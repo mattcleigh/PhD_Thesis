@@ -1,0 +1,75 @@
+\documentclass[
+	11pt,
+	english,
+	oneside,
+	singlespacing,
+	parskip,
+	headsepline,
+	consistentlayout,
+	% draft
+]{DoctoralThesis}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage[style=numeric-comp,sorting=none]{biblatex}
+\usepackage{csquotes}
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+
+\addbibresource{bibliography.bib}
+
+\geometry{
+	paper=a4paper,
+	inner=2.5cm,
+	outer=3.8cm,
+	bindingoffset=.5cm,
+	top=1.5cm,
+	bottom=1.5cm,
+	%showframe,
+}
+
+\thesistitle{Transformers, Generative Modelling, and High Energy Physics}
+\supervisorA{Prof. Tobias \textsc{Golling}}
+\supervisorB{Prof. Svyatoslav \textsc{Voloshynovskiy}}
+\degree{Doctor of Philosophy}
+\author{Matthew \textsc{Leigh}}
+
+\subject{Physics and Computer Science}
+\university{University of Geneva}
+\department{Department of Physics}
+\faculty{Faculty of Science}
+
+\AtBeginDocument{
+	\hypersetup{pdftitle=\ttitle}
+	\hypersetup{pdfauthor=\authorname}
+}
+
+\begin{document}
+
+% Format for preface pages
+\frontmatter
+\pagestyle{plain}
+
+\include{Preface/title}
+\include{Preface/declaration}
+\include{Preface/abstract}
+\include{Preface/acknowledgements}
+
+\tableofcontents
+
+% Reset page numbering and headers
+\mainmatter
+\pagestyle{thesis}
+
+\include{Chapters/introduction}
+\include{Chapters/standard_model}
+
+\appendix
+
+% \include{Appendices/AppendixA}
+
+\printbibliography[heading=bibintoc]
+
+\end{document}
