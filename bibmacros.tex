@@ -1,0 +1,33 @@
+\newbibmacro*{bbx:parunit}{%
+    \ifbibliography
+    {\setunit{\bibpagerefpunct}\newblock
+        \usebibmacro{pageref}%
+        \clearlist{pageref}%
+        \setunit{\adddot\par\nobreak}}
+    {}}
+
+\renewbibmacro*{doi+eprint+url}{%
+    \usebibmacro{bbx:parunit}% Added
+    \iftoggle{bbx:doi}
+    {\printfield{doi}}
+    {}%
+    \iftoggle{bbx:eprint}
+    {\usebibmacro{eprint}}
+    {}%
+    \iftoggle{bbx:url}
+    {\usebibmacro{url+urldate}}
+    {}}
+
+\renewbibmacro*{eprint}{%
+    \usebibmacro{bbx:parunit}% Added
+    \iffieldundef{eprinttype}
+    {\printfield{eprint}}
+    {\printfield[eprint:\strfield{eprinttype}]{eprint}}}
+
+\renewbibmacro*{url+urldate}{%
+    \usebibmacro{bbx:parunit}% Added
+    \printfield{url}%
+    \iffieldundef{urlyear}
+    {}
+    {\setunit*{\addspace}%
+        \printtext[urldate]{\printurldate}}}

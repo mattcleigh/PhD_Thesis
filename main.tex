@@ -12,12 +12,26 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{mathpazo}
-\usepackage[style=numeric-comp,sorting=none]{biblatex}
+\usepackage[style=numeric-comp,sorting=none,date=year]{biblatex}
 \usepackage{csquotes}
 \usepackage{hyperref}
+\usepackage{amsmath}
 \usepackage{cleveref}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xfrac}
+\usepackage{siunitx}
+\usepackage{tabularx}
+\usepackage{adjustbox}
+\usepackage{cancel}
 
+% Some commands for units
+\newcommand{\eV}{\unit{\electronvolt}}
+\newcommand{\MeV}{\unit{\mega\electronvolt}}
+\newcommand{\GeV}{\unit{\giga\electronvolt}}
+\newcommand{\TeV}{\unit{\tera\electronvolt}}
 
+\input{bibmacros}
 \addbibresource{bibliography.bib}
 
 \geometry{
@@ -53,18 +67,26 @@
 \pagestyle{plain}
 
 \include{Preface/title}
-\include{Preface/declaration}
-\include{Preface/abstract}
-\include{Preface/acknowledgements}
+% \include{Preface/declaration}
+% \include{Preface/abstract}
+% \include{Preface/acknowledgements}
 
-\tableofcontents
+% \tableofcontents
 
 % Reset page numbering and headers
 \mainmatter
 \pagestyle{thesis}
 
-\include{Chapters/introduction}
+% \include{Chapters/introduction}
 \include{Chapters/standard_model}
+% \include{Chapters/lhc_atlas_detector}
+% \include{Chapters/transformers_gnns}
+% \include{Chapters/deep_generative_models}
+% \include{Chapters/transformers_flavor_tagging}
+% \include{Chapters/generative_models_hep}
+% \include{Chapters/anomaly_detection}
+% \include{Chapters/foundation_models_hep}
+% \include{Chapters/conclusion}
 
 \appendix
 
