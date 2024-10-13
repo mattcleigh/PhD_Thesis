@@ -1,3 +1,7 @@
+%
+% To put the DOI/eprint/url on a new line
+%
+
 \newbibmacro*{bbx:parunit}{%
     \ifbibliography
     {\setunit{\bibpagerefpunct}\newblock
@@ -31,3 +35,12 @@
     {}
     {\setunit*{\addspace}%
         \printtext[urldate]{\printurldate}}}
+
+\DeclareSortingScheme{custom}{
+    \sort{
+        \citeorder
+    }
+    \sort{
+        \field{year}
+    }
+}
