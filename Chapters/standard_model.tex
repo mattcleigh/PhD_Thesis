@@ -114,18 +114,18 @@ In a QFT, all fundamental objects are described by quantum fields which are them
 Observed particles are localized excitations of these fields.
 The free field Lagrangian densities describe the propagation of non-interacting objects through spacetime and their forms depend on the spin of the particle.
 
-Spin-0 particles are excitations of a scalar field $\phi(x)$ such that they obey the Klein-Gordon equation \cite{Klein1926} and the corresponding Lagrangian density,
+Spin-0 particles are excitations of a scalar field $\phi(x)$ such that they obey the Klein-Gordon equation~\cite{Klein1926} and the corresponding Lagrangian density,
 \begin{equation}
 	\label{eq:scalar_lagrangian}
 	\mathcal{L}_\text{S} = \frac{1}{2} \partial_\mu \phi \partial^\mu \phi - \frac{1}{2} m_S^2 \phi^2,
 \end{equation}
 where $m_S$ is the mass of the particle, $\mu$ runs over the four dimensions of spacetime, and the Einstein summation convention is used.
-Spin-$\sfrac{1}{2}$ particles are described by the 4-component Dirac spinor $\psi(x)$ and the equations of motion are described by the Dirac Lagrangian density \cite{Dirac1928},
+Spin-$\sfrac{1}{2}$ particles are described by the 4-component Dirac spinor $\psi(x)$ and the equations of motion are described by the Dirac Lagrangian density~\cite{Dirac1928},
 \begin{equation}
 	\label{eq:dirac_lagrangian}
 	\mathcal{L}_\text{Dirac} = \bar{\psi} (i \gamma^\mu \partial_\mu - m) \psi.
 \end{equation}
-Here, $\gamma^\mu(\mu=0,1,2,3)$ are the contravariant Dirac matrices\footnote{The Dirac matrices are defined by the anti-commutation relations $\{\gamma^\mu, \gamma^\nu\} = 2 g^{\mu\nu}$, where $g^{\mu\nu}$ is the Minkowski metric.}, $\bar{\psi} = \psi^\dagger \gamma^0$ is the Dirac adjoint, and $m$ is the mass of the fermion.
+Here, $\gamma^\mu(\mu=0,1,2,3)$ are the contravariant Dirac matrices\footnote{The Dirac matrices are defined by the anti-commutation relations$\{ \gamma^\mu, \gamma^\nu \} = 2 g^{\mu\nu}$, where $g^{\mu\nu}$ is the Minkowski metric.}, $\bar{\psi} = \psi^\dagger \gamma^0$ is the Dirac adjoint, and $m$ is the mass of the fermion.
 Finally, free spin-1 vector fields $A_\mu$ with mass $m_A$ are described by the Proca Lagrangian,
 \begin{equation}
 	\label{eq:proca_lagrangian}
@@ -315,7 +315,7 @@ The QCD Lagrangian density,
 
 For the electromagnetic and weak forces the coupling strength increases with the momentum transfer of the interaction, but this dependence is minor.
 For the strong force the coupling constant becomes significantly weaker as the energy scale increases and the length scale decreases.
-This is a phenomenon known as asymptotic freedom~\cite{gross1973} and is shown in \Cref{fig:asymptotic_freedom}.
+This is a phenomenon known as asymptotic freedom~\cite{PriceAsymptoticFreedom} and is shown in \Cref{fig:asymptotic_freedom}.
 At the high energies of collider experiments ($ > 100 \GeV$), the quarks, even though bound in hadrons, behave as free particles.
 Conversely, at low energies the coupling constant becomes close to unity.
 \begin{figure}[h]
@@ -333,18 +333,14 @@ As the theory is non-perturbative, there is no analytical description for confin
 \label{sec:electroweak}
 
 In 1934 Fermi's description of $\beta$ decay~\cite{Fermi1934} hypothesized the existence of the weak nuclear force and allowed for the creation and annihilation of particles.
-In 19XX Sheldon Glashow proposed a single QFT that combined the electromagnetic and weak forces.
-
-is explained by the Glashow-Weinberg-Salam model (GSW)~\cite{Glashow1961, Weinberg1967,Salam1964}, where it is unified with the electromagnetic force,
-
-In the electroweak model of Glashow, Salam, and Weinberg (QSW), QED and the weak force are unified into a single theory and a combined group $\text{SU}(2)_L \times \text{U}(1)_Y$.
+Around three decades later the Glashow-Weinberg-Salam model (GSW)~\cite{Glashow1961, Weinberg1967,Salam1964} was developed to unify the electromagnetic and weak forces using the comined $\text{SU}(2)_L \times \text{U}(1)_Y$.
 As with all gauge theories, this introduces four gauge fields corresponding to each generator of the group.
 \begin{align}
 	\text{SU}(2)_L & \rightarrow W_\mu^a(a = 1, 2, 3) \\
 	\text{U}(1)_Y  & \rightarrow B_\mu
 \end{align}
 The $\text{SU}(2)_L$ group is non-Abelian making this a Yang-Mills theory, and the structure constants are given by $f^{abc} = \epsilon^{abc}$, where $\epsilon^{abc}$ is the Levi-Civita symbol.
-The generators of the group are the based on the three Pauli spin matrices $\sigma^i$~\cite{paulispin}.
+The generators of the group are the based on the three Pauli spin matrices $\sigma^i$.
 \begin{equation}
 	\label{eq:su2_generators}
 	T^a \equiv I^a = \frac{\sigma^a}{2} \\
@@ -415,21 +411,21 @@ The down-type quarks by convention mix between the weak eigenstates ($d', s', b'
 	\begin{pmatrix} 0.974 & 0.224 & 0.004 \\ 0.221 & 0.975 & 0.041 \\ 0.009 & 0.042 & 1.014 \end{pmatrix} \begin{pmatrix} d \\ s \\ b \end{pmatrix},
 \end{equation}
 where the numerical values of the elements are determined experimentally~\cite{ParticleDataGroup}\footnote{The non-unitary nature of experimental values of the CKM matrix is in tension with the SM by 2.2$\sigma$}.
-For the leptons, the mixing is described with respect to the neutrinos and the PMNS matrix~\cite{pontecorvo1967, maki1962}.
+For the leptons, the mixing is described with respect to the neutrinos and the PMNS matrix~\cite{PMNSMatrix}.
 These matrices provide explanations for the observed neutrino oscillations and the CP violation of the weak sector.
 
 \section{Electroweak Symmetry Breaking}
 \label{sec:higgs}
 
-Then in 1964, the mechanism for which spontaneous symmetry breaking could lead to massive gauge-bosons was developed independently by Robert Brout and François Englert, and Peter Higgs.
+In 1964, the mechanism for which spontaneous symmetry breaking could lead to massive gauge-bosons was developed independently by Robert Brout and François Englert, and Peter Higgs.
 This was incorporated into the electroweak theory by Steven Weinberg and Abdus Salam, and the theory was shown to be renormalizable.
-Experimental evidence for the electroweak theory first came in 1983 with the discovery of the W and Z bosons at CERN.
+Experimental evidence for the electroweak theory first came in 1983 with the discovery of the W and Z bosons at CERN\@.
 Arguably the last major breakthrough in the field of particle physics was the discovery of the Higgs boson in 2012 by the ATLAS and CMS collaborations.
 Over 100 years after the discovery of the electron.
 
 GSW theory predicts 4 gauge fields $W^a_\mu$ and $B_\mu$ which do not correspond to the physical $W^\pm$, $Z$, and $\gamma$ bosons.
 As a requirement of gauge invariance these fields are deemed to be massless, which is also in contradiction with the observed massive $W^\pm$ and $Z$ bosons.
-These discrepancies are resolved by the Brout-Englert-Higgs mechanism~\cite{higgs1964, englert1964, brout1964} (referred to hereafter as the Higgs mechanism), and the spontaneous symmetry breaking of the electroweak symmetry group (EWSB).
+These discrepancies are resolved by the Brout-Englert-Higgs mechanism~\cite{Higgs1, Higgs2, Higgs3} (referred to hereafter as the Higgs mechanism), and the spontaneous symmetry breaking of the electroweak symmetry group (EWSB).
 Spontaneous symmetry breaking is a phenomenon where the ground state of a system does not exhibit the same symmetries of the Lagrangian.
 
 Consider a new scalar field given by a complex doublet,
@@ -586,4 +582,13 @@ A similar prescription can be applied other leptons, the up-type, and down-type 
 
 \section{Particle Jets}
 \label{sec:jets}
+
+In particle physics, jets are collimated streams of particles moving together in a cone-like structure.
+A common feature in high-energy collisions, jets are emergent phenomena that arise due to the nature of QCD, particularly the property of colour confinement and asymptotic freedom.
+If a high energy quark is emitted from a collision, it quickly radiates gluons which in turn either radiate more gluons or split into quark-antiquark pairs.
+This continues until the energy of the particles is low enough that they form stable colour-neutral bound states.
+This process is known as hadronisation.
+Jets are formed during the transition from the perturbative to the non-perturbative regimes of QCD and thus can be defined broadly, either as the collection of coloured partons, or as the collection of final colorless mesons and baryons\footnote{Jets are also sometimes defined as the captured energy shower in the detector.}.
+
+Jet form primarily due to
 
