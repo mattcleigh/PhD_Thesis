@@ -2,12 +2,11 @@
 \label{chap:sm}
 
 Particle physics endeavours to identify all fundamental units of matter and describe their interactions.
-To this end the Standard Model (SM) of particle physics stands as the most successful theoretical framework in the history of the field.
-The SM is a quantum field theory (QFT) which encompasses three out of the four fundamental forces of nature, namely the electromagnetic, weak, and strong forces.
-The forth and final force, gravity, is not included in the SM\footnote{Gravity is $10^{37}$ times weaker than the weak nuclear force, and thus is negligible at the energy scales probed by particle accelerators, but can be incorporated to the theory through a coupling to a curved space-time.}.
-Development of the SM was an iterative and collaborative effort that took much of the 20th century during a time of great progress in particle physics.
-This is reflected both in the advancements in the theory itself, but also in the technology and experimental techniques used to test and inform its progress.
-To date, no experimental evidence has been found to contradict the SM predictions, much to the chagrin of many physicists who are eager to find the next breakthrough.
+To this end, the Standard Model (SM) of particle physics stands as the most successful theoretical framework in the history of the field.
+The SM is a quantum field theory (QFT) that encompasses three of the four fundamental forces of nature: electromagnetic, weak, and strong.
+The fourth and final force, gravity, is not included in the SM\footnote{Gravity is $10^{37}$ times weaker than the weak nuclear force, and thus is negligible at the energy scales probed by particle accelerators, but can be incorporated to the theory through a coupling to a curved space-time.}.
+The development of the SM was an iterative and collaborative effort that took much of the 20th century, during a time which saw great strides in the available technology, experimental techniques, and theory.
+No experimental evidence has been found to contradict the SM predictions, much to the chagrin of many physicists who are eager to find the next breakthrough.
 
 \section{Particle Content}
 
@@ -15,11 +14,11 @@ The SM describes all matter and forces in the universe using only 17 fundamental
 These particles are categorized by their spin.
 Fermions have spin-$\sfrac{1}{2}$ (in units of $\hbar$), and obey Fermi-Dirac statistics.
 Bosons have integer spin and obey Bose-Einstein statistics.
-Fermions make up all physical matter in the universe while spin-1 bosons mediate the forces between them.
+Fermions make up all physical matter in the universe, while spin-1 bosons mediate the forces between them.
 
 There are 12 fermions in the SM, divided into two categories: leptons and quarks.
 Fermions come in three generations, each containing a charged lepton, a neutral lepton (neutrino), an up-type quark, and a down-type quark.
-Each subsequent generation contains particles with increased mass but otherwise identical quantum numbers to the one preceding it.
+Each subsequent generation contains particles with increased mass but identical quantum numbers to the preceding one.
 Heavier generations are therefore unstable and decay into the lighter generations.
 The exceptions to this rule are the neutrinos, which do not decay, but oscillate between the three generations~\cite{NeutrinoOsc}.
 % The first generation contains the lightest particles; the electron, electron neutrino, up quark, and down quark.
@@ -98,7 +97,7 @@ A summary of the bosons and their properties can be found in~\Cref{tab:bosons}.
 \section{The Gauge Principle}
 \label{sec:gauge_principle}
 
-Symmetries have mapped out the route to most of the physical theories in this last century.
+Most of the breakthroughs in theoretical physics have been driven by the search for symmetries in nature.
 Noether's theorem famously established that continuous symmetries imply conserved currents~\cite{Noether1918}.
 The principle of least action states that the dynamics of a system are determined by the path through spacetime that minimizes the action specified by a Lagrangian density $\mathcal{L}$.
 The Lagrangian of the SM is symmetrical under the global Poincaré group, $\text{SL}(2, \mathbb{C})$, which encompasses the symmetries of special relativity.
@@ -237,6 +236,14 @@ Fermion mass is described by the Yukawa interaction, where $y_{ij}$ are the Yuka
 The last two terms describe the Higgs interaction with the massive vector bosons and the Higgs potential, respectively.
 The Higgs mechanism described in \Cref{sec:higgs}.
 
+In the SM there are also three important discrete symmetries.
+Namely, charge conjugation $\mathcal{C}$, parity inversion $\mathcal{P}$, and time reversal $\mathcal{T}$.
+Each of these symmetries were once believed to be obeyed by all physical processes.
+However, $\mathcal{P}$ violation was first observed in 1956~\cite{Wu1957} and the combined symmetry $\mathcal{CP}$ was shown to be violated in 1964~\cite{CPViolation}.
+In the SM it is now known that the weak force can violate any combination of $\mathcal{C}$, $\mathcal{P}$, and $\mathcal{T}$, but not all simultaneously.
+In fact, the combined symmetry $\mathcal{CPT}$ holds for all Lorentz invariant QFTs and is therefore beleived to be obeyed by all physical processes.
+
+
 \subsection{U(1) \texorpdfstring{$\rightarrow$}{-} Quantum Electrodynamics}
 
 The discovery of the electron in 1897 marked the first major breakthrough in particle physics~\cite{ThomsonElectron}.
@@ -276,7 +283,7 @@ In the SM, $\mathcal{L}_\text{QED}$ is absorbed into the electroweak Lagrangian 
 
 Starting with the discovery of the pion in 1947~\cite{DiscoveryPimeson} a veritable explosion of new hadrons were detected.
 This was largely due to the development of the first particle accelerators~\cite{ProductionHighSpeed} which allowed for the study of controlled high-energy collisions outside cosmic rays.
-This period of discovery lasted until the mid 1960s and a description of the expanding zoo of particles was needed.
+This period of discovery lasted until the mid 1960s and a description of the expanding list of particles was needed.
 Initial attempts involved the introduction of new quantum numbers such as strangeness~\cite{Strange2, Strange3} and isospin~\cite{StrongIso1, StrongIso2, StrongIso3,StrongIso4}.
 This \textit{particle zoo} was eventually tamed by the theory of quarks in 1964 by Gell-Mann and Zweig~\cite{GellMan1964,Zweig1964}.
 Each of these new particles could be understood as a bound state of multiple quarks called hadrons.
@@ -318,16 +325,32 @@ For the strong force the coupling constant becomes significantly weaker as the e
 This is a phenomenon known as asymptotic freedom~\cite{PriceAsymptoticFreedom} and is shown in \Cref{fig:asymptotic_freedom}.
 At the high energies of collider experiments ($ > 100 \GeV$), the quarks, even though bound in hadrons, behave as free particles.
 Conversely, at low energies the coupling constant becomes close to unity.
+At these scales divergences are induced and the theory can't be treated perturbatively.
+
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=0.7\textwidth]{Figures/standard_model/running}
 	\caption{The running of the strong coupling constant $\alpha_s = \sfrac{g_s^2}{4\pi}$ as a function of the energy scale $Q$ as measured by experiments at the LHC, Tevatron, and HERA~\cite{CMSRunning}.}
 	\label{fig:asymptotic_freedom}
 \end{figure}
-At these scales divergences are induced and the theory can't be treated perturbatively.
-An observed effect at this scale is colour confinement where quarks and gluons are never isolated, but are always bound together in colour-neutral ($\text{SU}(3)$ invariant) states called hadrons.
-A consequence of confinement is hadronisation, the process by which high energy coloured particles form particle jets, which is described in \Cref{sec:jets}.
+
+An observed effect of QCD is \textit{colour confinement}, where quarks and gluons are never observed isolated, but always bound together in colour-neutral ($\text{SU}(3)$ invariant) states called hadrons.
+This is illustrated by the qualitative picture in \Cref{fig:confinement}.
+For an electromagnetic interaction, \Cref{fig:confinement_b}, the field is diluted over space.
+However, for a strong interaction, \Cref{fig:confinement_c}, the exchanged gluons themselves interact, \Cref{fig:confinement_a}, effectively squeezing the colour field between the quarks into a \textit{color flux tube} or a \textit{color string}.
+These strings have a constant energy density so two free quarks on opposite sides of the universe would theoretically result in a string of near-infinite energy.
 As the theory is non-perturbative, there is no analytical description for confinement.
+A consequence of confinement is hadronisation, the process by which high energy coloured particles form particle jets, which is described in \Cref{sec:jets}.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Figures/standard_model/confinement.pdf}
+	\begin{subfigure}{0pt}\phantomcaption{}\label{fig:confinement_a}\end{subfigure}
+	\begin{subfigure}{0pt}\phantomcaption{}\label{fig:confinement_b}\end{subfigure}
+	\begin{subfigure}{0pt}\phantomcaption{}\label{fig:confinement_c}\end{subfigure}
+	\caption{Qualitative picture of the formation of colour strings due to interaction between the exchanged gluons from two quarks \cite{ModernParticlePhysics}.}.
+	\label{fig:confinement}
+\end{figure}
 
 \subsection{\texorpdfstring{$\text{SU}(2)_L \times \text{U}(1)_Y \rightarrow$}{SU(2)xSU(1)-} Electroweak Theory}
 \label{sec:electroweak}
@@ -358,7 +381,7 @@ The strength tensors are given by
 	B_{\mu\nu}   & = \partial_\mu B_\nu - \partial_\nu B_\mu.
 \end{align}
 It is useful to split the fermion fields into left- and right-handed components using chiral the projection operators $P_{L/R} = \sfrac{1}{2} (1 \mp \gamma^5)$, where $\gamma^5 = i \gamma^0 \gamma^1 \gamma^2 \gamma^3$.
-Experimentally, the charged weak current has proved to be maximally parity violating.
+Experimentally, the charged weak current has proved to maximally violate $\mathcal{P}$ symmetry.
 This means that the interaction term must follow a V-A (vector-axial) coupling type which can be shown to be equivalent to a standard coupling to left-handed fermions only:
 \begin{equation}
 	\label{eq:v-a_coupling}
@@ -583,12 +606,87 @@ A similar prescription can be applied other leptons, the up-type, and down-type 
 \section{Particle Jets}
 \label{sec:jets}
 
-In particle physics, jets are collimated streams of particles moving together in a cone-like structure.
-A common feature in high-energy collisions, jets are emergent phenomena that arise due to the nature of QCD, particularly the property of colour confinement and asymptotic freedom.
-If a high energy quark is emitted from a collision, it quickly radiates gluons which in turn either radiate more gluons or split into quark-antiquark pairs.
+In particle physics, jets are collimated streams of particles moving together in a cone-like structure that typically was initiated by a high-energy quark or gluon.
+A common feature in high-energy collisions, jets are emergent phenomena that arise due to the nature of QCD.
+Simply put, if a high-energy quark or gluon is emitted from a collision, it quickly radiates gluons which in turn either radiate more gluons or which split into quark-antiquark pairs.
 This continues until the energy of the particles is low enough that they form stable colour-neutral bound states.
-This process is known as hadronisation.
-Jets are formed during the transition from the perturbative to the non-perturbative regimes of QCD and thus can be defined broadly, either as the collection of coloured partons, or as the collection of final colorless mesons and baryons\footnote{Jets are also sometimes defined as the captured energy shower in the detector.}.
+Jets are therefore formed during the transition from the perturbative to the non-perturbative regimes of QCD.
 
-Jet form primarily due to
+Jet formation can be highlighted by the Feynman diagram in \Cref{fig:quark_gluon}.
+Here a quark propagator, produced in some inelastic collision, radiates a gluon.
+This specific diagram becomes dominant when the virtual propagator is close to being on-shell.
+This condition is satisfied in two limits which are essential in jet physics.
+One is referred to as the \textit{collinear limit} where the angle between the quark and the gluon approaches zero.
+This indicates preference for collinear radiation and explains why jets are collimated in the direction of the initiating particle\footnote{Jets are also collimated when measured in the lab frame due to the large boost of the initiating particle.}.
+The other is the \textit{soft limit} where the energy of the gluon approaches zero.
+Practically, this means that each time a parton is emitted, it is accompanied by a soft haze of radiation.
+These conditions exist for all gauge theories, but are particularly important for QCD due the strength of $\alpha_s$ even at high energies.
 
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.5\textwidth]{Feynman/quark_gluon.pdf}
+	\caption{Simple diagram of a quark emitted from some collision radiating a gluon. The matrix element of this process has a singularity when the virtual propagator is close to being on-shell ($q^2\approx m^2$) which is satisfied in the collinear and soft limits.}
+	\label{fig:quark_gluon}
+\end{figure}
+
+Another view of jet formation is through the process of breaking colour strings between quarks.
+From confinement, if two quarks were produced back-to-back in a collision, the color field between them would be squeezed into a color string with constant energy density.
+As they move apart, it becomes energetically favourable to create a quark-antiquark pair from the vacuum, leading to two new strings.
+If the quarks were produced with enough energy, this process repeats until the energy is low enough that the stable colour-neutral bound states emerge as shown by \Cref{fig:hadronisation}.
+Where exactly the strings break is ambiguous, resulting in the highly stochastic nature of jets.
+The lightest hadrons are the most accessible to this process, which is why typically jets are composed primarily of pions ($\approx80\%$) and kaons ($\approx15\%$).
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Figures/standard_model/hadronisation.pdf}
+	\caption{Qualitative picture of the formation of two jets via the splitting of color flux-tubes causing hadronisation \cite{ModernParticlePhysics}.}
+	\label{fig:hadronisation}
+\end{figure}
+
+While jets are essentially sets or clusters of many particles, they can also be defined by their own kinematics, calculated by summing up the four-momenta of all of its constituents.
+Furthermore, even if the original parton was massless, the jet as a whole may have non-zero invariant mass due to noncollinear radiation.
+The nature and shape of this radiation is characteristic of the properties of the initiating parton.
+This point is crucial for understanding jet physics and defining jet algorithms which is discussed in \Cref{sec:jets_reconstruction}.
+
+\section{Standard Model Limitations and Open Questions}
+\label{sec:sm_limitations}
+
+Predictions made by the SM have been confirmed to an extraordinary degree of precision in collider experiments, as shown by \Cref{fig:sm_precision}.
+Despite this, there are several reasons to believe that the SM is not the final theory of particle physics.
+Many perceived shortcomings of the SM lead to open questions that define the regions of active research in particle physics as well as many proposed extensions to the SM\@.
+
+For example, gravity is a notable omission from the SM owing to the lack of a renormalizable QFT for gravity.
+Candidate theories for a quantum theory of gravity include string theory and loop quantum gravity~\cite{GravityQFT}.
+However, gravity is so weak that it is unlikely a theory of quantized gravity could even make testable predictions at the energies accessible by current experiments.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\textwidth]{Figures/standard_model/sm_summary.pdf}
+	\caption{Comparison of the total production cross-sections of various processes predicted by the SM and measured by the ATLAS experiment \cite{ATLAS:2024cgh}.}
+	\label{fig:sm_precision}
+\end{figure}
+
+Cosmological observations dating back to the 1930s~\cite{GalaxyRotation} have shown that the majority of the gravitational effects in the universe is not a result of visible matter.
+This was first observed by the movements of galaxies within clusters~\cite{GalaxyRotation}, but has since been independently supported by measurements of the rotation of galaxies themselves~\cite{DistributionDarkMatter, EvidenceDarkMatter,NumericalStudyStability}, gravitational lensing~\cite{GravitationalLensMagnification, Lensing1, Lensing2},
+hot gas in galaxy clusters~\cite{HotGas}, and the cosmic microwave background~\cite{Planck2018Results}.
+The current theory to explain these phenomena is the presence of cold dark matter (CDM) which accounts for 85\% of the mass content in the universe~\cite{Planck2018Results}.
+In this model CDM particles that must be stable, massive, and at most weakly interacting, and there is no candidate in the SM that fits this description.
+Furthermore, inthe current model cosmology, $\Lambda$CDM, the dominant energy in the universe is \textit{dark energy}~\cite{LCDM1, LCDM2, LCDM3, LCDM4} a positive pressure of the vacuum that is causing the universe to expand at an accelerating rate for which there is no explanation in the SM\@.
+
+In the SM, anti-matter is treated as a mirror image of matter, however the universe is almost entirely composed of matter \cite{AlexDM1, AlexDM2}
+There exist two possibilities for this discrepancy; either the universe began with a preference for matter over anti-matter, or the universe was initially symmetric, and some process called \textit{baryogenesis}~\cite{BaryosynthesisOriginGalaxies}, occurred to create the imbalance.
+While there is no clear evidence for either scenario, the latter is more appealing to many physicists.
+The Sakharov conditions~\cite{Sakharov1967} for baryogenesis are that it violates baryon number, C and CP symmetry, and must have occured before the universe reached thermal equilibrium.
+CP violation is present in the SM from the CKM and PMNS matrices, but it is not sufficient to explain the observed matter-antimatter asymmetry.
+It is hoped that there exist new physical processes beyond the SM that induces the much larger CP violation required for baryogenesis.
+
+The above issues are related with the SM's inability to describe cosmological phenomena.
+An additional set of ``issues'' are derived from asthetic or philosophical considerations.
+The SM has 19 free parameters that must be determined experimentally, a value considered by many to be too large to be considered a fundamental theory.
+Another issue is the \textit{hierarchy problem}.
+In a QFT, physical observables are determined by the sum of all possible Feynman diagrams, which often includes divergent terms.
+These divergences are removed by renormalization which fixes the parameters of the theory to the observed values.
+However, in the case of the Higgs mass, the one-loop corrections are around 16 orders of magnitude larger than the observed value.
+To resolve this, the bare mass of the Higgs must be fine-tuned to an accuracy of 1 part in $10^{16}$, which many physicists find unsatisfactory.
+Finally, the unification of QED and the weak force led many to develop Grand Unified Theories (GUTs)~\cite{GUT1, GUT2} which predict that all forces in the SM are unified at high energies.
+Many of the predictions of GUTs, such as proton decay, have not been observed, and the energy scale at which the forces unify is far beyond the reach of current experiments.

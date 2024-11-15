@@ -1,0 +1,33 @@
+\documentclass{standalone}
+\usepackage[compat=1.0.0]{tikz-feynman}
+
+\begin{document}
+
+\feynmandiagram [horizontal=a to b] {
+  i1 -- a [blob] --  o1,
+  i2 -- a,
+  a -- o2,
+  a -- [fermion, edge label=$\frac{-i(\gamma^\mu q_\mu + m)}{q^2 - m^2}$] o3,
+  a -- o4,
+  a -- o5,
+  o3 -- [gluon] g,
+  o3 -- [fermion] ol,
+
+  % Positioning the outgoing fermions
+  o1 [at={(0.87,0.5)}],
+  o2 [at={(0.7,0.7)}],
+  o3 [at={(3.2,0)}],
+  o4 [at={(0.7,-0.7)}],
+  o5 [at={(0.87,-0.5)}],
+
+  % The initial gluon and fermion
+  a [at={(0,0)}],
+  i1 [at={(-1,1)}],
+  i2 [at={(-1,-1)}],
+
+  % Positioning the final gluon and fermion
+  g [at={(4.2,1)}],
+  ol [at={(4.2,-1)}],
+};
+
+\end{document}

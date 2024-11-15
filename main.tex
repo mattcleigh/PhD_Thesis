@@ -12,9 +12,9 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{mathpazo}
-\usepackage[style=numeric-comp,sorting=custom,date=year,backend=biber,giveninits=true,maxnames=3,minnames=1]{biblatex}
+\usepackage[style=numeric-comp, sorting=custom, date=year, backend=biber ,giveninits=true, maxnames=3, minnames=1, backref=true]{biblatex}
 \usepackage{csquotes}
-\usepackage{amsmath}
+\usepackage[subrefformat=parens, labelfont=up]{subcaption}\usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage{booktabs}
@@ -24,12 +24,25 @@
 \usepackage{tabularx}
 \usepackage{adjustbox}
 \usepackage{cancel}
+\usepackage{minted}
+
+\newcommand{\todo}[1]{\\\textcolor{red}{TODO:\@ {#1}}\\}
+\newcommand{\citetemp}[1]{\textcolor{red}{#1}}
+
+
+% Make subfigure labels lowercase
+% \captionsetup[subfigure]{labelformat=simple, labelsep=colon}
+% \renewcommand{\thesubfigure}{(\alph{subfigure})}
 
 % Some commands for units
 \newcommand{\eV}{\unit{\electronvolt}}
 \newcommand{\MeV}{\unit{\mega\electronvolt}}
 \newcommand{\GeV}{\unit{\giga\electronvolt}}
 \newcommand{\TeV}{\unit{\tera\electronvolt}}
+
+% Maths
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
 
 \input{bibmacros}
 \addbibresource{bibliography.bib}
@@ -78,9 +91,11 @@
 \pagestyle{thesis}
 
 % \include{Chapters/introduction}
-\include{Chapters/standard_model}
+% \part{Physics Background}
+% \include{Chapters/standard_model}
 % \include{Chapters/lhc_atlas_detector}
-% \include{Chapters/transformers_gnns}
+\part{Transformers for Flavour Tagging}
+\include{Chapters/transformers_gnns}
 % \include{Chapters/deep_generative_models}
 % \include{Chapters/transformers_flavor_tagging}
 % \include{Chapters/generative_models_hep}
