@@ -162,6 +162,12 @@ However, in most use cases dealt with in deep learning they are real valued tens
 It is also common for all the nodes to share the same dimensionality, and the same for the edges, imposing an equivalence between the elements of the set.
 These are not strict requirements, but it simplifies the design of the model as it allows operations on the individual elements to be parameterized with standard deep learning building blocks, such as linear layers, MLPs, and CNNs.
 
+Representing a graph in code required tuple or dictionary of real valued tensors $(\mathbf{X}, \mathbf{E}, \mathbf{U})$.
+Here, $\mathbf{X} \in \mathbb{R}^{N \times d_x}$, $\mathbf{E} \in \mathbb{R}^{N \times N \times d_e}$, and $\mathbf{U} \in \mathbb{R}^{1 \times d_u}$, where $d_x$, $d_e$, and $d_u$ are the dimensionality of the node, edge, and global features respectively.
+The edge matrix is typically ordered such that $\mathbf{E}_{ij}$ is the edge from node $i$ to node $j$.
+To represent the existence or absence of an edge between two nodes, a binary adjacency matrix $\mathbf{A} \in \{0, 1\}^{N \times N}$ can be used where $\sum{\mathbf{A}} = N^e$.
+Alternatively, one could use a sparse tensor representation, which is more memory efficient but can complicate the implementation of the model.
+
 Almost all GNNs operate on the graph by facilitating message passing between the nodes.
 In this framework the nodes send messages to their neighbours.
 These messages are then aggregates and used to update the node's attributes.
@@ -454,11 +460,12 @@ The adjacency matrix in a graph is also called the attention mask in a transform
 \begin{figure}
     \centering
     \includegraphics[width=0.49\textwidth]{Figures/transformers/nonlocal.pdf}
-    \caption{NLNN / Transformer}
-    \label{fig:Transformer}
+    \caption{NLNN / Transformer Encoder}
+    \label{fig:transformer}
 \end{figure}
 
-\subsection{Attention is Just Message Passing}
+\subsection{Attention is Message Passing}
+\label{sec:attention}
 
 There are hundreds of ways to parameterize the message passing step in a GNN, and the one used in the transformer is the scaled dot-product attention (SDPA).
 
@@ -467,56 +474,117 @@ This means that each node sends out the same message to all of its neighbours.
 This sent information is referred to as the value of the node, where is a learnable weight matrix.
 The attention weight is based on a dot product between separate projections of the sender and receiver nodes, called the key and query respectively.
 A softmax function is applied to the attention weights to turn the aggregation operation into a weighted mean of the incoming messages.
-To prevent the gradients from exploding, the attention weights are scaled by the square root of the dimensionality of the message.
+To prevent the gradients from exploding, the attention logits are scaled by the square root of the dimensionality of the key and value tensors $d_k$.
 
-In the framing of the GN-Block edge update is factorized into a tuple containing a scalar expressing the message weight $a_k'(\mathbf{x}_{s_k}, \mathbf{x}_{r_k})$ and a vector function for calculating the message content $\mathbf{v}_k'(\mathbf{x}_{s_k})$.
+In the framing of the GN-Block, self-attention has the edge update is factorized into a tuple containing a scalar expressing the message weight $a_k'(\mathbf{x}_{s_k}, \mathbf{x}_{r_k})$ and a vector function for calculating the message content $\mathbf{v}_k'(\mathbf{x}_{s_k})$.
 Only $\alpha^e$ depends on the pairwise interaction of both the sender and receiver nodes.
 The pooling operation $\rho^{e \to v}$ normalizes over the receiver weights before aggregating the messages.
 The block can be written as,
 \begin{equation}
     \begin{aligned}
-        \mathbf{e}_k' &= \phi^e(\mathbf{e}_k, \mathbf{x}_{s_k}, \mathbf{x}_{r_k}, \mathbf{u}),
-        = ( a_k', \mathbf{v}_k' )
-        = \left( \exp \left( \frac{\mathbf{W}^q \mathbf{x}_{s_k} \cdot \mathbf{W}^k \mathbf{x}_{r_k}}{d_k} \right), \mathbf{W}^v \mathbf{x}_{s_k} \right), \\
-        \vphantom{x}\\
-        \mathbf{\bar{e}}_i &= \rho^{e \to v}(E_i)
-        = \frac{\sum_{k: r_k = i} a_k' \mathbf{v}_k'}{\sum_{k: r_k = i} a_k'}.
+        \mathbf{e}_k' &= \phi^e(\mathbf{e}_k, \mathbf{x}_{s_k}, \mathbf{x}_{r_k}, \mathbf{u}) \\
+        &= ( a_k', \mathbf{v}_k' ) \\
+        &= \left( \exp \left( \frac{1}{d_k} \mathbf{W}^q \mathbf{x}_{s_k} \cdot \mathbf{W}^k \mathbf{x}_{r_k} \right), \mathbf{W}^v \mathbf{x}_{s_k} \right), \\
+        \mathbf{\bar{e}}_i &= \rho^{e \to v}(E_i) \\
+       &= \frac{\sum_{k: r_k = i} a_k' \mathbf{v}_k'}{\sum_{k: r_k = i} a_k'}.
     \end{aligned}
 \end{equation}
+for learnable weight matrices $\mathbf{W}^k \in \mathbb{R}^{d \times d_k}$, $\mathbf{W}^q \times \mathbb{R}^{d \times d_k}$, and $\mathbf{W}^v \in \mathbb{R}^{d \times d_v}$.
 
+This operation can be done efficiently for all nodes in parallel using basic matrix operations.
+Furthermore, it allows us to extend to two forms, self-attention and cross-attention, both expressible by the following equation,
+\begin{equation}
+    \label{eq:attention}
+    \text{Attention}(\mathbf{X_r}, \mathbf{X_s}) = \text{softmax}\left(\frac{\mathbf{X_s} \mathbf{W}^q (\mathbf{X_r} \mathbf{W}^k)^T}{d_k} + \mathbf{B}\right) \mathbf{X_s} \mathbf{W}^v.
+\end{equation}
+In this expression we distinguish between the tensor representing the sender nodes $\mathbf{X_s} \in \mathbb{R}^{N_s \times d}$ and the receiver nodes $\mathbf{X_r} \in \mathbb{R}^{N_r \times d}$.
+Self-attention is where the sender and receiver set are the same $\mathbf{X_s} = \mathbf{X_r}$.
+This is the standard message passing operation between nodes in a graph.
+Cross-attention is where the sender set and receiver set is different $\mathbf{X_s} \neq \mathbf{X_r}$.
+This operation is permutation invariant with respect to $\mathbf{X_s}$ and equivariant with respect to $\mathbf{X_r}$.
+As shown by \Cref{fig:bipartite}, one can interpret this as the construction of a one-way bipartite graph between two sets, where all nodes in the sender set send messages to all nodes in the receiver set.
+The output of the operation would therefore be the updates to the receiver nodes.
+Note that the cardinality of the sender and receiver sets do not need to be the same.
+Cross-attention is a powerful tool to condition one set on another and is used in many sequence to sequence tasks, from translation to image captioning and text to image generation.
+Finally, the bias term $\mathbf{B}$ is a matrix of shape $(N_r, N_s)$ which is broadcasted to the shape of the attention logits.
+This can be used to focus or ignore certain pairs of nodes.
 
-for learnable weight matrices $\mathbf{W}^k$, $\mathbf{W}^q$, and $\mathbf{W}^v$ and the dimensionality of the key and query $d_k$.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{Figures/transformers/bipartite.pdf}
+    \caption{(left) Self-attention is standard message passing between all nodes in a graph. (right) Cross-attention creates a one-way bipartite graph between two sets of nodes.}
+    \label{fig:bipartite}
+\end{figure}
 
+The final major feature of a transformer's message passing step is multi-headed attention (MHA), shown in \Cref{fig:mha}.
+This is where the operation is performed multiple time in parallel with different matrices $\mathbf{W}^q$, $\mathbf{W}^k$, $\mathbf{W}^v$, and $\mathbf{B}$.
+The output of each head is concatenated and then mixed using a final linear layer.
+\begin{equation}
+    \begin{aligned}
+    & \text{Head}_1 = \text{Attention}(\mathbf{X_r}, \mathbf{X_s}), \\
+    & \ldots, \\
+    & \text{Head}_H = \text{Attention}(\mathbf{X_r}, \mathbf{X_s}), \\
+    \vphantom{x} \\
+    & \text{MHA}(\mathbf{X_r}, \mathbf{X_s}) = \text{Concat}(\text{Head}_1, \ldots, \text{Head}_H) \mathbf{W}^o,
+    \end{aligned}
+\end{equation}
+By performing the operation many times like this, many types of messages are passed between the nodes.
+One can also think of this as constructing a multi-graph with different edge types each facilitated by a different head.
+Both self and cross attention can be multi-headed where multi-headed self-attention (MHSA) is defined as $\text{MHSA}(\mathbf{X}) = \text{MHA}(\mathbf{X}, \mathbf{X})$.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{Figures/transformers/mha.pdf}
+    \caption{Multi-headed attention can be thought of as constructing a multi-graph with different edge types.}
+    \label{fig:mha}
+\end{figure}
 
+While it is not a mathematical requirement, in practice the MHA operation is typically non-resizing, the output matches the input tensor $\mathbf{X_r}$ in shape $(N_r, d_x)$.
+The SPDA mechanism requires the query and key dimensions to be the same, but in most implementations the value dimension is also matches.
+This means that a single MHA function is parametrized by four weight matrices each with shape $(d_x, d_x)$.
+Thus the only hyperparameter for the block is the number of heads $H$, which is required to divide into the node dimension.
+One can change value and query projections from linear to affine transformations by including bias terms to increase the expressivity of the model, but the bias of the key operation is completly redundant~\citetemp{RoleOfBiases}.
 
-Even with multiple heads, a learnable self-attention block can be easly implemented in PyTorch using standard linear algebra operations.
-\begin{minted}[python]
-class SelfAttention(nn.Module):
-    def __init__(self, dim, num_heads):
-        super().__init__()
-        self.NH = num_heads
-        self.HD = dim // num_heads
-        self.scale = self.HD ** -0.5
-        self.qkv = nn.Linear(dim, dim * 3)
-        self.proj = nn.Linear(dim, dim)
+One of the other keys to the transformer's success is the ease of implementation.
+Many of the GNN variants require custom libraries and are difficult to implement from scratch.
+However MHA can be implemented in PyTorch using standard linear algebra operations as shown in \Cref{code:attention}.
+All heads are computed in parallel using smart reshaping of the tensors.
+This is quite significant, as it eases the process of designing, building, testing, and exporting models.
+\begin{figure}
+    \centering
+    \scriptsize
+    \begin{minted}{python}
+    class Attention(nn.Module):
+        def __init__(self, dim: int, num_heads: int):
+            super().__init__()
+            self.NH = num_heads
+            self.HD = dim // num_heads
+            self.scale = self.HD**-0.5
+            self.wk = nn.Linear(dim, dim)
+            self.wq = nn.Linear(dim, dim)
+            self.wv = nn.Linear(dim, dim)
+            self.wo = nn.Linear(dim, dim)
 
-    def forward(self, x):
-        B, N, D = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.NH, self.HD)      # (B, N, 3, NH, HD)
-        q, k, v = qkv.permute(2, 0, 3, 1, 4).chunk(3)             # (B, NH, N, HD) x 3
-        attn = (q @ k.transpose(-2, -1))                          # (B, NH, N, N)
-        attn = (attn * self.scale).softmax(dim=-1)                # (B, NH, N, N)
-        x = (attn @ v).transpose(1, 2).reshape(B, N, D)           # (B, N, D)
-        return self.proj(x)                                       # (B, N, D)
-\end{minted}
+        def forward(self, xr: T.Tensor, xs: T.Tensor, bias: T.Tensor | int = 0) -> T.Tensor:
+            q, k, v = self.wq(xs), self.wk(xr), self.wv(xs)              # project
+            shape = (xr.shape[0], -1, self.NH, self.HD)                  # split heads
+            q, k, v = (t.view(shape).transpose(1, 2) for t in (q, k, v))
+            attn = (q @ k.transpose(-2, -1))                             # attention weight
+            attn = (attn * self.scale + bias).softmax(dim=-1)
+            x = attn @ v                                                 # aggregate
+            x = x.transpose(1, 2).reshape(B, N, D)                       # mix heads
+            return self.wo(x)
+    \end{minted}
+    \caption{A simple implementation of a multi-headed attention block in PyTorch.}
+    \label{code:attention}
+\end{figure}
 
 \subsubsection{Efficiency of Scaled Dot-Product Attention}
 
-SDPA is arguably the most efficient form of expressive message passing.
-To show this it is worth starting from the simplest GNN variant, the graph convolutional network (GCN)~\citetemp{GCN}.
-The GCN is a form of NLNN where each node sends the exact same message to all other nodes, a simple linear transformation of its own attributes.
-The features are replaced by a sum over incoming information.
+SDPA is arguably the most efficient form of expressive message passing suitable for fully connected graphs.
+To show this it is worth starting from the simplest GNN variant, the graph convolutional network (GCN)~\citetemp{GCN}, and seeing why it fails.
+The GCN is a form of NLNN where each node sends the exact same message to all other nodes; a simple linear transformation of its own attributes.
+The features are then replaced by a sum over incoming information.
 A GCN layer can be written as (without normalization factors),
 \begin{equation}
     \begin{aligned}
@@ -524,16 +592,19 @@ A GCN layer can be written as (without normalization factors),
     \mathbf{x}_i' &= \sum_{k:r_k=i} \mathbf{e}_k',
     \end{aligned}
 \end{equation}
-for some learnable weight matrix $\mathbf{W}$.
-Why this fails to form good representations is clear if we consider the case where the graph is fully connected and the number of edges is $N^2$.
+for a single learnable weight matrix $\mathbf{W}$.
+Lets consider the shapes of the tensors in this operation.
 If we represent the set of nodes as a real valued tensor, it will have shape $(N, D)$, where $D$ is the dimensionality of the attributes.
-The operation $\mathbf{W}: (N, D) \rightarrow (N, D)$ is efficient, however after a single update step, every node in the set will contain the same information, taking the over-smoothing problem to the extreme.
+The operation $\mathbf{W}: (N, D) \rightarrow (N, D)$ is efficient, but why this fails to form good representations is clear if we consider the case where the graph is fully connected and the number of edges is $N^2$.
+Since all nodes have access to all others, including themselves, however after a single update step every node in the set will contain the same information, taking the over-smoothing problem to the extreme.
 
 To prevent this from happening, each message must be unique for each possible pairing of nodes.
-So the issue becomes; what is the most efficient way to parameterize a message such that the output of the message passing must be a tensor of shape $(N, N, D)$, where the first dimension is over the sender nodes and the second dimension is the receiver nodes such that it can then be aggregated back to a tensor of shape $(N, D)$.
+So the issue becomes; what is the most efficient way to parameterize a message such that the output of the message passing must be a tensor of shape $(N, N, D)$?
+Here, the first dimension is over the sender nodes and the second dimension is the receiver nodes.
+The pooling operation would act over the first dimension to produce a tensor of shape $(N, D)$.
 \begin{align}
     \text{??}: (N, D) & \rightarrow (N, N, D) \\
-    \text{sum}: (N, N, D) & \rightarrow (N, D)
+    \text{pool}: (N, N, D) & \rightarrow (N, D)
 \end{align}
 The GN-Block offers a way to perform this by making the message depend on a concatenation of the sender and receiver attributes.
 This concatenation must be done for all possible pairings before passing this tensor through an MLP.
@@ -544,15 +615,22 @@ The operations and dimensions of the tensors of such a block are,
     \text{sum}: (N, N, D) & \rightarrow (N, D)
 \end{align}
 Even if we were to use a single linear layer rather than an MLP, having both the input and output tensor be $O(N^2)$ is computationally expensive.
-GATs mitigate this by using the same message for all pairings, but weighting the message based on the sender and receiver attributes.
+
+One way to mitigate this is to factorize the message into two learnable components, the content and the weight.
+Only one of these needs to be unique for each pairing and since the weight is a scalar and the content is a vector, it is much more efficient to allow the content to be degenerate.
+This is exactly the approach of GATs~\citetemp{GAT}, which perform the update,
 \begin{align}
     \mathbf{W_1}&: (N, D)  \rightarrow (N, D) \\
     \text{concatenate}&: (N, D)  \rightarrow (N, N, 2D) \\
     \mathbf{W_2}&: (N, N, 2D)  \rightarrow (N, N) \\
     \text{matrix multiply}&: (N, N), (N, D)  \rightarrow (N, D)
 \end{align}
+However, there is still the issue that this input and output of the learnable layers are $O(N^2)$.
 
-SDPA circumvents all of this by factorizing the map into a learnable linear transformation, and a non-learnable dot product,
+The $(N, N)$ matrix of attention weights needs to be learnable from the original $(N, D)$ node attributes and must be allowed to be unique for each pairing.
+Therefore, there must be a distinction between the sender and receiver nodes, this makes the required map $a: (N, D), (N, D) \rightarrow (N, N)$.
+There are few operations that can achieve this, and none so efficient as a dot product.
+Using linear projections for the initial embeddings means that the K, Q, V tensors can be computed in parallel.
 \begin{align}
     \mathbf{W}: (N, D) & \rightarrow (N, 3D) \\
     \text{split}: (N, 3D) & \rightarrow (N, D), (N, D), (N, D) \\
@@ -561,11 +639,150 @@ SDPA circumvents all of this by factorizing the map into a learnable linear tran
 \end{align}
 While the other parts of the update do require $O(N^2)$ operations, crucially the input and output of the learnable layers dependent is only $O(N)$.
 
-\subsection{Types of Transformers}
+The argument made here is that one will struggle to find a more simple and efficient way to parameterize the message passing step in a GNN that does not lead to over-smoothing when fully connected.
+The philosophy of the transformer is similar to the philosophy of composing MLPs from linear layers, in that the composition of simple, highly parameterized functions, is what provides expressivity.
+By and large the most complex component of the operation is the softmax function, but there exist algorithms to calculate this online without having to express the full attention matrix~\citetemp{FlashAttention}.
+Contrary to popular claims, self-attention with these mechanisms is non $O(N^2)$ in memory complexity~\citetemp{MemoryComplexity}.
+Some more recent models large models have even done away with the softmax, citing better performance beyond a certain model scale~\citetemp{Reformer, LinearAttetnion}.
 
-\subsection{Transformers with Persistent Edge Features}
+\section{Transformer Variants}
 
-\subsection{Adapting Graph Networks for Sequences}
+There are many types of transformer variants, too much to cover in this thesis.
+However, common similarities can be drawn between them.
+Furthermore, many of the terminology used to describe the layers is ambiguous and overlaps.
+A single transformer block has two main types of sub-blocks, the message passing layer performed with MHA, and node update layers performed using MLPs, often confusingly called simply feed-forward networks (FFNs).
+These sub-blocks are combined, and repeated in various forms to create the larger transformer block.
+The MHA layers are configured to be either self-attention or cross-attention as needed, and they are stacked with the FFN layers usually in series~\citetemp{AttentionIsAllYouNeed}, but sometimes in parallel~\citetemp{PALM}.
+Another distinguishing feature is the use of residual connections and normalization layers to stabilize training.
+But even these can be configured in many ways.
+With such a large zoo of transformer variants, with empirical performance being the only guide, it often takes time for best practices to emerge.
+
+The MLP in most transformer layers only has a single hidden layer, which expands the dimensionality of the node attributes by a multiplicative factor $M$.
+The original implementation used $M=4$ and a ReLU activation function,
+\begin{equation}
+    \phi^v(\mathbf{x}_i) = \max\left(0, \mathbf{W}_2 \text{ReLU}(\mathbf{W}_1 \mathbf{x}_i + \mathbf{b}_1) + \mathbf{b}_2\right),
+\end{equation}
+though these were quickly switched to either GELU of SiLU activations~\citetemp{GELU, SiLUTransformers}.
+Modern transformers also use Gated Linear Units (GLU)~\citetemp{GLU}, a network layer involving the element-wise multiplication of two linear projections, one of which is passed through an activation function.
+Using a Swish/SiLU activation function seems to be the most popular choice~\citetemp{SwiGLU}, the node update using a SwiGLU layer is written as,
+\begin{equation}
+    \phi^v(\mathbf{x}_i) = \mathbf{W}_3(\text{Swish}(\mathbf{W}_1 \mathbf{x}_i + \mathbf{b}_1) \otimes (\mathbf{W}_2 \mathbf{x}_i + \mathbf{b}_2)) + \mathbf{b}_3.
+\end{equation}
+Many transformers also use the mixture-of-experts approach, where there exist many FFN layers, each with different parameters, and a gating mechanism to direct certain nodes to certain experts~\citetemp{MoE}.
+It is interesting that while the attention mechinism is often hailed as the key to the transformer's sucess, the vast majority of the transformer parameters are in these node update layers.
+
+To stabilize the training of deep models, the transformer encoder uses residual connections and normalization layers.
+The residual connection is used to circumvent each sub-block, and in the original implementation used LayerNorm~\citetemp{LayerNorm} after the residual connection.
+This was discovered to be over squashing the signal and most modern transformers now use PreNorm configuration where the normalization is done before each sub-block~\citetemp{PreNorm}.
+Many models also use RMSNorm as a faster alternative~\citetemp{RMSNorm}.
+Furthermore, extra normalization within the sub-blocks is common.
+It is also common to initialize the weights of the final layers in each sub-block to zero, or include extra layers initialised close to zero, such that upon initialization the model behaves like an identity function.
+This greatly helps to stabilize deeper models.
+
+The transformer encoder (TE) is a standard GNN where the message passing step is performed using multi-headed attention.
+It acts on a single set of nodes, and the output of the block is the updated node attributes.
+A single TE-Block as shown in \Cref{fig:transformer} is a GN-Block with no edge or global features and the message passing step is done using MHSA.
+The block update on the full tensor $\mathbf{X}$, using the PreNorm configuration is,
+\begin{equation}
+\begin{aligned}
+    \mathbf{X} & \leftarrow \mathbf{X} + \text{MSHA}(L(\mathbf{X})), \\
+    \mathbf{X} & \leftarrow \mathbf{X} + \text{FFN}(L(\mathbf{X})).
+\end{aligned}
+\end{equation}
+A full TE is composed of many TE-Blocks stacked in series forming a permutation equivariant set to set transformation.
+For many tasks, the TE is the main feature extractor.
+
+If one wanted to condition the update of one set on another, they could include a multi-headed cross attention operation in the block.
+This is the original implementation of the transformer decoder (TD)~\citetemp{AttentionIsAllYouNeed}.
+The update is written as,
+\begin{equation}
+\begin{aligned}
+    \mathbf{X}_r & \leftarrow \mathbf{X}_r + \text{MHSA}(L(\mathbf{X}_r)), \\
+    \mathbf{X}_r & \leftarrow \mathbf{X}_r + \text{MHA}(L(\mathbf{X}_r), \mathbf{X}_s), \\
+    \mathbf{X}_r & \leftarrow \mathbf{X}_r + \text{FFN}(L(\mathbf{X_r})).
+\end{aligned}
+\end{equation}
+The transformer encoder and decoder are often combined to form a set to set transformation that first extracts features from the input set, and the conditions the output set on these features.
+This set-to-set transformation is the basis of many generative of sequence-to-sequence models.
+
+\subsection{Edge Attributes, Biases, and Sequences}
+
+When one views the transformer as a simple GNN, the inclusion of edge information become natural.
+For message passing on a single graph, when not represented sparsely, the edge information is stored in an $\mathbf{E} \in \mathbb{R}^{N \times N \times d_e}$ tensor.
+In the self attention operation in \cref{eq:attention}, the attention matrix defined by,
+\begin{equation}
+    \mathbf{A} = \text{softmax}\left( \frac{\mathbf{Q} \mathbf{K}^T}{d_k} + \mathbf{B} \right),
+\end{equation}
+which has the shape $(N, N)$.
+When extending this operation to multi-headed attention it gains an extra dimension $(N, N, H)$ matching the required shape of the edge tensor, in fact it is the only valid candidate within the entire operation.
+The query and key tensors $\mathbf{Q}$ and $\mathbf{K}$ stem from projections of the input, but $\mathbf{B}$ must have shape which is at least broadcastable to $(N, N, H)$.
+Thus edge information can be included in a transformer through the bias term in the attention operation.
+This is used in various cases.
+
+The most common use of the bias tensor is to set it manually to negative infinity for certain pairs of nodes and for all heads.
+This forces the attention weight to be zero, after the softmax operation, killing the weight of the message entirely.
+This enables the transformer to run on graphs which are not fully connected.
+It is also one of the main mechanisms for adapting the transformer to work on sequences, where the nodes are presented in a specific order.
+By making the bias matrix a lower triangular matrix with above diagonal entries set to negative infinity, each node can only receive messages from those preceding it.
+This is also called a causal mask, and is used extensively generative models as it lends itself to autoregressive sampling.
+One of the main reasons why the transformer is so successful compared to other sequence models such as an RNN is that a causal attention mask allows it to parallelize training for each element in the sequence with a single forward pass.
+During generation of course the model must be run sequentially, but this is a small price to pay for the increase in training speed.
+Many sequence generating models are called decoder only, however in the presented framework, these models are transformer encoders with a causal mask.
+
+While can be shown that a causal mask is enough enable the transformer able to run on sequence data, it is often paired with positional encoding.
+Absolute positional encoding (APE) adds to the node attributes knowledge of their position within the sequence.
+A unique tensor $\mathbf{p}_i \in \mathbb{R}^{d_x}$ is constructed for each posible observed position $i$ and is added to the node attributes before the first transformer block, $\mathbf{x}_i \leftarrow \mathbf{x}_i + \mathbf{p}_i$.
+The original transformer used fixed sinusoidal functions of different frequencies to encode the position, but more recent models allow $\mathbf{p}_i$ to be fully learnable~\citetemp{GPT}.
+PE is also used for images in, often called spatial encoding, where the 2D coordinates of a patch are individually encoded and added to the patch representation.
+
+APE is not effective for allowing the model to capture the relative position of the elements in the sequence, and for this we turn to relative positional encoding (RPE)~\citetemp{RPE}.
+RPE is used to bias the attention matrix and can thus be thought of as a form of edge information.
+As with all transformer features, there are many approaches to RPE.
+One such method to parameterise $B$ as a Toeplitz matrix, where the elements of the matrix are learnable~\citetemp{RPE}.
+ALiBi~\citetemp{ALiBi} fixes the elements of this matrix to be simply $B_{ij} = m\times(i - j)$, for a fixed per-head scalar $m$.
+Rotary Positional Encoding is a form of RPE where the query and key tensors are rotated by a fixed amount before the attention operation~\citetemp{RotaryPE}.
+
+Other than positional encoding, transformers can incorporate edge information that are not dependant on order.
+The Particle Transformer (PartT)~\citetemp{PartT} uses a transformer encoder to embed a set of particles, defined by their kinematics.
+For each pair of particles, specific edge features are constructed using Lund Plane variables~\citetemp{LundPlane}.
+The model uses an MLP to embed these edge features into a tensor of shape $(N, N, H)$, which becomes the attention bias in each of the TE-Blocks.
+
+\subsection{Global Attributes}
+
+Global attributes are common features in graphs, and are often used to condition the main node update or are used as outputs of the model.
+Global attributes in a GNN are often updated via pooling information across all nodes in the graph $ \mathbf{u} = \rho^{v \to u}(\mathbf{X})$.
+This is done in the transformer by simply summing the node attributes.
+However, keeping with the theme, the cross-attention mechanism provides a pooling operation that is more expressive, even when the cardinality of the receiving set is one.
+This is often called class attention~\citetemp{GoingDeeper}, and in many vision transformer models in order to classify the image as a whole.
+The class attention operation can be described as,
+\begin{equation}
+    \mathbf{U} \leftarrow \mathbf{U} + \text{MHA}(\mathbf{U}, \mathbf{X}),
+\end{equation}
+where the initial embeddings of the global attributes are learnable.
+This process can also be repeated to perform multiple rounds of pooling.
+
+An alternative method relies on the fact that since most transformers act on fully connected graphs, information is not localized.
+Therefore, one can simply append a new global toke (often called a class token) to the set which is updated in the same way as the other nodes~\citetemp{VisionTransformers}.
+Then to classify the set, class token is read off from the final layer of node attributes.
+Recent work on vision transformers have shown that using multiple global tokens in this way, called registers~\citetemp{Registers}, can improve the performance of the model.
+Registers can even be ignored from the model outputs, which means that they provide the model with a temporary memory that can be used to store global information.
+This is because it was observed that the models had a tendency to overwrite patches with low local information content.
+
+
+
+
+One can use global attributes or extra conditional information to augment the message passing step.
+If the global attributes are
+
+
+
+This is commonly seen in diffusion models where TE-Blocks must incoroprate time information, expressed as an encoded vector.
+This can be done by concatenating the $mathbf{u}$ vector to all node attributes during the MHA step~citetemp{DiffT} or the MLP step~citetemp{PCJedi}.
+However the most effective way has been to combine adaptive normalization and residual gating mechanisms~citetemp{DiT}.
+Here the global attribute
+
+
+
 
 \chapter{Flavour Tagging with Transformers}
 
