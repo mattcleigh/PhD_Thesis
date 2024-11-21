@@ -1,17 +1,22 @@
-In recent years, machine learning (ML) has become a powerful tool if the field of HEP.
+Machine learning (ML) has become a powerful tool in HEP in recent years.
+ML has also been evolving rapidly, with new algorithms and techniques being developed at a breakneck pace.
+The observed performance gain in many algorithms and operations used in particle physics that have adopted ML has been well documented and hard to ignore.
+One of the most successful stories has been using deep learning for flavor tagging, identifying the flavor of quark that initiated a jet in the ATLAS experiment at the LHC.
+However, the field of HEP has unique challenges for ML adoption, such as the requirement for explainability and robustness.
+This chapter introduces relevant concepts required to understand the latest developments in the models used in flavor tagging at ATLAS: the description of deep learning, the motivation of graph neural networks, and the implementation of a transformer model.
 
 \chapter{Deep Learning Basics}
 
 Deep learning is the subset of machine learning that focuses on the development and training of artificial neural networks.
 These neural networks take the form of a series of composable, parameterized, and differentiable transformations that map input data to output data.
-Training or optimization of the network is done by modifying the parameters of each transformation.
-This is typically performed using gradient-based algorithms to minimize a loss metric evaluated over a dataset called the training set.
-The exact form of how the loss is calculated differentiates the various types of learning, such as supervised, unsupervised, reinforcement, self-supervised, etc\footnote{There is often overlap between these categories}.
+Training or optimization of the network is done by modifying the parameters of each transformation to minimize some error metric over a dataset.
+This is typically performed using gradient-based algorithms.
+The exact form of how the loss is calculated differentiates the various types of learning, such as supervised, unsupervised, self-supervised, reinforcement, etc\footnote{There is often overlap between these categories}.
 
 Initially, artificial neural networks were inspired by the structure of the brain, with many layers of interconnected artificial neurons processing information and sending signals to each other.
 While individual neurons are simple, the emergent behaviour of the network can be complex.
 As the field has evolved, the initial biological inspiration of neural networks has given way to more abstract, mathematical descriptions.
-Today, network design today is driven by inductive biases, computational efficiency, observations in training dynamics, and (above all) empirical results.
+Today, network design is driven by inductive biases, computational efficiency, observations in training dynamics, and (above all) empirical results.
 From this more practical perspective, an artificial neural network is long computational graph composed of differentiable operations arranged in layers that transform between collections of real-valued tensors.
 The ``depth'' of a deep learning model refers to the number of layers used in the network.
 
@@ -19,34 +24,56 @@ The primary distinction between deep learning and other parameterized curve fitt
 Modern networks now contain billions of parameters, requiring large datasets, specialized hardware, and sophisticated optimization algorithms to train effectively.
 As the networks have grown in size and complexity, model interpretability has become a significant challenge and an active area of research.
 
-The above definition is intentionally broad, as it encompasses an entire field of research that has grown rapidly in the last decade.
-More detailed descriptions will come by way of examples in the following sections.
-
 \section{Supervised Learning}
 
-Supervised Learning is often introduced first in a pedagogical setting, as it is the simplest and most intuitive form of machine learning. While it is not limited to deep learning, it is introduced here within the context of DL as it is arguably the most common form of training for deep models. Indeed, many other training frameworks in deep learning, such as reinforcement learning and unsupervised learning, can be reframed as supervised problems.
+Supervised Learning is often introduced first in a pedagogical setting, as it is the simplest and most intuitive form of machine learning. While it is not limited to deep learning, it is introduced here within its context as it is arguably the most common form of training for deep models. Indeed, many other training frameworks, such as reinforcement learning, are reframed as supervised problems to facilitate training.
 
-In supervised learning, a single data sample is a coupling of two variables, $s = (x, y)$, where $s \sim p(X, Y)$ is drawn from unknown joint distribution.
-Here $X$ is a given observable and $Y$ is the target variable.
+In supervised learning, a single data sample is a coupling of two variables, $(x, y) \sim p(X, Y)$ is drawn from unknown joint distribution.
+Here $x$ is a given observable and $y$ is the target variable.
 The goal of supervised learning is to produce a discriminative model which approximates the conditional probability distribution of the target given an observation $f(x) \approx p(Y|X=x)$.
 Discriminative models which permit sampling from this distribution can also be considered generative models, which are covered in \Cref{sec:generative}.
 Alternatively, discriminative models can be non-probabilistic, where they simply attempt to create a mapping from inputs to outputs, $f: X \mapsto Y$.
 
 Supervised learning typically requires a training set $\mathcal{D}$ containing of $N$ observations and their paired targets $\mathcal{D} = \{(x_i, y_i)\}_{i=1}^N$.
 These samples are usually assumed to be independent and identically distributed (i.i.d.) from the joint distribution $p(X, Y)$\footnote{Non i.i.d. data can sometimes be used by incorporating the appropriate weights during training}.
-A supervised learning algorithm $f$, probabilistic or not, is selected out of some hypothesis space $\mathcal{H}$ to minimize some cost function $L(Y \times Y) \mapsto \mathbb{R}$, which is typically a measure of empirical risk over the training set.
+A supervised learning algorithm $f$, probabilistic or not, is selected out of some hypothesis space $\mathcal{H}$ to minimize some cost function $\mathcal{R}(Y \times Y) \mapsto \mathbb{R}$, which is typically a measure of empirical risk over the training set.
 \begin{equation}
-    f = \argmin_{f \in \mathcal{H}} \frac{1}{N} \sum_{i=1}^N \mathcal{L}(\hat{y}_i = f(x_i), y_i).
+    f = \argmin_{f \in \mathcal{H}} \frac{1}{N} \sum_{i=1}^N \mathcal{R}(\hat{y}_i = f(x_i), y_i).
 \end{equation}
 
 For now, we make no assumptions about the structure of the input or output samples except that they can be represented as tensors, or collections of tensors, of real numbers.
-Common types of supervised algorithms $f$ including support vector machines, decision trees, and neural networks.
+Common types of supervised algorithms $f$ including support vector machines, decision trees, and of course neural networks.
 For a neural network $f_{\theta}$, the hypothesis space $\mathcal{H}$ is the set of all possible network architectures and network parameter values $\theta$.
 
-\section{The Multi-Layer Perceptron}
+\section{Network Design}
 
-The Multi-Layer Perceptron (MLP) is the simplest form of a deep neural network.
-It is also referred to as a dense network, fully connected network, or sometimes confusingly as a feed-forward neural network (which is usually used to describe any network without loops in the computational graph).
+A single network layer is any function with parameters $\theta$ that can takes in a set of input tensors and returns a set of output tensors (it could be a set of size one).
+There are very few limits on what exactly this function can be, but there are some core design principles ML engineers have to rely on when designing a network to solve a specific task.
+These principles are called inductive biases~\cite{InductiveBiases1, InductiveBiases2}, and they are the assumptions made which allow a learning algorithm to favour one solution over another.
+There exists a large zoo of possible network layers, each with their own inductive biases.
+The ML engineer must select, mix, and match these layers to create a network best suited to the task at hand.
+
+One common guide is that the model should be well suited for the type of data it operates on and as in as in physics, symmetries are a good principle to follow.
+Many layers are designed with equivariance or invariance in mind.
+Convolutional layers are well suited for image or otherwise grid-like data as they are somewhat equivariant to translations.
+Message passing networks work well for graph data as they are equivariant to the permutation of the nodes.
+There exist many other layers designed to be equivariant to specific transformations on their inputs.
+For example LorentzNet~\cite{LorentzNet} operates on particle physics data and is designed to be equivariant to rotations or shifts in reference frame.
+Another rough philosophy is that individual layers should be simple, and easy to implement, as it is their composition and overparameterization that gives the model its expressive power.
+
+Inductive biases do not have to be explicitly defined.
+For example, fitting a linear regression model to data assumes explicitly that the relationship between the input and output is linear.
+Doing so using the least-squares loss function implicitly assumes that the linear relationship is corrupted by Gaussian noise with constant variance.
+For deep learning, examples of inductive biases include the choice of loss function, regularization, the optimization algorithm, and even the model architecture itself.
+Weight decay can be seen as an inductive bias towards simpler models, as prioritizes solutions with small parameters.
+Ideal inductive biases should improve the performance of the model primarily by aiding the optimization process.
+However, too restrictive biases can limit model performance by excluding valid solutions.
+Inductive biases can also be understood in terms of the bias-variance trade-off, where flexibility is traded for generalization.
+
+\subsection{The Multi-Layer Perceptron}
+
+The Multi-Layer Perceptron (MLP) is arguably the simplest form of a deep neural network.
+It is also referred to as a dense network, fully connected network, or sometimes confusingly as a feed-forward neural network (FFN)\footnote{Which is usually used to describe any network without loops in the computational graph.}
 In an MLP, there is a single input and output, both of which are rank-1 tensors but can have differing numbers of features.
 A minimal working example of an MLP is a series of affine transformations\footnote{Often called a linear layer, but the operation almost always includes a bias term.}, each parameterized by a weight matrix $W$ and bias vector $\mathbf{b}$, followed by a non-linear activation function $\sigma$.
 The depth of the MLP is the number of intermediate representations in the computational graph between the input and output.
@@ -57,18 +84,17 @@ A minimal MLP with two hidden layers can be written as
     \mathbf{a}_2 &= \sigma_1(W_1 \mathbf{a}_1 + \mathbf{b}_1), \\
     \mathbf{a}_3 = \mathbf{\hat{y}} &= \sigma_2(W_2 \mathbf{a}_2 + \mathbf{b}_2),
 \end{align}
-where $\mathbf{x}$ is the input, $\mathbf{y}$ is the output, and $\mathbf{a}_i$ are the intermediate representations (or activations) of the network.
+where $\mathbf{x}$ is the input, $\mathbf{\hat{y}}$ is the output, and $\mathbf{a}_i$ are the intermediate representations (or activations) of the network.
 The parameters of this network are is the full set of weights and biases from each layer, $\theta = \{W_0, \mathbf{b}_0, W_1, \mathbf{b}_1, W_2, \mathbf{b}_2\}$.
 
 Activation functions exist to introduce non-linearities in the computational graph and are applied element-wise to the tensors.
-As the composition of affine transformations is itself an affine transformation, not matter the depth of the MLP, it could be reparameterized as a single affine transformation, greatly hindering its expressive power.
-With induced non-linearities, MLPs can be shown to be universal function approximators, given enough hidden units and the right activation functions, and this feature is the primary reason for their success in deep learning.
-Practically, the expressivity of an MLP is limited by the depth of the network and size of each intermediate representation.
+As the composition of affine transformations is itself an affine transformation, without activation functions, the entire MLP could be reparameterized as a single affine transformation, no matter its depth, greatly hindering its expressive power.
+With these induced non-linearities, MLPs can approximate any continuous function~\cite{ApproximationSuperpositionsSigmoidal, ApproximatingContinuousFunctions, UniversalApproximationDeep}, given enough hidden units and the right activation functions.
 
-The activation function in the output layer is typically chosen to match the expected range of $\mathbf{y}$.
+The activation function in the output layer is typically chosen to match the expected range of the target variable.
 Historically, the sigmoid function was used as the primary activation in the hidden layers, due to its analogy with biological activation.
-However, it can be shown that even the simplest function that breaks linearity is sufficient for universal approximation, and the ReLU function $\sigma(x) = \max(0, x)$ has become the most popular choice for hidden layers in modern networks.
-Common choices for hidden layer activations are shown in \Cref{fig:activations}.
+However, it can be shown that even the simplest function that breaks linearity is sufficient, and the ReLU~\cite{ReLU} function $\text{ReLU}(x) = \max(0, x)$ has become the popular choice for hidden layers in modern networks.
+Other common choices for hidden layer activations are shown in \Cref{fig:activations}.
 
 \begin{figure}
     \centering
@@ -79,19 +105,135 @@ Common choices for hidden layer activations are shown in \Cref{fig:activations}.
 
 \section{Training with Gradient Descent}
 
-The most common method for training deep neural networks is stochastic gradient descent (SGD) or one of its many variants.
+Training a deep neural network is an optimization problem where the best parameters $\theta^*$ of the network are those that minimize the combined loss $\mathcal{L}$ over the training set $\mathcal{D}$.
+\begin{equation}
+    \theta^* = \argmin_{\theta} \frac{1}{N} \sum_{i=1}^N \mathcal{L}(\theta, x_i).
+\end{equation}
+Here the loss function includes some empirical risk calculation and the sample $x \in \mathcal{D}$ is used as shorthand to denote the full sample from the training set, including the target if present.
+Due to the size of the parameter space and the non-linearity of the model, the $\theta^*$ can not be found analytically.
+The most common method for training deep neural networks is mini-batch stochastic gradient descent (SGD) or one of its many variants~\cite{Perceptron}.
 SGD is an iterative optimization algorithm that attempts to minimize a loss function by adjusting the parameters of the model in the direction of the negative gradient of the loss.
-The loss function is typically a measure of the discrepancy between the model's prediction and the desired outputs, and the gradient of the loss is calculated with respect to the model parameters.
+The training set is partitioned into batches of size $B$ which are iterated through.
+At each iteration, the loss for the batch is calculated, and the parameters are updated using gradient descent with some learning rate $\eta$,
+\begin{equation}
+    \theta \leftarrow \theta - \eta \nabla_{\theta} \frac{1}{B} \sum_{i=1}^B \mathcal{L}(\theta, x_i).
+\end{equation}
+Both the $B$ and the $\eta$ are hyperparameters of the training algorithm.
+Once the entire training set has been processed, this is considered one epoch.
+Training continues until some stopping criterion is met, such as a saturation of the loss.
+Typically, models are trained for many epochs and the training set is shuffled between each epoch to prevent correlated updates which may hinder convergence.
+Ideally we would have $B=N$, this is called batch gradient descent.
+However, this is often infeasible due to memory constraints.
+So instead we use a noisy estimate of the gradient, by using a subset of the training set.
+True SGD uses a batch size of $B=1$.
+
+The learning rate is a crucial hyperparameter of the training algorithm, however it is common to modify it during training.
+Many large networks require a warm-up phase~\cite{SGDRStochasticGradient} where the learning rate is slowly increased from zero to its maximal.
+Without this step, large models like transformers are prone to diverging early in training.
+The learning rate is also decayed towards the end of training helping the network converge to a local minimum, avoiding oscillation improving the learning of complex patterns~\cite{HowDoesLearning}.
+Often these phases are repeated~\cite{CyclicalLearningRates} or performed once~\cite{SuperConvergenceVeryFast}, ending the training after the first cycle.
+
+There exist many extensions to this basic algorithm that attempt to improve robustness and convergence.
+One common method is the accumulation of a moving average of the gradients, analogous to momentum in physics~\cite{Momentum}.
+This assists in traversing regions of the parameter space where curvature is higher in one direction than another.
+Another common method is the use of adaptive learning rates, where the per parameter learning rate is adjusted based on the fluctuations in the gradient~\cite{Adagrad, RMSProp}.
+\Cref{alg:adam} shows the update rule for one of the most common variants, the Adam optimizer~\cite{Adam}, which combines both momentum and adaptive learning rates.
+It introduces two hyperparameters $\beta_1$ and $\beta_2$ which control the exponential decay rates of the moving averages.
+
+\begin{algorithm}
+\caption{The Adam optimizer, where $\mathcal{L}_B(\theta)$ is the loss calculated over a mini-batch, $\eta$, $\beta_1$, $\beta_2$ are hyperparameters, $t$ is the current iteration and $\epsilon$ is a small constant to prevent division by zero.}
+\label{alg:adam}
+\begin{algorithmic}[1]
+\State $\mathbf{m} \gets 0$ \Comment{Initialize first moment vector}
+\State $\mathbf{s} \gets 0$ \Comment{Initialize second moment vector}
+\For{each mini-batch}
+    \State $\mathbf{g} \gets \nabla \mathcal{L}_B(\theta)$ \Comment{Compute gradients}
+    \State $\mathbf{m} \gets \beta_1 \mathbf{m} + (1 - \beta_1) \mathbf{g}$ \Comment{Update biased first moment estimate}
+    \State $\mathbf{s} \gets \beta_2 \mathbf{s} + (1 - \beta_2) \mathbf{g} \otimes \mathbf{g}$ \Comment{Update biased second moment estimate}
+    \State $\hat{\mathbf{m}} \gets \frac{\mathbf{m}}{1 - \beta_1^t}$ \Comment{Correct bias in first moment}
+    \State $\hat{\mathbf{s}} \gets \frac{\mathbf{s}}{1 - \beta_2^t}$ \Comment{Correct bias in second moment}
+    \State $\theta \gets \theta - \eta \frac{\hat{\mathbf{m}}}{\sqrt{\hat{\mathbf{s}} + \epsilon}}$ \Comment{Update parameters}
+\EndFor
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Normalization}
 
-\subsection{Biases}
+Training via gradient descent requires the gradient with respect to every parameter in the model.
+This leads to a balancing problem with the vanishing and exploding gradient problems manifesting as the gradients become too small or too large to be useful for training.
+This is especially problematic in deep networks, where the gradients must be propagated through many layers, requiring the repeated application of the chain rule.
+As the gradients are linked to the scale of the intermediate tensor representations in each layer, it is good practice to ensure that these are roughly the same scale.
+It is common to target activations with a mean of zero and a standard deviation of one by including normalization layers.
 
-\subsection{Regularization}
+Another reason for this is that most activation non-linearities are near zero, \Cref{fig:activations}.
+Oversaturating these functions ensure that the layer becomes linear, and the network expressivity decreases.
 
-\subsection{Optimization}
+Normalization starts with the input data, which is often normalized in a preprocessing step and typically is performed using the statistics of the training set.
+Variables with long tails are typically transformed to have a more Gaussian distribution, such as by taking the logarithm.
+Within the network itself, normalization layers $L_{\text{scale}}$ are used to ensure that the activations of each layer have a mean of zero and a standard deviation of one.
+Methods such as batch normalization~\cite{BatchNorm} or layer normalization~\cite{LayerNorm} are widely used and both have been shown to be greatly effective, with LayerNorm seen as essential for transformer neural networks~\cite{AttentionIsAllYouNeed}.
 
-\subsection{Learning Rate Scheduling}
+Another crucial feature to stabilise the gradients is to manually clip them before applying the update.
+This can be done based on some maximal value, but is more commonly done by scaling the gradient such that their combined norm does not exceed some threshold~\cite{WhyGradientClipping}.
+
+\subsection{Residual Connections}
+
+Residual connections are another simple and effective technique for training deep networks.
+Here the learnable transformation of the layer is added to the input, rather than replacing it,
+\begin{equation}
+    \mathbf{a}_{i+1} = \mathbf{a}_i + f(\mathbf{a}_i),
+\end{equation}
+where $f$ is the transformation of the layer.
+A single operation of this form is called a residual block.
+Residual connections have been shown to improve the training of very deep networks, as they allow the gradient to flow directly through the network, bypassing the squashing or exploding of the gradient in the intermediate layers.
+Residual connections are a key component of almost all moder arcitectures from convolutional neural networks~\cite{ResNet} to transformers~\cite{Attention}.
+The residual connection is usually additive, but other operations exist, for example UNets~\cite{UNet} use concatenation.
+If the input and output of the layer have different dimensions, the residual path is adjusted by a minimal transformation, in a convolutional network this is typically a $1 \times 1$ convolution.
+
+The addition of two signal paths can lead to a doubling of variance.
+This can cause the network to become unstable, especially in the early stages of training.
+One method to circumvent this is the inclusion of a normalization layer after the residual block, as was done in the original transformer architecture~\cite{Attention}, and is referred to as post-normalisation.
+However, this was shown to be detrimental to very deep networks and recent methods use pre-normalisation~\cite{PreLN} (PreNorm), where the input to the learnable layer is normalized.
+With a PreNorm residual block one can prevent an exploding variance by scaling the residual path by a small constant, such as $\frac{1}{\sqrt{2}}$~\cite{StyleGAN2}.
+Recent methods allow this constant to be trainable with some set it to zero at the beginning of training such that the block behaves like an identity function~\cite{ReZero, SkipInit, Fixup}.
+This was extended to the LayerScale method~\cite{GoingDeeper}, where a full learnable tensor $\mathbf{L}_s$ matching the output shape of the layer is used to scale the residual path.
+It too is initialised to zero, and the network is trained to learn the optimal scaling.
+A PreNorm residual block with LayerScale follows,
+\begin{equation}
+    \mathbf{a}_{i+1} = \mathbf{a}_i + \mathbf{L}_\text{scale} \otimes f( L_{\text{norm}}(\mathbf{a}_i) ),
+\end{equation}
+and such a large models like transformers.
+
+\section{Generalization}
+
+Generalizaion in the context of ML refers to the ability of a model to perform well on new, unseen data.
+This is in most cases the primary goal of training such a model.
+As neural networks are highly flexible, it is possible that they can ``memorize'' the training set, achieving a very low loss but failing to generalize to new data.
+This phenomenon is called overfitting, and it is a common problem in deep learning.
+
+Detecting overfitting can be done through cross-validation, where the model is trained on a subset of the training data and tested on the rest.
+The most simple case of this is to split the available data into a training set and a validation set.
+Gradient descent is performed on the training set, but the loss is also calculated over the validation set at regular intervals.
+The difference in performance between the training and validation set is a good indicator of overfitting.
+Often the model chosen for future applications is the one that performs best on the validation set.
+
+Regularization methods like weight decay, dropout, and drop-path are effective in reducing overfitting by penalizing complex models.
+Weight decay places a penalty on the size of the parameters in the network, pushing it towards simpler solutions.
+Dropout is a technique where a random subset of the activations in the network are set to zero during training, effectively training an ensemble of models.
+Another interpretation is that droupout simply injects
+Drop path and stochastic depth is an extension of dropout where entire layers are removed from the network during training.
+Data augmentation can also help by artificially expanding the training dataset.
+Confusingly, increasing the size of the network can also help prevent overfitting.
+This is known as the double descent phenomenon~\cite{UnderstandingDoubleDescent}, whereas the effective model capacity grows, more solutions become accessible, and the model becomes a self ensemble.
+
+Domain shift similar to overfitting, but occurs when the distribution of the training data differs from the distribution of the test data.
+This is a significant issue in fields HEP, where models are trained on simulated samples, in order to have access to ground truth labels, but must be applied to real data.
+Domain adaptation and adversarial training are methods to address this.
+
+Finally, unwanted biases in the training set can lead to skewed predictions.
+The distribution of the target variable acts as a prior for the model, and if this distribution is not representative of the population, the model will make biased predictions.
+Reweighting or resampling the training set can help mitigate this.
+
 
 \chapter{Graph Neural Networks}
 
@@ -103,25 +245,6 @@ This reductionist approach is used by much of the scientific community, and inde
 Graphs are an example of explicitly structured data containing entities and pairwise relations between them.
 Relational reasoning is the development of rules or functions that describe how the properties of entities modify the relations between them, and how the relations modify the properties of the entities.
 GNNs are a class of deep learning models that operate on graph-structured data and employ relational reasoning complete tasks by directly manipulating the rules, entities, and relations of a system.
-
-% \section{Inductive Biases For Graphs}
-
-% The term inductive bias refers to the set of assumptions made about some task that allows a learning algorithm to favour one solution over another.
-% It is the set of assumptions about the nature of the function to be learned which allows a restriction of the hypothesis space, before any data is seen.
-% In practice, inductive biases typically involve the smart decisions made by a model designer which make the learning problem easier or guide the process to target a specific class of solutions.
-% \todo{Cite inductive bias}
-
-% Inductive biases do not have to be explicitly defined.
-% For example, fitting a linear regression model to data assumes explicitly that the relationship between the input and output is linear.
-% Doing so using the least-squares loss function implicitly assumes that the linear relationship is corrupted by Gaussian noise with constant variance.
-% For deep learning, examples of inductive biases include the choice of loss function, regularization, the optimization algorithm, and even the model architecture itself.
-% Weight decay can be seen as an inductive bias towards simpler models, as prioritizes solutions with small parameters.
-
-% Ideal inductive biases should improve the performance of the model primarily by aiding the optimization process.
-% However, too restrictive biases can limit model performance by excluding valid solutions.
-% Inductive biases can also be understood in terms of the bias-variance trade-off, where flexibility is traded for generalization.
-
-% \subsection{Relational Reasoning}
 
 An example of successful relational reasoning being used in deep learning outside GNNs is in image processing tasks.
 An image is typically represented as a tensor of shape $(H, W, C)$, where $H$ is the height, $W$ is the width, and $C$ is the number color channels, using the pixel values as the tensor elements.
@@ -235,7 +358,9 @@ A patched image may not have any edge attributes at all, alternatively, translat
 \subsection{Interconnectivity}
 
 When constructing a graph representation of a data sample, it is crucial to consider its interconnectivity.
-While locality is often a useful inductive bias, limiting the connections means that long term dependencies may get diluted.
+The interconnectivity of the graph is closely tied to two key issues in grpah neural networks: the over-squashing problem and the over-smoothing problem.
+
+While locality is often a useful inductive bias, limiting the connections of each node to its local neighbourhood, it can also mean that long term dependencies may get lost.
 This is because multiple rounds of message passing are required to propagate information between distant nodes as shown in \Cref{fig:neighbours}.
 On each node is the number of message passing steps required to propagate information to the node $\mathbf{x}_i$.
 With each round, exponentially more neighbouring nodes need to project information into a fixed-size vectors.
@@ -243,27 +368,36 @@ This phenomenon is known as the over-squashing problem, and is exacerbated by bo
 
 There are many proposed solutions to the over-squashing problem.
 The inclusion of global features in the graph may help model long range dependencies, however the size of the global feature would need to scale with the cardinality of the set.
+
 One solution is to increase the number of edges in the graph, allowing for more direct paths between nodes.
-This procedure can be focussed around bottlenecks int he graph, identified by regions of low Forman curvature~\citetemp{Bottlenecks}.
+This procedure can be focussed around bottlenecks in the graph, identified by regions of low Forman curvature~\citetemp{Bottlenecks}.
 The extreme case of this is a fully connected graph, where edges exist between all pairs of nodes in both directions.
-Presenting the data as a fully connected graph allows the model to choose for itself which interactions are important, especially when equipped with an attention mechanism~\citetemp{AttentionIsAllYouNeed}.
-However, this can be computationally prohibitive when the cardinality of the set is large, as the number of edges grows quadratically.
-Furthermore, this would also mean sacrificing the relational inductive bias of locality.
-For some cases this is still useful, for example the most successful models on images use fully connected graphs~\citetemp{VisionTransformers}.
+Presenting the data as a fully connected graph allows the model to choose for itself which interactions are important, which it can do if equipped with an attention mechanism~\citetemp{AttentionIsAllYouNeed}.
+Attention refers to the process of weighting the incoming messages based before aggregation.
+It allows the node to ``pay more attention'' to certain neighbours.
+This introduces more expressivity into the model by distinguishing the layers for deciding the content of a message and the layers for deciding its importance.
+
+Using a fully connected graph like this would mean sacrificing the relational inductive bias of locality.
+Counterintuitively, this can be beneficial in many cases, for example the most successful models on images use fully connected graphs~\citetemp{VisionTransformers} despite dropping the locality inductive bias of the convolutional kernel.
 This is because the locality in images is not always useful, for example if an object in the image is obscured and only partially visible physically separated patches.
-Many models are looking to find a balance, and minimise the interconnectivity of the graph while preserving model quality~\citetemp{SparseAttention}.
-
-Increasing the connectivity of the graph can also be applied in instances where the physical graph is not fully connected.
 In the example of the chemical compound in \Cref{fig:chemical}, the edges are defined by the chemical bonds between the atoms.
-However, long range dependencies may exist.
-For example, the function of one part of a protein may be altered by the presence of a ligand on the other side of the molecule.
-However, a fully connected graph may discount the actual chemical bonds.
-One solution to this is to build a multigraph to represent close or long range interactions.
-However, a large enough edge dimension, with attributes for the type of interaction, and an expressive enough update function may suffice.
+However, long range dependencies do exist in chemistry.
+The function of one part of a protein may be altered by the presence of a ligand on the other side of the molecule.
+Constraining the graph on which the messages are passed to the physical structure of the data may limit the model from learning these relationships.
 
-This also does raise whether the computational graph and the input data structure should be tied together at all.
+This highlights a conflict between designing a model strong or minimal inductive biases and whether the computational graph and the input data structure should be tied together at all.
+Models such as the perceiver~\citetemp{Perceiver} project input information onto a completly different latent graph and run the message passing on that.
 Recent work in vision transformers have shown that the addition of extra, fully learnable nodes to the graph can improve performance~\citetemp{Registers}.
-Models which fully separate the input graph and the computational graph used for message passing include the perceiver~\citetemp{Perceiver}.
+
+However, there are some downsides to simply increasing the connectivity of the graph.
+First, this can be computationally prohibitive when the cardinality of the set is large, as the number of edges grows quadratically.
+Many models are looking to find way to minimize the interconnectivity of the graph while preserving model quality~\citetemp{SparseAttention}.
+Second, it exacerbates the other problem plaguing GNNs, the over-smoothing problem.
+Over-smoothing refers to the phenomenon where the nodes in the graph become homogenous, containing the same information, after many rounds of message passing.
+This is because with each round of message passing, the information from the neighbouring nodes is averaged, and the information from the original node is diluted.
+This one of the reasons that the depth of most GNNs is notably shallower than other deep learning models.
+There are many proposed solutions to this issue, such as residual connections and normalization layers.
+Attention is also a viable method to combat over-smoothing.
 
 \begin{figure}
     \centering
@@ -360,17 +494,26 @@ The specifics of these functions mean that there are many GNN variants.
 
 A full GN-Block is shown in \Cref{fig:full_gn_block}.
 A basic implementation, where all graph attributes are tensors, can be done using MLPs for each of the update functions, and summation for the aggregation functions.
-This creates the following update equations,
-\newcommand{\tall}{\vphantom{\sum_{k: r_k = i}}}
-\begin{equation} \label{eq:gn_update}
-    \begin{aligned}
-        \tall \mathbf{e}_k' &= \text{MLP}_e([\mathbf{e}_k, \mathbf{x}_{s_k}, \mathbf{x}_{r_k}, \mathbf{u}]) &&\rightarrow \text{update edge features}, \\
-        \tall \mathbf{\bar{e}}_i &= \sum_{k: r_k = i} \mathbf{e}_k' &&\rightarrow \text{aggregate incoming information per node}, \\
-        \tall \mathbf{x}_i' &= \text{MLP}_v([\mathbf{\bar{e}}_i, \mathbf{x}_i, \mathbf{u}]) &&\rightarrow \text{update node features}, \\
-        \tall \mathbf{\bar{e}} &= \sum_{k} \mathbf{e}_k', \quad \mathbf{\bar{v}} = \sum_{i} \mathbf{x}_i' &&\rightarrow \text{aggregate features across the graph}, \\
-        \tall \mathbf{u}' &= \text{MLP}_u([\mathbf{\bar{e}}, \mathbf{\bar{v}}, \mathbf{u}]) &&\rightarrow \text{update global features},
-    \end{aligned}
-\end{equation}
+This creates the following update shown in \Cref{alg:gn_block}.
+
+\begin{algorithm}
+    \caption{Basic GN-Block using MLPs}
+    \label{alg:gn_block}
+    \begin{algorithmic}[1]
+        \State \textbf{Input:} Graph attributes $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \mathbf{u})$
+        \State \textbf{Output:} Updated graph attributes $\mathcal{G}' = (\mathcal{N}', \mathcal{E}', \mathbf{u}')$
+        \For{each edge $\mathbf{e}_k$ in $\mathcal{E}$}
+            \State $\mathbf{e}_k' \gets \text{MLP}_e([\mathbf{e}_k, \mathbf{x}_{s_k}, \mathbf{x}_{r_k}, \mathbf{u}])$ \Comment{update edge features}
+        \EndFor
+        \For{each node $\mathbf{x}_i$ in $\mathcal{N}$}
+            \State $\mathbf{\bar{e}}_i \gets \sum_{k: r_k = i} \mathbf{e}_k'$ \Comment{aggregate incoming information per node}
+            \State $\mathbf{x}_i' \gets \text{MLP}_v([\mathbf{\bar{e}}_i, \mathbf{x}_i, \mathbf{u}])$ \Comment{update node features}
+        \EndFor
+        \State $\mathbf{\bar{v}} \gets \sum_{i} \mathbf{x}_i'$ \Comment{aggregate features across the graph}
+        \State $\mathbf{\bar{e}} \gets \sum_{k} \mathbf{e}_k'$
+        \State $\mathbf{u}' \gets \text{MLP}_u([\mathbf{\bar{e}}, \mathbf{\bar{v}}, \mathbf{u}])$ \Comment{update global features}
+    \end{algorithmic}
+\end{algorithm}
 
 where the square brackets denote tensor concatenation.
 This provides a simple model that can be trained end-to-end using gradient descent.
@@ -383,14 +526,6 @@ Here the operations are simply,
 \end{align}
 
 GN-Blocks which preserve the existence of graph features, unlike the deep set which has no node features in the output, can be stacked together to form a deep GNN.
-The depth of most GNNs is notably shallower than other deep learning models, such as CNNs which can have hundreds of layers.
-One of the reasons for this is training instability and the over-smoothing problem.
-Over-smoothing refers to the phenomenon where the nodes in the graph become homogenous, containing the same information, after many rounds of message passing.
-There are many proposed solutions to this issue, such as residual connections and normalization layers.
-Attention is also a viable method to combat over-smoothing.
-It refers to the process of weighting the incoming messages based on some learned function of the sender and receiver nodes before aggregation.
-It allows the node to ``pay more attention'' to certain neighbours.
-This introduces more expressivity into the model by distinguishing the layers for deciding the content of a message and the layers for deciding its importance.
 
 \begin{figure}
     \centering
@@ -410,6 +545,7 @@ This introduces more expressivity into the model by distinguishing the layers fo
 \end{figure}
 
 \section{Transformers are Graph Networks}
+\label{sec:transformers}
 
 It is hard to overstate the impact of the transformer model~\citetemp{AttentionIsAllYouNeed} on the field of deep learning.
 Originally designed for sequence-to-sequence tasks, transformers grew to dominate all NLP benchmarks.
@@ -650,7 +786,7 @@ Some more recent models large models have even done away with the softmax, citin
 There are many types of transformer variants, too much to cover in this thesis.
 However, common similarities can be drawn between them.
 Furthermore, many of the terminology used to describe the layers is ambiguous and overlaps.
-A single transformer block has two main types of sub-blocks, the message passing layer performed with MHA, and node update layers performed using MLPs, often confusingly called simply feed-forward networks (FFNs).
+A single transformer block has two main types of sub-blocks, the message passing layer performed with MHA, and node update layers performed using MLPs, often confusingly called FFNs.
 These sub-blocks are combined, and repeated in various forms to create the larger transformer block.
 The MHA layers are configured to be either self-attention or cross-attention as needed, and they are stacked with the FFN layers usually in series~\citetemp{AttentionIsAllYouNeed}, but sometimes in parallel~\citetemp{PALM}.
 Another distinguishing feature is the use of residual connections and normalization layers to stabilize training.
@@ -660,13 +796,13 @@ With such a large zoo of transformer variants, with empirical performance being 
 The MLP in most transformer layers only has a single hidden layer, which expands the dimensionality of the node attributes by a multiplicative factor $M$.
 The original implementation used $M=4$ and a ReLU activation function,
 \begin{equation}
-    \phi^v(\mathbf{x}_i) = \max\left(0, \mathbf{W}_2 \text{ReLU}(\mathbf{W}_1 \mathbf{x}_i + \mathbf{b}_1) + \mathbf{b}_2\right),
+    \text{FFN}_\text{ReLU}(\mathbf{x}_i) = \max\left(0, \mathbf{W}_2 \text{ReLU}(\mathbf{W}_1 \mathbf{x}_i + \mathbf{b}_1) + \mathbf{b}_2\right),
 \end{equation}
 though these were quickly switched to either GELU of SiLU activations~\citetemp{GELU, SiLUTransformers}.
 Modern transformers also use Gated Linear Units (GLU)~\citetemp{GLU}, a network layer involving the element-wise multiplication of two linear projections, one of which is passed through an activation function.
 Using a Swish/SiLU activation function seems to be the most popular choice~\citetemp{SwiGLU}, the node update using a SwiGLU layer is written as,
 \begin{equation}
-    \phi^v(\mathbf{x}_i) = \mathbf{W}_3(\text{Swish}(\mathbf{W}_1 \mathbf{x}_i + \mathbf{b}_1) \otimes (\mathbf{W}_2 \mathbf{x}_i + \mathbf{b}_2)) + \mathbf{b}_3.
+    \text{FFN}_\text{SwiGLU}(\mathbf{x}_i) = \mathbf{W}_3(\text{Swish}(\mathbf{W}_1 \mathbf{x}_i + \mathbf{b}_1) \otimes (\mathbf{W}_2 \mathbf{x}_i + \mathbf{b}_2)) + \mathbf{b}_3.
 \end{equation}
 Many transformers also use the mixture-of-experts approach, where there exist many FFN layers, each with different parameters, and a gating mechanism to direct certain nodes to certain experts~\citetemp{MoE}.
 It is interesting that while the attention mechinism is often hailed as the key to the transformer's sucess, the vast majority of the transformer parameters are in these node update layers.
@@ -685,8 +821,8 @@ A single TE-Block as shown in \Cref{fig:transformer} is a GN-Block with no edge 
 The block update on the full tensor $\mathbf{X}$, using the PreNorm configuration is,
 \begin{equation}
 \begin{aligned}
-    \mathbf{X} & \leftarrow \mathbf{X} + \text{MSHA}(L(\mathbf{X})), \\
-    \mathbf{X} & \leftarrow \mathbf{X} + \text{FFN}(L(\mathbf{X})).
+    \mathbf{X} & \leftarrow \mathbf{X} + \text{MSHA}(L_\text{norm}(\mathbf{X})), \\
+    \mathbf{X} & \leftarrow \mathbf{X} + \text{FFN}(L_\text{norm}(\mathbf{X})).
 \end{aligned}
 \end{equation}
 A full TE is composed of many TE-Blocks stacked in series forming a permutation equivariant set to set transformation.
@@ -697,9 +833,9 @@ This is the original implementation of the transformer decoder (TD)~\citetemp{At
 The update is written as,
 \begin{equation}
 \begin{aligned}
-    \mathbf{X}_r & \leftarrow \mathbf{X}_r + \text{MHSA}(L(\mathbf{X}_r)), \\
-    \mathbf{X}_r & \leftarrow \mathbf{X}_r + \text{MHA}(L(\mathbf{X}_r), \mathbf{X}_s), \\
-    \mathbf{X}_r & \leftarrow \mathbf{X}_r + \text{FFN}(L(\mathbf{X_r})).
+    \mathbf{X}_r & \leftarrow \mathbf{X}_r + \text{MHSA}(L_\text{norm}(\mathbf{X}_r)), \\
+    \mathbf{X}_r & \leftarrow \mathbf{X}_r + \text{MHA}(L_\text{norm}(\mathbf{X}_r), \mathbf{X}_s), \\
+    \mathbf{X}_r & \leftarrow \mathbf{X}_r + \text{FFN}(L_\text{norm}(\mathbf{X_r})).
 \end{aligned}
 \end{equation}
 The transformer encoder and decoder are often combined to form a set to set transformation that first extracts features from the input set, and the conditions the output set on these features.
@@ -747,7 +883,7 @@ The Particle Transformer (PartT)~\citetemp{PartT} uses a transformer encoder to 
 For each pair of particles, specific edge features are constructed using Lund Plane variables~\citetemp{LundPlane}.
 The model uses an MLP to embed these edge features into a tensor of shape $(N, N, H)$, which becomes the attention bias in each of the TE-Blocks.
 
-\subsection{Global Attributes}
+\subsection{Global Attributes and Conditioning Graph Updates}
 
 Global attributes are common features in graphs, and are often used to condition the main node update or are used as outputs of the model.
 Global attributes in a GNN are often updated via pooling information across all nodes in the graph $ \mathbf{u} = \rho^{v \to u}(\mathbf{X})$.
@@ -768,36 +904,157 @@ Recent work on vision transformers have shown that using multiple global tokens 
 Registers can even be ignored from the model outputs, which means that they provide the model with a temporary memory that can be used to store global information.
 This is because it was observed that the models had a tendency to overwrite patches with low local information content.
 
-
-
-
 One can use global attributes or extra conditional information to augment the message passing step.
-If the global attributes are
-
-
-
+If the global attributes are a set, then cross attention can be used to pass information back and forth between the nodes and global attributes~\citetemp{PCDroid}.
+If the global attribute is a single tensor, then cross attention will not suffice.
+This is due to the softmax operation in the attention mechanism.
+If there is only one sender node, then the attention weight will always be one.
+Instead, the global attribute can be concatenated directly in different parts of the block.
 This is commonly seen in diffusion models where TE-Blocks must incoroprate time information, expressed as an encoded vector.
 This can be done by concatenating the $mathbf{u}$ vector to all node attributes during the MHA step~citetemp{DiffT} or the MLP step~citetemp{PCJedi}.
 However the most effective way has been to combine adaptive normalization and residual gating mechanisms~citetemp{DiT}.
-Here the global attribute
+Here the global attribute is passed through three projections of the same dimensionality as the node attributes.
+It is then used to scale, shift and gate the update,
+\begin{equation}
+    \begin{aligned}
+    & \mathbf{u}_\text{scale}, \mathbf{u}_\text{shift}, \mathbf{u}_\text{gate} \leftarrow \text{MLP}(\mathbf{u}), \\
+    & \mathbf{x} \leftarrow \mathbf{x} + \mathbf{u}_\text{gate} \otimes f \left(L_\text{norm}(\mathbf{x} \otimes \mathbf{u}_\text{scale} + \mathbf{u}_\text{shift})\right).
+    \end{aligned}
+\end{equation}
+where $f$ is either the FF or MHA operation within the block.
+One can also initialise the MLP in such a way that the $\mathbf{u}_\text{gate}$ is close to zero at the start of training and that the model is initially an identity function.
 
+\chapter{Flavour Tagging with Graphs and Transformers}
 
-
-
-\chapter{Flavour Tagging with Transformers}
+In this chapter we describe the design and implementation new graph networks for flavour tagging.
+These models build on GN1, a graph network which uses GATv2 system of message passing~\cite{GATv2}, and can be thought of as an architecture optimization of the already successful flavour tagger used by ATLAS.
+The first new model is called GN++ and is based on the full GN-Block architecture described in \Cref{sec:gn_block}, complete with persistent edge information and global attributes.
+The second new model is called Spice and is based on the transformer encoder architecture, described in \Cref{sec:transformer}, with the message passing step done using multi-headed SDPA.
+Spice would prove to be so performant and efficient that it would form the basis of the new GN2 flavour tagger adopted by the ATLAS collaboration.
+One of the observations made over the course of this project is that the rate of progress in machine learning is much faster than in high energy physics.
+At the time Spice was being developed and presented to the flavour tagging group, GN1 was still undergoing collaboration.
+At the time of writing, GN2 is now being calibrated and significant effort is being use to keep it up to date with the latest developments in machine learning.
 
 \section{Datasets}
 
-\section{Input Features}
+The same training and test samples used for the previous flavour taggers, DIPS and GN1, were used.
+Further information can be found in Refs. \cite{GN1, AlexThesis}.
+
+Two simulated datasets are used in this work to train and evaluate the models.
+The first contains $\ttbar$ events and this covers the low $\pt$ phase space for training the taggers.
+The simulation settings for the $\ttbar$ sample are derived from studies to best match jet multiplicity and top quark momentum distributions in data~\cite{ttbar1, ttbar2}.
+The second sample contains $Z'$ events included to enhance the training statistics in the high $\pt$ phase space.
+The $Z'$ boson is a non-SM particle where both the cross-section of the hard-scatter process and the branching fractions were specifically designed to produce a relatively uniform distribution of jets with $\pt$ up to $5~\TeV$ split equally between $b-$, $c-$, and light-jets.
+
+\subsection{Monte Carlo Samples}
+
+Both datasets are initiated by simulated proton-proton collisions at a center-of-mass energy of $\sqrt{s} = 13$ TeV.
+
+Hard scatter events for the $\ttbar$ sample were generated at next-to-leading order using \textsc{PowhegBox v2} \cite{Powheg1, Powheg2, Powheg3} interfaced with \textsc{Pythia 8.230} \cite{Pythia8} using the \textsc{A14} tune \cite{A14} for parton showering and hadronization.
+For the parton distribution functions, the \textsc{NNPDF3.0NNLO} \cite{PDF3.0} set was used for the matrix element calculation while the \textsc{NNPDF2.3LO} \cite{PDF2.3} set was used for the showering.
+The cut-off scale parameter for the first-gluon-emission $h_{\text{damp}}$ was set to 1.5 times the top quark mass of $m_t = 172.5~\GeV$.
+The $Z'$ sample was generated and showered using \textsc{Pythia 8.212} with the \textsc{A14} tune and the \textsc{NNPDF2.3LO} set of parton distribution functions.
+
+For both datasets, decays of $b-$ and $c-$hadrons are done using the \textsc{EvtGen v1.6.0} package \cite{EvtGen}.
+Detector response is performed using the \textsc{Geant4} simulation package \cite{Geant4} with the \textsc{ATLAS} simulation setup \cite{ATLASSim}.
+Pileup is modelled by overlaying extra minimum bias events using the \textsc{Pythia 8.160} generator with the \textsc{A3} tune \cite{A3} and the \textsc{NNPDF2.3LO} parton distribution functions.
+These signals are combined with the hard scatter events during the digitization step.
+Interactions with heavy flavour hadrons and the detector material was not simulated but accounted for in correction factors and systematic uncertainties.
+In-time pileup is modelled using an average of 40 interactions per bunch crossing, while out-of-time pileup is modelled using bunch crossings before and after the primary interaction.
+
+\subsection{Selection and Sampling}
+
+The ATLAS flavour tagging uses PFLow jets, which are described in \Cref{sec:jet_reconstruction}.
+Jets are required to have $\pt > 20~\GeV$ and $|\eta| < 2.5$.
+All jets with $\pt < 60~\GeV$ and $|\eta| < 2.4$ must also pass the tight working point of the JVT algorithm in order to minimise contributions from pileup.
+Jets are also discarded is they are found to overlap with a generator-level lepton from a $W$ or $Z$ decay.
+
+The training dataset is a mixture of 70\% $\ttbar$ and 30\% $Z'$ events.
+To decorrelate the tagger with respect to the jet $\pt$ and $\eta$, jets are also resampled such that the truth matched $b-$, $c-$, and light-jets have identical distributions in these variables.
+After resampling the training set contained a total of 120 million jets split equally between the three jet flavours.
+During training, 5\% of this was reserved for hold out validation.
+Two statistically independent test samples are each containing 1 million $\ttbar$ and $Z'$ jets respectively.
+No resampling is done on the test datasets.
 
 \section{Model Design}
 
+All of the proposed models can be thought of as variations or extensions of GN1.
+GN1 introduced the idea of a monolithic graph neural network which would simultaneously perform jet tagging, vertexing, and track identification.
+All the proposed extensions follow this same setup but with updates to the message passing step as well as latest trends in architecture design.
+From Ref.~\cite{RelationalInductiveBiases} and the design of the GN-Block the proposed updates include, persistent edge information, persistent global information, and node feed-forward layers.
+From the modern network design and the current trend of transformers, we include multi-headed SDPA, PreNorm, and residual additive connections.
+
+\section{Input Features}
+
+The inputs to all the models presented in this section are the same.
+They include two kinematic jet variables, $\pt$ and $\eta$, and up to 40 tracks associated with the jet.
+Each track is represented by a vector containing 21 features, detailed in \Cref{tab:track_features}.
+Almost all \ttbar jets contain less than 40 tracks, but a significant fraction of $Z'$ jets contain more, as shown in \Cref{fig:track_multiplicity}.
+For these samples only the 40 tracks with the highest IP significance $s(d_0)$ are retained.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ll}
+        \toprule
+        \midrule
+        \multicolumn{2}{c}{Jet Level Inputs Description} \\
+        \midrule
+        $\pt$ & Jet transverse momentum \\
+        $\eta$ & Signed jet pseudorapidity \\
+        \midrule
+        \midrule
+        \multicolumn{2}{c}{Track Level Inputs} \\
+        \midrule
+        $q/p$ & Track charge divided by momentum \\
+        d$\eta$ & Pseudorapidity of the track, relative to the jet $\eta$ \\
+        d$\phi$ & Azimuthal angle of the track, relative to the jet $\phi$ \\
+        $d_0$ & Closest distance from the track to the PV in the longitudinal plane \\
+        $z_0 \sin \theta$ & Closest distance from the track to the PV in the transverse plane \\
+        $\sigma(q/p)$ & Uncertainty on q/p \\
+        $\sigma(\theta)$ & Uncertainty on track polar angle $\theta$ \\
+        $\sigma(\phi)$ & Uncertainty on track azimuthal angle $\phi$ \\
+        $s(d_0)$ & Lifetime signed transverse IP significance \\
+        $s(z_0)$ & Lifetime signed longitudinal IP significance \\
+        nPixHits & Number of pixel hits \\
+        nSCTHits & Number of SCT hits \\
+        nIBLHits & Number of IBL hits \\
+        nBLHits & Number of B-layer hits \\
+        nIBLShared & Number of shared IBL hits \\
+        nIBLSplit & Number of split IBL hits \\
+        nPixShared & Number of shared pixel hits \\
+        nPixSplit & Number of split pixel hits \\
+        nSCTShared & Number of shared SCT hits \\
+        nPixHoles & Number of pixel holes \\
+        nSCTHoles & Number of SCT holes \\
+        \bottomrule
+    \end{tabular}
+    \caption{Input features for the Graph Neural Network Flavour Tagger.}
+    \label{tab:track_features}
+\end{table}
+
+% - Describe GN1
+% - Describe the 3 tier loss
+% - Describe the full GNN model
+% - Describe the proposed transformer model
+
 \section{Training}
+
+% - Training highlights
+% - Loss curves
+% - All training parameters
 
 \section{Performance}
 
+% - Output distributions
+% - ROC curves
+% - Rejection values
+
 \section{Applications}
 
+% - GN2X
+% - Current model architecture
+% - Current training set
+% - Current performance
 
 
 
