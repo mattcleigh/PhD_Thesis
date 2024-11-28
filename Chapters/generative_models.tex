@@ -109,8 +109,8 @@ detector response depends on the properties of the incoming particle, making GAN
 
 \section{Normalizing Flows}
 
-NFs are a popular tool for both variational inference~\cite{VariationalInferenceNormalizing}
-and density estimation~\cite{NICENonlinearIndependenta}.
+NFs are a popular tool for both variational inference~\cite{VariationalInferenceNormalizing, NormalizingFlowsProbabilistic}
+and density estimation~\cite{NICENonlinearIndependent}.
 Like GANs and VAEs, they prescribe a method to train a transformation from a simple latent distribution into one that matches the data.
 However, unlike GANs and VAEs, normalizing flows allow for explicit likelihood evaluation, making them well suited for density estimation.
 
@@ -126,7 +126,7 @@ The density $p_\X(\x)$ is called a \textit{pushforward} of the density $p_\Z(\z)
 
 Unlike GANs, a NF constructs an explicit approximation of data density by defining it as a pushforward of a simple latent distribution, typically Gaussian, through a parametrized neural network,
 \begin{equation}
-    p_{\X}(\x) \approx p_{\theta}(\x) = f_{\theta \#} p_\Z(\z).
+    p_{\X}(\x) \approx p_{\theta}(\x) = f_{\theta \#} p_\Z(\z) = p_\Z(f_{\theta}(\x)) \left|\det D f_{\theta}(\x) \right|.
 \end{equation}
 Like all neural networks, NFs are built from the composition of several simple layers, but unlike other neural networks, each \textit{flow layer} has to be a diffeomorphism.
 This is because the composition of two diffeomorphisms is itself a diffeomorphism, furthermore the Jacobian of the full transformation is simply the product of the Jacobians of the individual layers,
@@ -145,82 +145,185 @@ NFs are typically trained via a maximum log-likelihood approach, or more specifi
         \frach &= \mathbb{E}_{\x \sim \mathcal{D}}\left[-\log p_{\Z}(f_{\theta}(\x)) - \sum_{i=1}^L \log \left|\det D f_i(\x_i) \right|\right].
     \end{aligned}
 \end{equation}
-Note that due to the composition property of the Jacobian, the log determinant term is a sum of the log determinants of the individual layers, leading to essentially independant terms in the final loss.
+Note that due to the composition property of the Jacobian, the log determinant term is a sum of the log determinants of the individual layers, leading to essentially independent contributions per layer in the final loss.
 
-During training, the flow is said to run in forward mode, transforming samples from the data space to the latent space.
-Once the model is trained, it can be used in forward mode to yield the density at any measured point, or it could be run in reverse mode $f^{-1}$, transforming samples from the latent space to the data space.
+During training, the flow is said to run in forward-mode, transforming samples from the data space to the latent space.
+Once the model is trained, it can again be used in forward-mode to yield the density at any measured point, or it could be run in reverse mode $f^{-1}$, transforming samples from the latent space to the data space.
 
-How to construct these
+Conditional density estimation and sampling is a natural extension of NFs.
+The only modification is that the context variable is included to the input of each layer in the flow.
+This allows the model to learn the conditional distribution $p_{\X}(\x|\con)$ yields surprisingly good results and highly calibrated uncertainties that match the aleatoric uncertainty in the data almost exactly~\cite{SolvingInverseProblems, InferenceAstrophysicalParameters, ComposingNormalizingFlows, NormalizingFlowsProbabilistic}.
+Standard regression, which operates under the assumption of a Gaussian likelihood, is often overly restrictive.
+A more effective approach for almost all regression tasks involves framing them as conditional density estimation, where NFs emerge as one of the most suitable tools, particularly when the dimensionality is low.
 
-% How to construct a normalising flow with these layers
-% Must be invertible
-% Must be differentiable
-% But to make it practical
-% But ideally, it should be easy to compute the determinant of the jacobian
-% It should be quick to compute the inverse
-% Designing these flow layers is the core research problem in normalising flows
+While NFs allow for the exact calculation of the likelihood, they are not without their drawbacks.
+The main issue is that NFs are computationally expensive and do not scale well to high-dimensional data.
+Even with the specialised flow layer explained in the next section, the complexity of calculating the determinant of the transformation is prohibitive for data with more than a few hundred dimensions such as images.
+Another notable feature of NFs is that they are designed to work with continuous data.
+Data with discontinuities, especially discrete data needs to be \textit{dequantized} before being fed into the flow, which essentially amounts to adding noise to the data~\cite{FlowImprovingFlowBased}.
+
+In HEP, NFs have been widely adopted for many tasks but most notably fast simulation, template building, and unfolding, which are covered in detail in \Cref{ch:fastsim}, \Cref{ch:templates}, and \Cref{ch:unfolding} respectively.
+
+\subsection{Flow Layers}
+
+Building a NF requires stacking together multiple flow layers.
+As mentioned, each of these layers must be a diffeomorphism.
+Typically, they would need to operate on real valued tensors $\x \in \mathbb{R}^d$ and optionally $\con \in \mathbb{R}^c$.
+In addition, for practical applications each layer needs to be efficient to process, both in the forward- and reverse-mode, and the determinant of the Jacobian should be easy to compute.
+The design of these layers is the core research problem in normalizing flows.
+
+At the time of writing, the most popular flow layers are linear flows, coupling flows, autoregressive flows, residual flows, and continuous-time flows.
+We describe the ones most relevant to this thesis.
+
+\subsubsection{Linear Flows}
+
+A simple, non-resizing linear transform is arguably the most basic flow layer $f(\x) = \W\x + \bias$, as the inverse is simply $f^{-1}(\z) = \W^{-1}(\z - \bias)$.
+Only a small amount of reparameterisation is required to ensure that the matrix $\W$ is non-singular and thus invertible.
+Linear flows are limited in their expressiveness, furthermore, the complexity of calculating $\det D f(\x) = |\det \W|$ is $\bigO(d^3)$ making them computationally expensive for high-dimensional data.
+
+One can restrict the form of the matrix to make it easier to use, as shown in \Cref{tab:linear_flows}.
+The most popular choices are the LU-Factorisation and for images a $1\times1$-convolution~\cite{GlowGenerativeFlow}.
+
+\begin{table}[h!]
+    \centering
+    \caption{Complexity of using different forms of linear flows.}
+    \label{tab:linear_flows}
+    \begin{tabular}{ccc}
+    \toprule
+    \textbf{Type} & \textbf{Inverse} & \textbf{Determinant} \\
+    \midrule
+    Full & $\bigO(d^3)$ & $\bigO(d^3)$ \\
+    Diagonal & $\bigO(d)$ & $\bigO(d)$ \\
+    Triangular & $\bigO(d^2)$ & $\bigO(d)$ \\
+    Block (c) Diagonal & $\bigO(c^3d)$ & $\bigO(c^3d)$ \\
+    LU Factorized & $\bigO(d^2)$ & $\bigO(d)$ \\
+    1x1 Convolution & $\bigO(c^3 + c^2d)$ & $\bigO(c^3)$ \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Coupling Flows}
+
+Coupling flows~\cite{NICENonlinearIndependent} describe a general approach to constructing highly expressive non-linear flows.
+In a coupling flow, the input $\x$ is partitioned into two disjoint components $(\x_A, \x_B)$.
+$\x_A$ is used to compute the parameters of a bijective transformation $h(\dot; \phi)$ which is applied to only $\x_B$.
+This can be expressed as,
+\begin{equation}
+    \label{eq:coupling_flow}
+    f(\x) = (\x_A, h(\x_B; \phi(\x_A))).
+\end{equation}
+As shown in \Cref{fig:coupling_flow}, this layer is entirely reversible so long as the coupling function $h$ is invertible, whereas the conditioner $\phi$ does not have this restriction.
+Additionally, the Jacobian of the transformation is a block matrix given by,
+\begin{equation}
+    D f(\x) = \begin{pmatrix}
+        \mathbb{I} & 0 \\
+        \frac{\partial h(\x_B; \phi(\x_A))}{\partial \x_A} & \frac{\partial h(\x_B; \phi(\x_A))}{\partial \x_B}
+    \end{pmatrix}.
+\end{equation}
+When calculating the determinant the entire bottom left block can be ignored making it simply the determinant of the invertible transformation $h$.
+Thus, $\phi$ can be arbitrarily complex, without impacting the convertibility or the computational complexity of calculating the likelihood contributions of the layer.
+It is common therefore to use a deep neural network for $\phi$, to maximise the expressivity of the layer.
+Conditional information can easily be injected into the flow by incorporating the context variable to the input of the conditioner $\phi(\x_A, \con)$.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/transformers/coupling.pdf}
+    \caption{A diagram of a coupling flow.}
+    \label{fig:coupling_flow}
+\end{figure}
+
+Note that the layer only transforms $\x_B$ and leaves $\x_A$ unchanged.
+Thus, multiple coupling layers are typically stacked together, interleaved with a fixed random permutation layer or a linear flow to mix the elements of $\x$.
+Equivalently one could also alternate the mask used to partition $\x$ between coupling layers.
+It is standard invertible to set $h$ to be an elementwise transformation for ensure efficiency as most of the expressivity in the layer comes from $\phi$.
+Early original coupling flows used an affine transformation for $h$~\cite{RealNVP}, but this required many layers to fit to complex data distributions.
+The expressivity of the model can be greatly enhanced using more complex transformations, yet still elementwise bijections, such as rational quadratic splines~\cite{NeuralSplineFlows}.
+This is demonstrated by \Cref{fig:moons}, which shows the output at of a flow with 4 coupling layers with spline transformations, each layer can only transform one dimension of the data.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.95\textwidth]{Figures/transformers/samples.pdf}
+    \caption{The transformation of two dimensional Gaussian samples into a double moon distribution using a flow with 4 coupling layers with rational quadratic splines.}
+    \label{fig:moons}
+\end{figure}
+
+\subsection{Continuous Normalizing Flows}
+
+% In a CNF, the transformation is defined by a differential equation parametrised by a time $t \in [0, 1]$
+% Fixed end points are x(0) = 0 and x(1) = z.
+% This gives the forward and inverse transformations as two time ordered ODEs,
+% Put equation
+% Once the transformation is defined, any numerical ODE solver can be used to transform samples from the data space to the latent space and back again.
+
+Whereas in a standard NF the transformation composed by a fixed number of sub-transformations or layers, a continuous normalizing flow (CNF)~\cite{NeuralODE} defines a continuous process where each infinitesimal transformation depends on the current state of the data and the time index.
+This leads to an ordinary differential equation (ODE) indexed by a time $t \in [0, 1]$ defined by a smooth time-varying vector field $u(\y, t)$
 
 
-Important to note that if modelling discrete data, we need to dequantise the data
-Singularities
-Easiest method is to add noise to the data
-Can be done variationally
+In a continuous normalizing flow (CNF) the transformation is defined by an ordinary differential equation (ODE) indexed by a time $t \in [0, 1]$.
+\begin{equation}
+    f(\x) = \x_0 + \int_0^1 u(\x_t, t) \diff t
+    \quad \rightarrow \quad
+    f^{-1}(\x) = \x_1 + \int_0^1 u(\x_t, t) \diff t.
+\end{equation}
+Given the distribution of
 
-Can learn conditional normalising flows through injection of context in each layers
-Shown to match the aleatoric uncertainty in the data
 
-\subsection{Linear Flows}
-$f(x) = Ax + b$
-inverse is $x = A^{-1}(z - b)$
-Determinant is $|det(A)|$
-Problem: inexpressive, determinant is $O(d^3)$
 
-Can restrict the form of the matrix to make it easier,
-Full - $O(d^3)$
-Diagonal - $O(d)$
-Triangular - $O(d^2)$
-Block Diagonal - $O(c^2d)$
-LU Factorised - $O(d^2)$
-Spacial convolusion - $O(d)$
-1x1 Convolusion - $O(d)$
+The fixed end points are $x(0) = 0$ and $x(1) = z$.
 
-\subsection{Coupling Flows}
+Once the transformation is defined, any numerical ODE solver can be used to transform samples from the data space to the latent space and back again.
 
-General approach to construct non-linear flows
-Partition the input into two parts
-One part is passed through a neural network, two operations
-$f(x) = (x_A, g(x_B | h(x_A)))$
-g has to be invertible and simple to calculate
-But there are no restrictions on h
-Show diagram of coupling flow
 
-Jacobian of the transformation is a block matrix
-Can ignore the bottom left block in calculating the determinant
-This means that we can have an arbitrarily complex h, MLP, CNN, etc
+% CNFs are trained using the same maximum liklihood approach as NFs, but this involves the integral of the trace of the Jaaconian of the transformation
+% Put equation
+% Quadratic in the dimensions, so not scalable.
+% Can use the hutchingson trace estimator.
 
-It is important to permute or use a linear transformation between coupling layers to
-maximise the expressiveness of the model.
+% The equation prob can also be frames via the continuity equation
+% Trace of the jacobian is seen as a divergence of the vector field defined by the transformation
+% Can parametrise the vector field with a neural network, and train it to match the data distribution
+% Incl equation
 
-Popular coupling transformes include nice additive
-RealNVP, scale and shift
-Splines are the most expressive
-
-\subsection{Autoregressive Flows}
-
-Autoregressive models $p(x) = \prod_i p(x_i | x_{<i})$
-Require defining a specific ordering of the variables
-
-Sampling is sequential and slow
-Can use inverse for training, which means training is slow
-Jacobian is triangular and easy to compute
-
+% Training via maximum liklihood sucks
+% Required an integration over the ODE which not only involves forward pass of the network but a a estimator of divergence too.
+% Main issue is how slow they are to train.
 
 \section{Denoising Models}
 
+% Denoising models have taken the world by storm
+% They are the current state-of-the-art in generative models
+% Initial promise with the iterative refinement paper
+% Formailsed in DDPM paper
+% Frenzy when they dethroned GANs paper
 
+% Many different, competing, overlapping frameworks to define these models
+% Alot of different mathematical derivations for what comes down to the same training objective and practical implementation
+% Many attempts to unify these models in a single framework EDM, new CM paper
+% We chose to focus on two that were used in projects for this thesis
+% Namely score based models and flow matching, focusing on the work by Song, Karras and Lipman.
 
-\subsection{Score-Based Generative Models}
+\subsection{Score-Based Models}
 
 \subsection{Flow Matching}
+
+% CFM and Rectified Flows emerged at the same time
+% Flow matching can be seen as an extension of continuous time normalising flows
+% Provides a simulatio-free way to train CNF models
+% The loss is based on a regression objective to match the correct velocity field
+% Include equation
+% We reach the same probjem with score-matching, that if we have the field as targets then we dont need to approximate it
+% Like with score matching we devise a target without having to calculate the velocity field directly, through denoising.
+
+% Use a latent variable and define the probability path over a joint
+% Include equation
+% Probability path is a joint over a conditional probability path
+% Induces a new continuity equation
+
+
+
+
+
+
+
 
 \subsection{Consistency Models}
