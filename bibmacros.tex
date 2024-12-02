@@ -1,7 +1,5 @@
-%
-% To put the DOI/eprint/url on a new line
-%
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Put the DOI/eprint/url on a new line
 \newbibmacro*{bbx:parunit}{%
     \ifbibliography
     {\setunit{\bibpagerefpunct}\newblock
@@ -35,7 +33,10 @@
     {}
     {\setunit*{\addspace}%
         \printtext[urldate]{\printurldate}}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% If the entries are introduced the same citation then order by year
 \DeclareSortingScheme{custom}{
     \sort{
         \citeorder
@@ -44,3 +45,4 @@
         \field{year}
     }
 }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
