@@ -338,46 +338,54 @@ All of these models share similar training objectives, but differ in the mathema
 There have also been many attempts to unify these models under a framework~\cite{CM2, ElucidatingDesignSpace,UnderstandingDiffusionModels, StochasticInterpolants, FlowStraightFast}.
 Since no single framework has emerged as the standard we will not attempt to unify them here, but we do use the term ``diffusion model'' as an umbrella term to describe all of these models in this chapter.
 We chose to focus on two frameworks that are used directly in the projects of this thesis, namely score-based models~\cite{ScoreBasedGenerativeModeling} and flow matching models~\cite{FlowMatchingGenerative, FlowStraightFast}.
-Finally, we also cover consistency models~\cite{ConsistencyModels, CM2} and in particular consistency distillation, as a method to improve the generation time of diffusion models.
 
 \subsection{Score-Based Generative Models}
 \newcommand{\score}{\nabla_{\x_t} \log p(\x_t)}
 \newcommand{\cscore}{\nabla_{\x_t} \log p(\x_t|\x_0)}
 \newcommand{\unitime}{\mathcal{U}(0, T)}
+\newcommand{\timeone}{\mathcal{U}(0, 1)}
 
-Score-based generative modelling~\cite{ScoreMatching, ScoreBasedGenerativeModeling} is a framework that envelops many diffusion models like DDPM~\cite{DDPM}, where the forward-process involves progressively applying Gaussian perturbations to a data sample $\x_0 \sim p_0(\x) = p_\X(\x)$\footnote{Note that the time index in diffusion models is typically inverted compared to CNFs, where $p_0$ is the noise/latent distribution.}.
-Where this approach differs from DDPM is that the forward-process is indexed by a continuous time variable $t \in [0, T]$ such that it can be modelled as an SDE of the form,
+Score-based generative modelling~\cite{ScoreMatching, ScoreBasedGenerativeModeling} is a framework that envelops many diffusion models such as DDPM~\cite{DDPM}.
+The forward-process involves progressively applying Gaussian perturbations to a data sample $\x_0 \sim p_0(\x) = p_\X(\x)$\footnote{Note that the time index in diffusion models is typically inverted compared to CNFs, where $p_0$ is the noise/latent distribution.}.
+Score-based models describe this process in the continuous limit with time index $t \in [0, T]$ such that it can be modelled as an SDE,
 \begin{equation}
     \label{eq:sde}
-    \diff \x_t = \underbrace{f(\x_t, t)}_{\mathclap{\text{drift}}} \diff t + \underbrace{g(t)}_{\mathclap{\text{diffusion}}} \diff \omega_t,
+    \diff \x_t = \underbrace{f(\x_t, t)}_{\mathclap{\text{drift}}} \diff t + \underbrace{g(t)}_{\mathclap{\text{diffusion}}} \diff \w_t,
 \end{equation}
-where $\omega_t$ is the standard Wiener process (Brownian motion) and $f: \mathbb{R}^d \times \mathbb{R}_{+} \rightarrow \mathbb{R}^d$ and $g: \mathbb{R}_{+} \rightarrow \mathbb{R}$ are the drift and diffusion functions respectively.
-Note that if $|g(t)| > 0$ the data is progressively corrupted and one can tune $f(\x, t)$ and $g(t)$ such that at $t = T$ the data is completely indistinguishable from noise.
+where $\w_t$ is the standard Wiener process (Brownian motion) and $f: \mathbb{R}^d \times \mathbb{R}_{+} \rightarrow \mathbb{R}^d$ and $g: \mathbb{R}_{+} \rightarrow \mathbb{R}$ are the drift and diffusion functions respectively.
+Note that if $|g(t)| > 0$ the data signal is progressively corrupted.
 
-While this process is non-learnable, it is not obviously quick to solve without numerical integration.
-However, if the drift term is affine in $\x_t$, the transition kernel is Gaussian,
+While the forward-process is non-learnable, it is not quick to solve without numerical integration.
+However, if the drift function is affine with respect to $\x_t$, the transition kernel becomes Gaussian,
 \begin{equation}
     \label{eq:gaussian_kernel}
     f(\x_t, t) = f(t)\x_t \quad \Rightarrow \quad p_{0t}(\x_t|\x_0) = \mathcal{N}(\x_t; s(t)\x_0, \sigma(t)^2 \mathbb{I}),
 \end{equation}
-where $s(t)$ and $\sigma(t)$ are time-dependent scaling factors respectively and can be derived for specific forms of the drift and diffusion functions~\cite{sarkka2019applied}.
-Thus, the \textit{diffusion schedule} is uniquely defined by either setting $f(t)$ and $g(t)$, and then calculating the perturbation kernel coefficients $s(t)$ and $\sigma(t)$, or vice versa.
-One is then able to sample the forward process to any arbitrary time $t$ by sampling from the Gaussian transition kernel and the reparametrisation trick,
+where $s(t)$ and $\sigma(t)$ are time-dependent scaling factors, referred to as the signal rate and noise rate respectively, and can be derived for specific forms of $f(t)$ and $g(t)$~\cite{sarkka2019applied}.
+Alternatively one can select specific forms for the scaling factors and derive the drift and diffusion functions~\cite{ElucidatingDesignSpace}.
+Either way, this choice uniquely defines the \textit{diffusion schedule} for the process, and for generative models one typically constructs it such that,
 \begin{equation}
-    \x_t = s(t)\x_0 + \sigma(t) \e \quad \text{where} \quad \e \sim \normal.
+    \label{eq:diffusion_schedule}
+    \lim_{t \rightarrow 0} s(t) = 1, \quad \lim_{t \rightarrow 0} \sigma(t) = 0, \quad \lim_{t \rightarrow T} \frac{s(t)}{\sigma(t)} = 0,
 \end{equation}
-Ideally, the diffusion schedule is chosen in such a way that the data is completely corrupted at $t = T$.
+as this ensures that $p_0 = p_\X$ and that $p_\Z \approx p_T = \mathcal{N}(0;, \sigma(T) \mathbb{I})$.
 
-Remarkably, this SDE in \Cref{eq:sde} has an exact inverse~\cite{ReversetimeDiffusionEquation} which can be used to define the reverse-process,
+Using the transition kernel defined in \Cref{eq:gaussian_kernel}, one is able to sample from the forward-process at any arbitrary time $t$ using the reparametrisation trick,
+\begin{equation}
+    \label{eq:reparametrisation}
+    \x_t = s(t)\x_0 + \sigma(t) \e \quad \text{where} \quad \e \sim \normal \quad \text{and} \quad \x_0 \sim p_0(\x).
+\end{equation}
+
+Remarkably, the SDE in \Cref{eq:sde} has an exact inverse~\cite{ReversetimeDiffusionEquation} which can be used to define the reverse-process,
 \begin{equation}
     \label{eq:reverse_sde}
-    \diff \x_t = \left[ f(\x_t, t) - g(t)^2 \score \right] \diff t + g(t) \diff \bar\omega_t,
+    \diff \x_t = \left[ f(\x_t, t) - g(t)^2 \score \right] \diff t + g(t) \diff \bar\w_t,
 \end{equation}
-where $\bar\omega_t$ is a Wiener process with opposing sign and time flows from $T$ to $0$.
-Thus, one can describe a generative procedure which starts from samples of $x_T \sim p_T(\x)$ and numerically integrates the reverse SDE to obtain samples matching $p_0$.
-The only unknown term in \Cref{eq:reverse_sde} the score function $\score$ and thus modelling it is the main objective of a score-based generative model.
+where $\bar\w_t$ is a Wiener process with opposing sign and time flows from $T$ to $0$.
+The only unknown term in \Cref{eq:reverse_sde}, $\score$, is referred to as the score function and thus approximating it is the main objective of a score-based generative model.
+This is also known as score matching (SM)~\cite{ScoreMatching}.
 
-One naive approach to perform score matching (SM) is to use direct regression, resulting in the loss function,
+One naive approach to perform SM is to use direct regression, resulting in the loss function,
 \begin{equation}
     \label{eq:naive_loss}
     \mathcal{L}_{SM}(\theta) =
@@ -387,7 +395,7 @@ One naive approach to perform score matching (SM) is to use direct regression, r
 \end{equation}
 where $S_\theta$ is a neural network with trainable parameters $\theta$.
 However, this loss is not practical as it requires the calculation of the very term we are trying to approximate.
-One can instead use the denoising score matching (DSM) objective~\cite{ScoreMatching, SlicedScoreMatching} where the \textit{conditional score function} is approximated,
+One can instead use the denoising score matching (DSM) objective~\cite{ScoreMatching, SlicedScoreMatching} where the conditional score function is approximated,
 \begin{equation}
     \label{eq:denoising_loss}
     \mathcal{L}_{DSM}(\theta) =
@@ -400,7 +408,7 @@ Firstly, this replacement is valid because after taking all expectations, the gr
 \begin{equation}
     \nabla_{\theta} \mathcal{L}_{SM}(\theta) = \nabla_{\theta} \mathcal{L}_{DSM}(\theta).
 \end{equation}
-Secondly, this replacement is useful because the conditional score function does have a tractable form due to the Gaussian transition kernel in \Cref{eq:gaussian_kernel}.
+Secondly, this replacement is useful because the conditional score function does have a tractable form due to the transition kernel in \Cref{eq:gaussian_kernel}.
 This is shown by,
 \begin{equation}
     \begin{aligned}
@@ -420,60 +428,291 @@ It is therefore also convenient to precondition the network output as,
 \end{equation}
 This yields final loss function,
 \begin{equation}
-    \label{eq:denoising_loss}
+    \label{eq:noise_loss}
     \mathcal{L}_{DSM}(\theta) =
     \mathbb{E}_{t \sim \unitime}
     \mathbb{E}_{\x_0 \sim \mathcal{D}}
-    \mathbb{E}_{\epsilon \sim \normal}
+    \mathbb{E}_{\e \sim \normal}
     \frac{\gamma(t)}{\sigma(t)^2}
-    \left|\left|\epsilon_\theta(\x_t, t)\right|\right|^2,
+    \left|\left|\e_\theta(\x_t, t) - \e\right|\right|^2,
 \end{equation}
-where $\gamma(t) > 0$ is introduced as a reweighting factor to ballance the loss across the diffusion schedule.
-For example, one can use specific weighting schemes to allow training on the maximum likelihood objective~\cite{UnderstandingDiffusionModels}.
+where $\gamma(t) > 0$ is introduced as a reweighting factor to balance the loss across the diffusion schedule.
+Thus, to train a score-based generative model, one only needs to train a network to approximate the noise used to corrupt data.
 Note that by setting $\gamma(t) = \sigma(t)^2$ the loss is uniformly weighted and this often corresponds to good perceptual quality of the generated samples~\cite{VariationalPerspectiveDiffusionBased, VariationalDiffusionModels, ImprovedDenoisingDiffusion}.
+Alternatively, one can use specific weighting schemes to allow training on the maximum likelihood objective~\cite{UnderstandingDiffusionModels}.
 
-As with most diffusion models, the final generative procedure is to sample from the noise distribution and integrate the reverse SDE to obtain a sample from the data distribution.
-This can be done using the Euler-Maruyama method or stochastic Runge-Kutta methods~\cite{StochasticRungeKutta}.
-This process takes time and the generation quality is highly sensitive to the number of integration steps.
-Each integration step requires another forward pass through the neural network.
-The computational cost of generating a sample with a diffusion model is the one main drawback of the approach when comparing it to single pass methods like NFs and CNFs.
+Once the model is trained, one can define the sampling procedure which starts from samples drawn from $p_Z$ and numerically integrates the reverse SDE in \Cref{eq:reverse_sde} from $t: T \rightarrow 0$ to optain samples matching $p_0$.
+The integration can be done using the Euler-Maruyama method or stochastic Runge-Kutta methods~\cite{NumericalSolutionStochastic}.
+This process takes time and the generation quality is highly sensitive to the number of integration steps as each step requires another forward pass through the neural network.
+The large computational cost of generating a sample with a diffusion model is the main drawback of the approach when comparing it to single pass methods like NFs and GANs.
 
-One method to speed up generation is to instead use an ODE whose solutions share the same marginal densities $p_t(\x_t)$ as the SDE.
-This is called the probability flow ODE~\cite{ScoreBasedGenerativeModeling} and for the SDE defined in \Cref{eq:sde} it is given by,
+As a method to speed up generation, \textcite{ScoreBasedGenerativeModeling} proved the existence the probability flow ODE whose solutions share the same marginal densities $p_t(\x_t)$ as the SDE.
+For the SDE defined in \Cref{eq:sde} it is given by,
 \begin{equation}
     \label{eq:probability_flow}
     \diff \x_t = \left[f(\x_t, t) - \frac{1}{2} g(t)^2 \score\right] \diff t.
 \end{equation}
-The probability flow ODE provides an emprically observed larger truncation error tolerance than the SDE, allowing for fewer integration steps and thus faster generation.
-In addition, it enables the use of more advanced ODE solvers, provides deterministic encoding, and log likelihood computation.
-
-While \textcite{ScoreBasedGenerativeModeling} introduced the probability flow ODE, purely as a method to speed up generation, \textcite{ElucidatingDesignSpace} showed that the entire training objective of a score-based model can be derived purely from an ODE perspective.
-In this work the authors show that an ideal denoiser is equivalent to the score function.
+Empirically, the probability flow ODE provides a larger tolerance to truncation errors, allowing for fewer integration steps and thus faster generation.
+In addition, it enables the use of more advanced ODE solvers, provides deterministic encoding, and log likelihood computation via~\Cref{eq:cnf_loglikelihood}, indicating the strong connection between score-based models and CNFs.
+Furthermore, while the probability flow ODE was originally introduced as an alternative method for generation, \textcite{ElucidatingDesignSpace} showed that the entire training objective of a score-based model can be derived purely from an ODE perspective.
 
 \subsection{Conditional Flow Matching}
 
-Conditional Flow Matching (CFM)~\cite{FlowMatchingGenerative, FlowStraightFast} is an alternative framework which arrives at an equivalent training objective to score-based models but can be seen as a method to train CNFs without the need for numerical integration.
+Conditional Flow Matching (CFM)~\cite{BuildingNormalizingFlows, FlowMatchingGenerative, FlowStraightFast} is an alternative framework which arrives at an equivalent training objective to score-based models and can be seen as a method to train CNFs without the need for numerical integration.
+The derivation shares many parallels with that of score-based models and there is abundant literature that argues their equivalence~\cite{CM2, StochasticInterpolants}.
+They however approach the problem without the use of SDEs, and like \textcite{ElucidatingDesignSpace} directly target the probability flow ODE, arguably yielding a simpler derivation.
+
+Like CNFs, the goal of CFM is to learn the velocity field $u_t(\x_t)$ that induces the time dependent density $p_t(\x_t)$ adhering to the boundary conditions $p_1 = p_\X$ and $p_0 = p_\Z$\footnote{Note again that the time index is inverted compared to score-based models.}.
+One can express this density as a marginal over a conditional probability path which propagates from a single data sample,
+\begin{equation}
+    \label{eq:conditional_path}
+    p_t(\x_t) = \int p_1(\x_1) p_{t1}(\x_t|\x_1) \diff \x_1.
+\end{equation}
+The conditional path has the endpoints,
+\begin{equation}
+    \label{eq:conditional_path_endpoints}
+    p_{01}(\x_t|\x_1) = p_0(\x_t) \quad \text{and} \quad p_{11}(\x_t|\x_1) = \delta(\x_t - \x_1),
+\end{equation}
+and is generated by its own conditional vector field $u_t(\x_t | \x_1)$ with the consistency condition,
+\begin{equation}
+    \label{eq:conditional_consistency}
+    \frac{\partial p_{t1}(\x_t | \x_1)}{\partial t} = -\nabla \cdot (u_t(\x_t | \x_1) p_{t1}(\x_t | \x_1)).
+\end{equation}
+
+The conditional vector field $u_t(\x_t | \x_1)$ can be used to express the marginal vector field $u_t(\x_t)$ as,
+\begin{equation}
+    \label{eq:conditional_to_marginal}
+    u_t(\x_t) = \int u_t(\x_t | \x_1) \frac{p_{t1}(\x_t | \x_1) p_1(\x_1)}{p_t(\x_t)} \diff \x_1.
+\end{equation}
+This is proven by,
+\begin{equation}
+    \begin{aligned}
+    \frac{\partial p_t(\x_t)}{\partial t}
+    &= \frac{\partial}{\partial t} \int p_{t1}(\x_t | \x_1) p_1(\x_1) \diff \x_1 \\
+    &= \int \frac{\partial}{\partial t} p_{t1}(\x_t | \x_1) p_1(\x_1) \diff \x_1 \\
+    &= - \int \left(\nabla \cdot (u_t(\x_t | \x_1) p_{t1}(\x_t | \x_1))\right) p_1(\x_1) \diff \x_1 \\
+    &= - \nabla \cdot \left(\int u_t(\x_t | \x_1) p_{t1}(\x_t | \x_1) p_1(\x_1) \diff \x_1\right) \\
+    &= - \nabla \cdot \left(\int u_t(\x_t | \x_1) \frac{p_{t1}(\x_t | \x_1) p_1(\x_1)}{p_t(\x_t)} p_t(\x_t) \diff \x_1\right) \\
+    &= - \nabla \cdot \left(\left(\int u_t(\x_t | \x_1) \frac{p_{t1}(\x_t | \x_1) p_1(\x_1)}{p_t(\x_t)} \diff \x_1\right) p_t(\x_t) \right) \\
+    &= - \nabla \cdot \left(u_t(\x_t) p_t(\x_t)\right),
+    \end{aligned}
+\end{equation}
+which is the continuity equation for the marginal density $p_t(\x_t)$.
+With this relations we can apply the same trick we did for score-matching, in that the flow matching (FM) loss,
+\begin{equation}
+    \label{eq:fm_loss}
+    \mathcal{L}_{FM}(\theta) =
+    \mathbb{E}_{t \sim \timeone}
+    \mathbb{E}_{\x_t \sim p_t(\x_t)}
+    \left|\left|u_\theta(\x_t) - u_t(\x_t)\right|\right|^2,
+\end{equation}
+and the CFM loss,
+\begin{equation}
+    \label{eq:cfm_loss}
+    \mathcal{L}_{CFM}(\theta) =
+    \mathbb{E}_{t \sim \timeone}
+    \mathbb{E}_{\x_1 \sim \mathcal{D}}
+    \mathbb{E}_{\x_0 \sim p_0}
+    \left|\left|u_\theta(\x_t, t) - u_t(\x_t | \x_1)\right|\right|^2,
+\end{equation}
+are equivalent with respect to the model parameters~\cite{FlowMatchingGenerative}.
+
+The only remaining feature is to describe the conditional probability path $p_{t1}(\x_t | \x_1)$.
+The authors of~\cite{FlowStraightFast} propose a basic Gaussian probability path,
+\begin{equation}
+    \label{eq:conditional_gaussian}
+    p_{t1}(\x_t | \x_1) = \mathcal{N}(\x_t; (1 - t)\x_1, t^2\mathbb{I}),
+\end{equation}
+which matches the relation in \Cref{eq:gaussian_kernel} with $s(t) = 1 - t$ and $\sigma(t) = t$ and allows for the same reparametrisation trick for sampling.
+This corresponds to the conditional vector field,
+\begin{equation}
+    \label{eq:conditional_gaussian_field}
+    u_t(\x_t | \x_1) = \frac{\x_t-\x_1}{t}.
+\end{equation}
+With these changes \Cref{eq:cfm_loss} simplifies even further with the linear interpolation scheme to
+\begin{equation}
+    \label{eq:linear_cfm_loss}
+    \mathcal{L}_{CFM}(\theta) =
+    \mathbb{E}_{t \sim \timeone}
+    \mathbb{E}_{\x_1 \sim \mathcal{D}}
+    \mathbb{E}_{\x_0 \sim p_0}
+    \left|\left|u_\theta(\x_t, t) - (\x_1 - \x_0)\right|\right|^2,
+\end{equation}
+which is the most common form of the loss used in practice.
+
+Once the network is trained, one can sample from the model by integrating the conditional vector field from noise sample to the data sample as with any CNF.
+
+\subsection{Diffusion Models in Practice}
+
+No matter the choice of framework, the training step for diffusion models largely the same.
+One selects a time index $t$, samples from the data $\x \sim p_\Z$ and the latent distribution $\z \sim p_\X$, mixes them together to get the partially noised sample $\x_t = s(t)\x + \sigma(t)\z$ using predefined scaling factors, and passes both the noised sample and the time index through a neural network.
+
+\subsubsection{Diffusion Frameworks}
+
+Three diffusion frameworks are used in the various projects within this thesis.
+The first uses SM objective by~\textcite{GenerativeModelingEstimating} with  trigonometric interpolations~\cite{StochasticInterpolants, ImprovedDenoisingDiffusion} which we refer to as SM-TI, the second follows the work by~\textcite{ElucidatingDesignSpace} often referred to as EDM diffusion, and the third is the CFM framework by~\textcite{FlowMatchingGenerative,FlowStraightFast,BuildingNormalizingFlows}.
+Each of these frameworks differ can be seen as alternative hyperparameter selections for the diffusion schedule, network preconditioning, the training target, and the sampling procedures.
+We briefly summarize the differences in the hyperparameters used in each of these frameworks in \Cref{tab:diffusion_frameworks}.
+
+In SM-TI, the diffusion schedule was chosen to be a cosine and sine function such that the total power of $\x_t$, assuming that the training set was standardized, is constant across the schedule.
+The network predicts the noise added to the data with the training objective
+$\mathbb{E}_{\x, \z, t} \lambda(t) \left|\left| \e_\theta(\x_t, t) - \z\right|\right|^2$.
+This is then used to approximate the score function, which is used in either the reverse SDE or the probability flow ODE to generate samples.
+
+In EDM the diffusion schedule was constructed to simplify the probability flow ODE as much as possible, resulting in noise being added at a constant rate to a signal that was kept the same.
+This results in straighter trajectories, which is beneficial for the numerical integration during sampling as it reduces the truncation error.
+It also means that the limit of the time index set the maximum noise level.
+The network is trained to predict the data itself, with the training objective $\mathbb{E}_{\x, \z, t} \lambda(t) \left|\left| f_\theta(\x_t, t) - \x\right|\right|^2$.
+The actual denoising model is parametrized such that
+\begin{equation}
+    f_\theta = c_\text{skip}(t) \x_t + c_\text{out}(t)F_\theta(c_\text{in}(t)\x_t, c_\text{noise}(t)),
+\end{equation}
+where $F_\theta$ is the neural network and $c_\text{skip}, c_\text{in}, c_\text{out}, c_\text{noise}$ are manually selected scaling factors such that the training objective and the network's inputs have unit variance across all timesteps.
+With the ODE, one can simply take steps towards the estimated data sample during integration.
+
+In the CFM framework, the diffusion schedule is chosen to be a basic linear interpolation between the noise and the data.
+The training target is simply the difference between the two.
+
+A natural question is which of these models is superior.
+Research on the topic is still ongoing, and it takes time for the community to reach a consensus.
+That being said, the CFM framework with the basic linear diffusion schedule is now used by the majority of the commercial diffusion models used for text-to-image synthesis, including Stable Diffusion 3~\cite{SD3} and Flux~\cite{flux2024github}, indicating a preference for this framework in practice.
+
+\begin{table}[h!]
+    \centering
+    \caption{Hyperparameters used in the different diffusion frameworks.}
+    \label{tab:diffusion_frameworks}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{cccc}
+    \toprule
+    & \textbf{SM-TI} & \textbf{EDM} & \textbf{CFM} \\
+    \midrule
+    time index $t$ & $t \in [0, 1]$ & $t \in [0, 80]$ & $t \in [0, 1]$ \\
+    signal rate $s(t)$ & $\cos(\frac{t\pi}{2})$ & $1$ & $1 - t$ \\
+    noise rate $\sigma(t)$ & $\sin(\frac{t\pi}{2})$ & $t$ & $t$ \\
+    latent distribution & $\normal$ & $\mathcal{N}(0, t_\text{max}\mathbb{I})$ & $\normal$ \\
+    training target & noise - $\z$ & data - $\x$ & velocity - $(\x - \z)$ \\
+    $\frac{\diff \x_t}{\diff t}$ & $- \frac{\pi}{2}\tan(\frac{\pi t}{2})(\x_t - \score)$ & $- t \score$ & $u_t(\x_t)$ \\
+    sampling & SDE or ODE & ODE & ODE \\
+    \bottomrule
+    \end{tabular}
+    }
+\end{table}
+
+Some examples of the generated samples from these models are shown in \Cref{fig:cm_samples}.
+Here these samples were generated using the CNF framework to produce the double-moon and four-box datasets starting from a standard normal distribution.
+One of the main benefits of the CNF framework is that the latent distribution does not have to be Gaussian at all, and the theory holds for any arbitrary distributions $p_0$ and $p_1$.
+This is shown in the bottom row of \Cref{fig:cm_samples} where the model interpolates from the double-moon distribution to the four-box distribution.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.99\textwidth]{Figures/transformers/cm_samples.pdf}
+    \caption{The transformation of gaussian samples into a double-moon distribution (top) and a four-box distribution (middle), and the interpolation between the two (bottom). The samples were generated using the CNF framework using Heun's method~\cite{heun} for 64 steps. Each column shows the samples at a different time index $t$, the black lines trace back to the samples in the previous column. The rightmost column shows the full paths traced by each sample from the base distribution.}
+    \label{fig:cm_samples}
+\end{figure}
 
 
+\subsubsection{Conditional Verses Unconditional Paths}
 
-% Include equation
-% We reach the same probjem with score-matching, that if we have the field as targets then we dont need to approximate it
-% Like with score matching we devise a target without having to calculate the velocity field directly, through denoising.
+One of the claims of both EDM and CFM is that they lead to straighter trajectories than SM-TI, allowing for faster sampling as one needs to perform less steps in the numerical integration.
+This is indeed the case as shown by \Cref{fig:vp_vs_cfm} where the SM-TI model results in paths with very high curvature.
+Note that the endpoints, the final distribution, is the same for both, yet neither paths the CFM are still not quite straight.
+The reason for this is that all frameworks were derived using a similar argument; that the marginal density (velocity) is intractable, but one can use the conditional density (conditional velocity) as a proxy.
+This disconnect also means that there is tension between the actual training target and what the model tends towards, highlighted in \Cref{fig:squares_gaussian} where a CNF was trained to generate samples from a two-box distribution.
+This especially true for when training with non-Gaussian latent distributions as shown in \Cref{fig:oned_oned}, where the model was trained to interpolate between the same distribution even though an optimal model in this case would have $u_t(\x_t) = 0$.
+So even if the conditional paths are straight, as with EDM and CFM, he marginal paths are not.
+This discrepancy results in a few considerations for training.
 
-% Use a latent variable and define the probability path over a joint
-% Include equation
-% Probability path is a joint over a conditional probability path
-% Induces a new continuity equation
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.45\textwidth]{Figures/transformers/fm.png}
+    \includegraphics[width=0.45\textwidth]{Figures/transformers/vp.png}
+    \caption{The marginal paths generated interpolating between a Gaussian and a double-moon distribution learned by using the CFM schedule (left) and the SM-TI schedule (right).}
+    \label{fig:vp_vs_cfm}
+\end{figure}
 
-\subsection{Hyperparameters of Diffusion Models}
-\subsubsection{The Diffusion Schedule}
-\subsubsection{Preconditioning}
-\subsubsection{Sampling From Diffusion Models}
+The using the conditional paths as a proxy means that updates are unbiased but have high variance.
+So while diffusion models arent at a risk to collapse like GANs while training, gradient updates are noisy and convergence is slow.
+Almost all diffusion models in practice are trained with two copies of the network, and online and a offline network.
+The online network is updated using the loss term with standard gradient descent, while the offline network is updated using the exponential moving average of the online network.
+The offline model is always used for sampling.
+This is a common trick which could be applied to any deep learning task~\cite{Adam} but it is ubiquitous in diffusion models.
 
-The diffusion schedule is uniquely defined by either the drift and diffusion functions, or the signal and noise coefficients.
-The choice of these functions are essentially a hyperparameter of the model and play a large role in the final performance.
+Note that for CFM predicting the marginal velocity is significantly harder in the middle of the schedule as opposed to the endpoints.
+This is because the optimal prediction for the marginal velocity at $t=0$ is to point towards the mean of $p_1$, and the optimal prediction at $t=1$ is to point towards the mean of $p_0$.
+Likewise for EDM, when no noise has been added the model should simply return the input, and when the noise is at it's maximum the model can not do anything more but return the mean of the training set.
+Thus it is common to use a non uniform sampling for the time index during training, to target the timesteps where the most information can be gained.
+These are typically based on empirical results, and are not derived from the theory.
+For EDM, $\log(t) \sim \mathcal{N}(-1.2, 1.2)$, is commonly used, where the specific values were chosen after a hyperparameter search~\cite{ElucidatingDesignSpace}.
+Likewise for CFM, it was found that logit-normal sampling,
+\begin{equation}
+    t \sim \frac{1}{\sqrt{2\pi}t(1-t)}\exp\left(-\frac{(\text{logit}(t))^2}{2}\right),
+\end{equation}
+where $\text{logit}(t) = \log\left(\frac{t}{1-t}\right)$, was the more effective than uniform sampling~\cite{SD3}.
 
-The Variance-Preserving (VP) schedule was introduced to match
+Even with these tricks, the highly variant outputs are still a problem and much work has been dedicated to learning straighter paths.
+Perfectly strait paths would be optimal, as they could be solved using a single Euler step.
+One approach is to use mini-batch optimal transport couplings between the data and the latent samples before mixing~\cite{ImprovingGeneralizingFlowbased}.
+However, even for mini-batches this method does not scale well to high dimensional data.
+Another approach is to take a trained model and \textit{distill} it, by training a second model to learn the same endpoints as the first model, but with straighter trajectories.
+There are various methods for distillation, such as rectification~\cite{FlowStraightFast}, progressive distillation~\cite{ProgressiveDistillationFast}, and consistency distillation~\cite{ConsistencyModels}.
+Each method attempts to reduce the number of inference steps required to generate high quality samples.
 
+There is however an argument to be made that it is the multiple steps that make diffusion models so powerful.
+Since the process requires removing noise from the data, any additional error terms induced by truncation errors are also removed.
+Diffusion models have been described as applying iterative refinements~\cite{ImageSuperResolutionIterative} to the data, and the multiple steps might be what is allowing the model to self correct.
 
-\subsection{Consistency Models}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.49\textwidth]{Figures/transformers/oned_target.png}
+    \includegraphics[width=0.49\textwidth]{Figures/transformers/oned.png}
+    \caption{(left) The conditional probability paths used to train a CFM, and (right) the marginal paths generated by the model for a two-box distribution mapping to a Gaussian.
+    }
+    \label{fig:squares_gaussian}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.49\textwidth]{Figures/transformers/oned2.png}
+    \includegraphics[width=0.49\textwidth]{Figures/transformers/oned2_marginal.png}
+    \caption{(left) The conditional probability paths used to train a CFM, and (right) the marginal paths generated by the model for interpolating between the same three-box distribution.
+    }
+    \label{fig:squares_gaussian}
+\end{figure}
+
+\subsubsection{Time Encoding}
+
+In all models the network needs to take in time information.
+One can do this by simply concatenating the time index to the input, but it is more beneficial to perform positional encoding beforehand.
+This is most commonly done using trigonometric functions, such as the positional encoding used in transformers~\cite{Attention}, or random Fourier features~\cite{FourierFeaturesLet}, but in our projects we have found the most success with a basic cosine-encoding (CosEnc)~\cite{ImplicitQuantileNetworks}.
+This layer takes scalar $t$ and returns an output tensor of length $d$ where each element is the output of a cosine function an exponentially increasing frequency.
+The lowest frequency is set such that the layer will not have duplicate outputs.
+For parameters $t_\text{min}$, $t_\text{max}$, and $d$ the CosEnd layer is given by,
+\begin{equation}
+    \label{eq:cosine_encoding}
+    \text{CosEnc}(t) =
+    \begin{bmatrix}
+        \cos\left(e^0 t'\right) \\
+        \cos\left(e^1 t'\right) \\
+        \vdots \\
+        \cos\left(e^{d-1} t'\right)
+    \end{bmatrix}, \quad \text{where} \quad t' = \pi \frac{t - t_\text{min}}{t_\text{max} - t_\text{min}} \\
+\end{equation}
+
+\subsubsection{Conditional Generation}
+
+Other conditioning information $\con$ can easily be added to the network, such as class labels or other auxiliary information.
+This works for all frameworks requires including the context information with the inputs to the network, the exact form depending on the architecture of the model.
+Interestingly enough, one does not even have to train a conditional model to perform conditional generation due to the relation,
+\begin{equation}
+    \label{eq:conditional_generation}
+    \nabla_{\x_t} \cdot \log p(\x_t | \con) = \nabla_{\x_t} \cdot \log p(\x_t) + \nabla_{\x_t} \cdot \log p(\con | \x_t).
+\end{equation}
+Thus, one only needs a second time-dependent classifier for the conditioning information.
+Gradients with respect to this model can be used to modify the update rule for the ODE or the velocity field to perform conditional generation.
+This is often referred to as \textit{guidance} in the diffusion literature~\cite{DiffusionBeatsGANS}.
+
+\subsubsection{Sampling}
+
+As previously discussed, various numerical integration techniques can be employed in conjunction with either the reverse Stochastic Differential Equation or the probability flow Ordinary Differential Equation to sample from a diffusion model. Beyond the conventional numerical integration methods, such as Euler, Heun, and Linear Multi-Step methods~\cite{heun}, a novel domain has emerged, focusing on the development of efficient integration methods tailored to specific diffusion schedules. Notable examples include DDIM~\cite{DDIM}, DPM-Solver~\cite{DPMSolverFastODE}, DPM-Solver++~\cite{DPMSolverFastSolver}, UniPC~\cite{UniPC}, and DPM-Solver-2M~\cite{DPMSolverFastSolver}. These samplers are adaptable to both the stochastic differential equation and ordinary differential equation frameworks.
+
+Furthermore, the number of integration steps and the step size vary across different methods. In~\cite{ElucidatingDesignSpace}, the integration steps were designed to take larger steps at the beginning of the schedule and smaller steps towards the end, facilitating refinement. This variability complicates the comparison of models, as the same model may yield different results depending on the integration method employed. This presents a significant challenge in the field.
