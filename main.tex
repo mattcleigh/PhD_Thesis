@@ -12,7 +12,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{mathpazo}
-\usepackage[style=numeric-comp, sorting=custom, date=year, backend=biber, giveninits=true, maxnames=3, minnames=1, backref=true]{biblatex}
+\usepackage[style=numeric-comp, sorting=custom, date=year, backend=biber, giveninits=true, maxnames=3, minnames=1, backref=false]{biblatex}
 \usepackage{csquotes}
 \usepackage[subrefformat=parens, labelfont=up]{subcaption}\usepackage{amsmath}
 \usepackage{hyperref}
@@ -46,8 +46,10 @@
 \newcommand{\x}{\mathbf{x}}
 \newcommand{\y}{\mathbf{y}}
 \newcommand{\z}{\mathbf{z}}
+\renewcommand{\u}{\mathbf{u}}
 \newcommand{\e}{\boldsymbol{\epsilon}}
 \newcommand{\w}{\boldsymbol{\omega}}
+\newcommand{\ba}{\mathbf{a}}
 \newcommand{\bias}{\mathbf{b}}
 \newcommand{\con}{\mathbf{c}}
 \newcommand{\X}{\mathbf{X}}
@@ -114,14 +116,13 @@
 \pagestyle{thesis}
 
 % \include{Chapters/introduction}
-% \part{Physics Background}
-% \include{Chapters/standard_model}
+\include{Chapters/standard_model}
 % \include{Chapters/lhc_atlas_detector}
-% \part{Transformers for Flavour Tagging}
-% \include{Chapters/transformers_gnns}
-% \include{Chapters/deep_generative_models}
-% \include{Chapters/transformers_flavor_tagging}
-\include{Chapters/generative_models}
+% \include{Chapters/deep_learning}
+% \include{Chapters/gnns}
+% \include{Chapters/spice}
+% \include{Chapters/generative_models}
+% \include{Chapters/jet_generation}
 % \include{Chapters/anomaly_detection}
 % \include{Chapters/foundation_models_hep}
 % \include{Chapters/conclusion}

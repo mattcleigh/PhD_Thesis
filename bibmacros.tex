@@ -12,10 +12,9 @@
     \usebibmacro{bbx:parunit}% Added
     \iftoggle{bbx:doi}
     {\printfield{doi}}
-    {}%
-    \iftoggle{bbx:eprint}
-    {\usebibmacro{eprint}}
-    {}%
+    {\iftoggle{bbx:eprint}
+        {\usebibmacro{eprint}}
+        {}}%
     \iftoggle{bbx:url}
     {\usebibmacro{url+urldate}}
     {}}
@@ -34,6 +33,17 @@
     {\setunit*{\addspace}%
         \printtext[urldate]{\printurldate}}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Redefine the eprint macro to exclude the "Pre-published" status
+\renewbibmacro*{eprint}{%
+  \iffieldundef{eprinttype}
+    {\printfield{eprint}}
+    {\printfield[eprint:\strfield{eprinttype}]{eprint}}}
+\AtEveryBibitem{%
+    \ifentrytype{online}{%
+      \clearfield{pubstate}%
+    }{}%
+  }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % If the entries are introduced the same citation then order by year

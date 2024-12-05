@@ -1,0 +1,139 @@
+
+\chapter{Flavour Tagging with Transformers}
+\label{ch:spice}
+
+In this chapter we describe the design and implementation new graph networks for flavour tagging.
+These models build on GN1, a graph network which uses GATv2 system of message passing~\cite{GATv2}, and can be thought of as an architecture optimization of the already successful flavour tagger used by ATLAS.
+The first new model is called GN++ and is based on the full GN-Block architecture described in \Cref{sec:gn_block}, complete with persistent edge information and global attributes.
+The second new model is called Spice and is based on the transformer encoder architecture, described in \Cref{sec:transformer}, with the message passing step done using multi-headed SDPA.
+Spice would prove to be so performant and efficient that it would form the basis of the new GN2 flavour tagger adopted by the ATLAS collaboration.
+One of the observations made over the course of this project is that the rate of progress in machine learning is much faster than in high energy physics.
+At the time Spice was being developed and presented to the flavour tagging group, GN1 was still undergoing collaboration.
+At the time of writing, GN2 is now being calibrated and significant effort is being use to keep it up to date with the latest developments in machine learning.
+
+\section{Datasets}
+
+The same training and test samples used for the previous flavour taggers, DIPS and GN1, were used.
+Further information can be found in Refs. \cite{GN1, AlexThesis}.
+
+Two simulated datasets are used in this work to train and evaluate the models.
+The first contains $\ttbar$ events and this covers the low $\pt$ phase space for training the taggers.
+The simulation settings for the $\ttbar$ sample are derived from studies to best match jet multiplicity and top quark momentum distributions in data~\cite{ttbar1, ttbar2}.
+The second sample contains $Z'$ events included to enhance the training statistics in the high $\pt$ phase space.
+The $Z'$ boson is a non-SM particle where both the cross-section of the hard-scatter process and the branching fractions were specifically designed to produce a relatively uniform distribution of jets with $\pt$ up to $5~\TeV$ split equally between $b-$, $c-$, and light-jets.
+
+\subsection{Monte Carlo Samples}
+
+Both datasets are initiated by simulated proton-proton collisions at a center-of-mass energy of $\sqrt{s} = 13$ TeV.
+
+Hard scatter events for the $\ttbar$ sample were generated at next-to-leading order using \textsc{PowhegBox v2} \cite{Powheg1, Powheg2, Powheg3} interfaced with \textsc{Pythia 8.230} \cite{Pythia8} using the \textsc{A14} tune \cite{A14} for parton showering and hadronization.
+For the parton distribution functions, the \textsc{NNPDF3.0NNLO} \cite{PDF3.0} set was used for the matrix element calculation while the \textsc{NNPDF2.3LO} \cite{PDF2.3} set was used for the showering.
+The cut-off scale parameter for the first-gluon-emission $h_{\text{damp}}$ was set to 1.5 times the top quark mass of $m_t = 172.5~\GeV$.
+The $Z'$ sample was generated and showered using \textsc{Pythia 8.212} with the \textsc{A14} tune and the \textsc{NNPDF2.3LO} set of parton distribution functions.
+
+For both datasets, decays of $b-$ and $c-$hadrons are done using the \textsc{EvtGen v1.6.0} package \cite{EvtGen}.
+Detector response is performed using the \textsc{Geant4} simulation package \cite{Geant4} with the \textsc{ATLAS} simulation setup \cite{ATLASSim}.
+Pileup is modelled by overlaying extra minimum bias events using the \textsc{Pythia 8.160} generator with the \textsc{A3} tune \cite{A3} and the \textsc{NNPDF2.3LO} parton distribution functions.
+These signals are combined with the hard scatter events during the digitization step.
+Interactions with heavy flavour hadrons and the detector material was not simulated but accounted for in correction factors and systematic uncertainties.
+In-time pileup is modelled using an average of 40 interactions per bunch crossing, while out-of-time pileup is modelled using bunch crossings before and after the primary interaction.
+
+\subsection{Selection and Sampling}
+
+The ATLAS flavour tagging uses PFLow jets, which are described in \Cref{sec:jet_reconstruction}.
+Jets are required to have $\pt > 20~\GeV$ and $|\eta| < 2.5$.
+All jets with $\pt < 60~\GeV$ and $|\eta| < 2.4$ must also pass the tight working point of the JVT algorithm in order to minimise contributions from pileup.
+Jets are also discarded is they are found to overlap with a generator-level lepton from a $W$ or $Z$ decay.
+
+The training dataset is a mixture of 70\% $\ttbar$ and 30\% $Z'$ events.
+To decorrelate the tagger with respect to the jet $\pt$ and $\eta$, jets are also resampled such that the truth matched $b-$, $c-$, and light-jets have identical distributions in these variables.
+After resampling the training set contained a total of 120 million jets split equally between the three jet flavours.
+During training, 5\% of this was reserved for hold out validation.
+Two statistically independent test samples are each containing 1 million $\ttbar$ and $Z'$ jets respectively.
+No resampling is done on the test datasets.
+
+\section{Model Design}
+
+All of the proposed models can be thought of as variations or extensions of GN1.
+GN1 introduced the idea of a monolithic graph neural network which would simultaneously perform jet tagging, vertexing, and track identification.
+All the proposed extensions follow this same setup but with updates to the message passing step as well as latest trends in architecture design.
+From Ref.~\cite{RelationalInductiveBiases} and the design of the GN-Block the proposed updates include, persistent edge information, persistent global information, and node feed-forward layers.
+From the modern network design and the current trend of transformers, we include multi-headed SDPA, PreNorm, and residual additive connections.
+
+\section{Input Features}
+
+The inputs to all the models presented in this section are the same.
+They include two kinematic jet variables, $\pt$ and $\eta$, and up to 40 tracks associated with the jet.
+Each track is represented by a vector containing 21 features, detailed in \Cref{tab:track_features}.
+% Almost all \ttbar jets contain less than 40 tracks, but a significant fraction of $Z'$ jets contain more, as shown in \Cref{fig:track_multiplicity}.
+For these samples only the 40 tracks with the highest IP significance $s(d_0)$ are retained.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ll}
+        \toprule
+        \midrule
+        \multicolumn{2}{c}{Jet Level Inputs Description} \\
+        \midrule
+        $\pt$ & Jet transverse momentum \\
+        $\eta$ & Signed jet pseudorapidity \\
+        \midrule
+        \midrule
+        \multicolumn{2}{c}{Track Level Inputs} \\
+        \midrule
+        $q/p$ & Track charge divided by momentum \\
+        d$\eta$ & Pseudorapidity of the track, relative to the jet $\eta$ \\
+        d$\phi$ & Azimuthal angle of the track, relative to the jet $\phi$ \\
+        $d_0$ & Closest distance from the track to the PV in the longitudinal plane \\
+        $z_0 \sin \theta$ & Closest distance from the track to the PV in the transverse plane \\
+        $\sigma(q/p)$ & Uncertainty on q/p \\
+        $\sigma(\theta)$ & Uncertainty on track polar angle $\theta$ \\
+        $\sigma(\phi)$ & Uncertainty on track azimuthal angle $\phi$ \\
+        $s(d_0)$ & Lifetime signed transverse IP significance \\
+        $s(z_0)$ & Lifetime signed longitudinal IP significance \\
+        nPixHits & Number of pixel hits \\
+        nSCTHits & Number of SCT hits \\
+        nIBLHits & Number of IBL hits \\
+        nBLHits & Number of B-layer hits \\
+        nIBLShared & Number of shared IBL hits \\
+        nIBLSplit & Number of split IBL hits \\
+        nPixShared & Number of shared pixel hits \\
+        nPixSplit & Number of split pixel hits \\
+        nSCTShared & Number of shared SCT hits \\
+        nPixHoles & Number of pixel holes \\
+        nSCTHoles & Number of SCT holes \\
+        \bottomrule
+    \end{tabular}
+    \caption{Input features for the Graph Neural Network Flavour Tagger.}
+    \label{tab:track_features}
+\end{table}
+
+% - Describe GN1
+% - Describe the 3 tier loss
+% - Describe the full GNN model
+% - Describe the proposed transformer model
+
+\section{Training}
+
+% - Training highlights
+% - Loss curves
+% - All training parameters
+
+\section{Performance}
+
+% - Output distributions
+% - ROC curves
+% - Rejection values
+
+\section{Applications}
+
+% - GN2X
+% - Current model architecture
+% - Current training set
+% - Current performance
+
+
+
+
+
+
