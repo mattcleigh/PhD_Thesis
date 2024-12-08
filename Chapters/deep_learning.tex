@@ -29,14 +29,15 @@ Modern networks now contain billions of parameters, requiring large datasets, sp
 As the networks have grown in size and complexity, model interpretability has become a significant challenge and an active area of research.
 
 \section{Supervised Learning}
+\label{sec:supervised_learning}
 
 Supervised Learning is often introduced first in a pedagogical setting, as it is the simplest and most intuitive form of machine learning. While it is not limited to deep learning, it is introduced here within its context as it is arguably the most common form of training for deep models. Indeed, many other training frameworks, such as reinforcement learning, are reframed as supervised problems to facilitate training.
 
 In supervised learning, a single data sample is a coupling of two variables $(x, y)$ and is drawn from unknown joint distribution $p_{XY}(X, Y)$.
 In this setting, $x$ is the observable information about the sample, and thus the input for a model, and $y$ is some truth label, target, or desired output for a model.
-The goal of supervised learning is to produce a discriminative model which approximates the mapping from inputs to outputs, $f: X \mapsto Y$.
+The goal of supervised learning is to produce a discriminative model which approximates the mapping from inputs to outputs, $f: X \rightarrow Y$.
 Discriminative models can also be probabilistic, where they model the conditional probability distribution of the target given an observation $f(x, \hat y) \approx p_Y(Y=\hat y|X=x)$.
-Probabilistic models which permit sampling from this distribution can also be considered generative models, which are covered in \Cref{chap:generative}.
+Probabilistic models which permit sampling from this distribution can also be considered generative models, which are covered in \Cref{ch:generative_models}.
 
 Fitting or training a supervised learning model typically requires a training set $\mathcal{D}$ containing of $N$ observations and their paired targets $\mathcal{D} = \{(x_i, y_i)\}_{i=1}^N$.
 These samples are usually assumed to be independent and identically distributed (i.i.d.) from the joint\footnote{Non i.i.d. data can sometimes be used by incorporating the appropriate weights during training}.

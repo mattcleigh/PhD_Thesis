@@ -3,7 +3,7 @@
 
 The philosophy behind graph neural networks (GNNs) is rooted in the idea that nature is best understood when broken down into compositional elements.
 By understanding these elements and the rules governing their interactions, we can gain insights into the system as a whole.
-This reductionist approach is in many areas of science, and indeed is the basis for all of particle physics.
+This reductionist approach is used in many areas of science, and indeed is the basis for all of particle physics.
 
 Graphs serve as a prime example of explicitly structured data, encompassing entities and their pairwise relationships. GNNs are a type of deep learning model designed to handle this structure, allowing information to flow through the network in a manner that mirrors the graph's organization.
 
@@ -627,6 +627,7 @@ RPE biases the attention matrix, serving as edge information, with various imple
 $B$ can be parameterized as a learnable Toeplitz matrix, ALiBi~\cite{ALIBI} fixes the elements of this matrix to be simply $B_{ij} = m\times(i - j)$, for a fixed per-head scalar $m$, and rotary-positional-encoding rotates the query and key tensors by a fixed amount before the attention operation~\cite{RoFormerEnhancedTransformer}.
 
 \subsection{Global Attributes and Conditioning Graph Updates}
+\label{sec:global_attributes}
 
 Global attributes are used to condition updates or can be used as outputs for graph-level tasks.
 In \Cref{alg:gn_block}, the global attributes are updated by summing the node attributes which is then passed through an MLP\@.
