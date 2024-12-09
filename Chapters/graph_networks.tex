@@ -70,6 +70,7 @@ Exact details of how this is done can vary between models, but the core idea is 
 \end{figure}
 
 \section{Graph Type Data}
+\label{sec:graph_data}
 
 Graph or set representation is fairly ubiquitous in the real world as it may be used for anything that can be broken down into discrete elements.
 For instance, a collection of particles captured by a detector can be expressed as sets, where the stable particles are the nodes and their attributes are the particle kinematics.
@@ -197,7 +198,7 @@ The GN-Block does not change the cardinality of the features present, only updat
 \begin{equation}
     \text{GN}(\mathcal{N}, \mathcal{E}, \u) = (\mathcal{N}', \mathcal{E}', \u').
 \end{equation}
-The GN block is composed of three sub-blocks involving three update functions, $\phi^v$, $\phi^e$, and $\phi^u$, and three aggregation functions, $\rho^{e \to v}$, $\rho^{e \to u}$, and $\rho^{v \to u}$.
+The GN block is composed of three sub-blocks involving three update functions, $\phi^x$, $\phi^e$, and $\phi^u$, and three aggregation functions, $\rho^{e \to x}$, $\rho^{e \to u}$, and $\rho^{x \to u}$.
 Given an input graph $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$ the GN-Block proceeds as follows.
 
 \begin{enumerate}
@@ -210,16 +211,16 @@ Given an input graph $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$ the GN-Block
     \item \textbf{Node Block:} Incoming edge information is aggregated for each node.
     For node with index $i$, this is represented by the set $E_i$.
     \begin{equation}
-        \bar\edge_i = \rho^{e \to v}(E_i) = \rho^{e \to v}\left(\{(\edge_k', r_k, s_k) | r_k = i\}\right)
+        \bar\edge_i = \rho^{e \to x}(E_i) = \rho^{e \to x}\left(\{(\edge_k', r_k, s_k) | r_k = i\}\right)
     \end{equation}
     All nodes are then updated using its current attributes, the aggregated edge information, and the global attribute.
     Updating the nodes using incoming information is called message passing.
     \begin{equation}
-        \x_i' = \phi^v(\bar\edge_i, \x_i, \u).
+        \x_i' = \phi^x(\bar\edge_i, \x_i, \u).
     \end{equation}
     \item \textbf{Global Block:} All edge information and node information across the graph is aggregated,
     \begin{alignat}{2}
-        \bar\x &= \rho^{v \to u}(\mathcal{N}') &&= \rho^{v \to u}(\{\x_i\}_{i=1}^{N}) \\
+        \bar\x &= \rho^{x \to u}(\mathcal{N}') &&= \rho^{x \to u}(\{\x_i\}_{i=1}^{N}) \\
         \bar\edge &= \rho^{e \to u}(\mathcal{E}') &&= \rho^{e \to u}(\{\edge_k'\}_{k=1}^{N^e}),
     \end{alignat}
     and used to update the global attribute,
@@ -270,9 +271,9 @@ Here the operations are simply,
             \State $\mathbf{\bar\edge}_i \gets \sum_{k: r_k = i} \edge_k'$ \Comment{aggregate incoming information per node}
             \State $\x_i' \gets \text{MLP}_v([\mathbf{\bar\edge}_i, \x_i, \u])$ \Comment{update node features}
         \EndFor
-        \State $\mathbf{\bar{v}} \gets \sum_{i} \x_i'$ \Comment{aggregate features across the graph}
+        \State $\mathbf{\bar{x}} \gets \sum_{i} \x_i'$ \Comment{aggregate features across the graph}
         \State $\mathbf{\bar\edge} \gets \sum_{k} \edge_k'$
-        \State $\u' \gets \text{MLP}_u([\mathbf{\bar\edge}, \mathbf{\bar{v}}, \u])$ \Comment{update global features}
+        \State $\u' \gets \text{MLP}_u([\mathbf{\bar\edge}, \mathbf{\bar{x}}, \u])$ \Comment{update global features}
     \end{algorithmic}
 \end{algorithm}
 
@@ -356,18 +357,18 @@ To prevent the gradients from exploding, the attention logits are scaled by the 
 
 In the framing of the GN-Block, SDPA has the edge update is factorized into a tuple containing a scalar expressing the message weight $\alpha_k'(\x_{s_k}, \x_{r_k})$ and a vector function for calculating the message content $\mathbf{v}_k'(\x_{s_k})$.
 Only $\alpha_k'$ depends on the pairwise interaction of both the sender and receiver nodes.
-The pooling operation $\rho^{e \to v}$ normalizes over the receiver weights before aggregating the messages.
+The pooling operation $\rho^{e \to x}$ normalizes over the receiver weights before aggregating the messages.
 The block can be written as,
 \begin{equation}
     \begin{aligned}
         \edge_k' &= \phi^e(\edge_k, \x_{s_k}, \x_{r_k}, \u)
         = ( a_k', \mathbf{v}_k' ) \\
         &= \left( \exp \left( \frac{1}{d_k} \mathbf{W}^q \x_{s_k} \cdot \mathbf{W}^k \x_{r_k} \right), \mathbf{W}^v \x_{s_k} \right), \\
-        \mathbf{\bar\edge}_i &= \rho^{e \to v}(E_i) \\
+        \mathbf{\bar\edge}_i &= \rho^{e \to x}(E_i) \\
        &= \frac{\sum_{k: r_k = i} a_k' \mathbf{v}_k'}{\sum_{k: r_k = i} a_k'},
     \end{aligned}
 \end{equation}
-for learnable weight matrices $\mathbf{W}^k \in \mathbb{R}^{d \times d_k}$, $\mathbf{W}^q \times \mathbb{R}^{d \times d_k}$, and $\mathbf{W}^v \in \mathbb{R}^{d \times d_v}$.
+for learnable weight matrices $\mathbf{W}^k \in \mathbb{R}^{d \times d_k}$, $\mathbf{W}^q \times \mathbb{R}^{d \times d_k}$, and $\mathbf{W}^x \in \mathbb{R}^{d \times d_v}$.
 
 When using real values tensor representations, this operation can be done efficiently for all nodes in parallel using basic matrix operations.
 Furthermore, it allows us to extend to two forms, self-attention and cross-attention, both expressible by the following equation,
