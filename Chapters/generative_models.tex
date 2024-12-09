@@ -18,7 +18,7 @@ An overview of the models is given in \Cref{fig:generative_models}.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.8\textwidth]{Figures/transformers/pgms.pdf}
+    \includegraphics[width=0.8\textwidth]{Figures/generative_models/pgms.pdf}
     \caption{An overview of the generative models covered in this chapter.}
     \label{fig:generative_models}
 \end{figure}
@@ -232,7 +232,7 @@ Conditional information can quickly be injected into the flow by incorporating t
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.8\textwidth]{Figures/transformers/coupling.pdf}
+    \includegraphics[width=0.8\textwidth]{Figures/generative_models/coupling.pdf}
     \caption{A diagram of a coupling flow.}
     \label{fig:coupling_flow}
 \end{figure}
@@ -249,14 +249,14 @@ The learned densities are shown in \cref{fig:density}.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.95\textwidth]{Figures/transformers/samples.pdf}
+    \includegraphics[width=0.95\textwidth]{Figures/generative_models/samples.pdf}
     \caption{The transformation of gaussian samples into a double-moon distribution (top) and a four-box distribution (bottom) using a flow with 4 coupling layers. Each coupling layer can only transform one dimension of the data.}
     \label{fig:samples}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.4\textwidth]{Figures/transformers/densities.pdf}
+    \includegraphics[width=0.4\textwidth]{Figures/generative_models/densities.pdf}
     \caption{The learned (left) and real (right)densities of the double-moon distribution (top) and the four-box distribution (bottom) using a NF.}
     \label{fig:density}
 \end{figure}
@@ -290,7 +290,7 @@ Alternatively one could parametrize the layer inversely, choosing efficient samp
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.8\textwidth]{Figures/transformers/autoreg.pdf}
+    \includegraphics[width=0.8\textwidth]{Figures/generative_models/autoreg.pdf}
     \caption{A diagram of an autoregressive flow. The forward-mode transformation (left) can be computed in parallel, while the reverse-mode transformation (right) must be computed sequentially.}
     \label{fig:autoregressive_flow}
 \end{figure}
@@ -433,7 +433,7 @@ One can instead use the denoising score matching (DSM) objective~\cite{ScoreMatc
     \mathbb{E}_{t \sim \unitime}
     \mathbb{E}_{\x_0 \sim \mathcal{D}}
     \mathbb{E}_{\x_t \sim p_{0t}(\x_t|\x_0)}
-    \left|\left|F_\theta(\x_t, t) - \cscore\right|\right|^2.
+    \left|\left|S_\theta(\x_t, t) - \cscore\right|\right|^2.
 \end{equation}
 This replacement is valid because after taking all expectations, the gradients of the two loss functions are equivalent with respect to the model parameters~\cite{ScoreBasedGenerativeModeling},
 \begin{equation}
@@ -667,7 +667,7 @@ This includes models such as Stable Diffusion 3~\cite{SD3} and Flux~\cite{flux20
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.99\textwidth]{Figures/transformers/cm_samples.pdf}
+    \includegraphics[width=0.99\textwidth]{Figures/generative_models/cm_samples.pdf}
     \caption{The transformation of gaussian samples into a double-moon distribution (top) and a four-box distribution (middle), and the interpolation between the two (bottom). The model was trained using the CNF framework generated with Heun's method~\cite{heun} for 64 steps. Each column shows the samples at a different time index $t$, the black lines trace back to the samples in the previous column. The rightmost column shows the full paths traced by each sample from the base distribution.}
     \label{fig:cm_samples}
 \end{figure}
@@ -686,8 +686,8 @@ This discrepancy results in a few considerations for training.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.45\textwidth]{Figures/transformers/fm.png}
-    \includegraphics[width=0.45\textwidth]{Figures/transformers/vp.png}
+    \includegraphics[width=0.45\textwidth]{Figures/generative_models/fm.png}
+    \includegraphics[width=0.45\textwidth]{Figures/generative_models/vp.png}
     \caption{The marginal paths generated interpolating between a Gaussian and a double-moon distribution learned by using the CFM schedule (left) and the SM-TI schedule (right).}
     \label{fig:vp_vs_cfm}
 \end{figure}
@@ -712,10 +712,10 @@ where $\text{logit}(t) = \log\left(\frac{t}{1-t}\right)$, was the most effective
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.49\textwidth]{Figures/transformers/oned2.png}
-    \includegraphics[width=0.49\textwidth]{Figures/transformers/oned.png}
-    \includegraphics[width=0.49\textwidth]{Figures/transformers/oned_target.png}
-    \includegraphics[width=0.49\textwidth]{Figures/transformers/oned2_marginal.png}
+    \includegraphics[width=0.49\textwidth]{Figures/generative_models/oned2.png}
+    \includegraphics[width=0.49\textwidth]{Figures/generative_models/oned.png}
+    \includegraphics[width=0.49\textwidth]{Figures/generative_models/oned_target.png}
+    \includegraphics[width=0.49\textwidth]{Figures/generative_models/oned2_marginal.png}
     \caption{(left) The conditional paths used to train a CFM, and (right) the marginal paths generated by the model. The top row shows a model interpolating between a two-box distribution and a Gaussian distribution, and the bottom row shows a model interpolating between samples drawn from the same three-box distribution.}
     \label{fig:oned_oned}
 \end{figure}

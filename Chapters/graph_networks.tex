@@ -64,7 +64,7 @@ Exact details of how this is done can vary between models, but the core idea is 
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\textwidth]{Figures/transformers/graphs.pdf}
+    \includegraphics[width=0.5\textwidth]{Figures/graph_networks/graphs.pdf}
     \caption{A directed multi-graph with node, edges a global attribute $\u$. Highlighted is the edge $\edge_{k}$ which connects the sender node $s_k$ to the receiver node $r_k$.}
     \label{fig:graph}
 \end{figure}
@@ -102,19 +102,19 @@ Finally, there are edge-level tasks which predict properties or even the existen
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figures/transformers/RifampiciN_Structure.pdf}
+        \includegraphics[width=\textwidth]{Figures/graph_networks/RifampiciN_Structure.pdf}
         \caption{Chemical compounds}
         \label{fig:chemical}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figures/transformers/patched_image.png}
+        \includegraphics[width=\textwidth]{Figures/graph_networks/patched_image.png}
         \caption{Images (patched)}
         \label{fig:dog}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
-        \includegraphics[width=0.8\textwidth]{Figures/transformers/text.pdf}
+        \includegraphics[width=0.8\textwidth]{Figures/graph_networks/text.pdf}
         \caption{Language (tokenized)}
         \label{fig:text}
     \end{subfigure}
@@ -173,13 +173,13 @@ Models such as the perceiver~\cite{Perceiver} project input information onto a c
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figures/transformers/neighbours.pdf}
+        \includegraphics[width=\textwidth]{Figures/graph_networks/neighbours.pdf}
         \caption{}
         \label{fig:neighbours}
     \end{subfigure}
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figures/transformers/bottleneck.pdf}
+        \includegraphics[width=\textwidth]{Figures/graph_networks/bottleneck.pdf}
         \caption{}
         \label{fig:bottleneck}
     \end{subfigure}
@@ -280,13 +280,13 @@ Here the operations are simply,
     \centering
     \begin{subfigure}[b]{0.49\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figures/transformers/full_gn.pdf}
+        \includegraphics[width=\textwidth]{Figures/graph_networks/full_gn.pdf}
         \caption{Full GN Block}
         \label{fig:full_gn_block}
     \end{subfigure}
     \begin{subfigure}[b]{0.49\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figures/transformers/deepset.pdf}
+        \includegraphics[width=\textwidth]{Figures/graph_networks/deepset.pdf}
         \caption{Deep Set}
         \label{fig:deep_set}
     \end{subfigure}
@@ -322,14 +322,14 @@ The adjacency matrix in a graph is also called the attention mask in a transform
     \centering
     \begin{subfigure}[b]{0.49\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figures/transformers/imagenet.pdf}
+        \includegraphics[width=\textwidth]{Figures/graph_networks/imagenet.pdf}
         \caption{}
         \label{fig:imagenet}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.49\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figures/transformers/coco.pdf}
+        \includegraphics[width=\textwidth]{Figures/graph_networks/coco.pdf}
         \caption{}
         \label{fig:coco}
     \end{subfigure}
@@ -339,7 +339,7 @@ The adjacency matrix in a graph is also called the attention mask in a transform
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.49\textwidth]{Figures/transformers/nonlocal.pdf}
+    \includegraphics[width=0.49\textwidth]{Figures/graph_networks/nonlocal.pdf}
     \caption{NLNN / Transformer Encoder}
     \label{fig:transformer}
 \end{figure}
@@ -391,7 +391,7 @@ Finally, the bias term $\mathbf{B}$ is a matrix of shape $(N_R, N_S)$ which can 
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\textwidth]{Figures/transformers/bipartite.pdf}
+    \includegraphics[width=0.5\textwidth]{Figures/graph_networks/bipartite.pdf}
     \caption{(left) Self-attention is standard message passing between all nodes in a graph. (right) Cross-attention creates a one-way bipartite graph between two sets of nodes.}
     \label{fig:bipartite}
 \end{figure}
@@ -414,7 +414,7 @@ Both self- and cross-attention can be multi-headed where multi-headed self-atten
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\textwidth]{Figures/transformers/mha.pdf}
+    \includegraphics[width=0.8\textwidth]{Figures/graph_networks/mha.pdf}
     \caption{Multi-headed attention can be thought of as constructing a multi-graph with different edge types.}
     \label{fig:mha}
 \end{figure}
@@ -585,7 +585,7 @@ This set-to-set transformation is the basis of many generative of sequence-to-se
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.7\textwidth]{Figures/transformers/transformer_variants.pdf}
+    \includegraphics[width=0.7\textwidth]{Figures/graph_networks/transformer_variants.pdf}
     \caption{Some common transformer variants. (left) Transformer Encoder (TE) block. (center) Cross-Attention (CA) block. (right) Transformer Decoder (TD) block.}
     \label{fig:transformer_blocks}
 \end{figure}
@@ -647,7 +647,7 @@ This is shown for a TE block in \Cref{fig:adaptive_gating} and can be written fo
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.25\textwidth]{Figures/transformers/adaptivegating.pdf}
+    \includegraphics[width=0.25\textwidth]{Figures/graph_networks/adaptivegating.pdf}
     \caption{A TE block with adaptive normalization and gating to incorporate global information.}
     \label{fig:adaptive_gating}
 \end{figure}

@@ -1,26 +1,27 @@
 
-\chapter{Flavour Tagging with Transformers}
+\chapter{Flavour Tagging with Graph Networks and Transformers}
 \label{ch:spice}
 
 In this chapter we describe the design and implementation new graph networks for flavour tagging.
-These models build on GN1, a graph network which uses GATv2 system of message passing~\cite{GATv2}, and can be thought of as an architecture optimization of the already successful flavour tagger used by ATLAS.
+These model build on GN1, a graph network which uses GATv2 system of message passing~\cite{GATv2}, and can be thought of as an architecture optimization of the already successful flavour tagger used by ATLAS.
 The first new model is called GN++ and is based on the full GN-Block architecture described in \Cref{sec:gn_block}, complete with persistent edge information and global attributes.
-The second new model is called Spice and is based on the transformer encoder architecture, described in \Cref{sec:transformer}, with the message passing step done using multi-headed SDPA.
+The second new model is called Spice and is based on the transformer encoder architecture, described in \Cref{sec:transformer}, with the message passing step done using MHA.
 Spice would prove to be so performant and efficient that it would form the basis of the new GN2 flavour tagger adopted by the ATLAS collaboration.
 One of the observations made over the course of this project is that the rate of progress in machine learning is much faster than in high energy physics.
 At the time Spice was being developed and presented to the flavour tagging group, GN1 was still undergoing collaboration.
-At the time of writing, GN2 is now being calibrated and significant effort is being use to keep it up to date with the latest developments in machine learning.
+At the time of writing, GN2 is now being calibrated, and significant effort is being used to keep it up to date with the latest developments in machine learning.
+One of the main contributions of this thesis was that, after presenting the Spice model to the collaboration, work was done on producing the repository and documentation for GN2 called Salt~\cite{Salt}.
 
 \section{Datasets}
 
-The same training and test samples used for the previous flavour taggers, DIPS and GN1, were used.
-Further information can be found in Refs. \cite{GN1, AlexThesis}.
+This work reuses the samples as the previous flavour taggers, DIPS and GN1, and further information can be found in \textcite{AlexThesis} and \textcite{GN1}.
 
-Two simulated datasets are used in this work to train and evaluate the models.
-The first contains $\ttbar$ events and this covers the low $\pt$ phase space for training the taggers.
-The simulation settings for the $\ttbar$ sample are derived from studies to best match jet multiplicity and top quark momentum distributions in data~\cite{ttbar1, ttbar2}.
-The second sample contains $Z'$ events included to enhance the training statistics in the high $\pt$ phase space.
-The $Z'$ boson is a non-SM particle where both the cross-section of the hard-scatter process and the branching fractions were specifically designed to produce a relatively uniform distribution of jets with $\pt$ up to $5~\TeV$ split equally between $b-$, $c-$, and light-jets.
+To ensure that the tagger is decorrelated with respect to jet $\pt$ and $\eta$, the training datasets are selected to cover a wide range of jet $\pt$ values.
+Two simulated datasets were utilized for training and evaluating the models.
+The first dataset comprises $\ttbar$ events, which primarily cover the $\pt < 200~\GeV$ phase space.
+The simulation settings for the $\ttbar$ sample are derived from studies designed to best match the jet multiplicity and top quark momentum distributions observed in the data~\cite{ttbar1, ttbar2}.
+The second dataset consists of $Z'$ events, introduced to enhance the training statistics in the high $\pt$ phase space.
+The $Z'$ boson, a non-SM particle, is specifically designed with cross-sections of the hard-scatter process and branching fractions tuned to produce a relatively uniform distribution of jets with $\pt$ up to $5~\TeV$, equally divided among $b-$, $c-$, and light-jets.
 
 \subsection{Monte Carlo Samples}
 
@@ -127,6 +128,7 @@ For these samples only the 40 tracks with the highest IP significance $s(d_0)$ a
 
 \section{Applications}
 
+% - Salt
 % - GN2X
 % - Current model architecture
 % - Current training set
