@@ -200,7 +200,7 @@ This is typically performed using the statistics of the training set.
 Variables with long tails are also transformed to have a more Gaussian distribution.
 This can be done by taking the logaritm of variables with large dynamic ranges, or by using more advanced techniques like a quantile transformation.
 Within the network itself, normalization layers $L_{\text{norm}}$ are interleaved between others.
-Methods such as batch normalization~\cite{BatchNorm} or layer normalization~\cite{LayerNorm} are widely used and both have been shown to be greatly effective, with the latter seen as essential for transformer neural networks~\cite{Attention}.
+Methods such as batch normalization (BatchNorm)~\cite{BatchNorm} or layer normalization (LayerNorm)~\cite{LayerNorm} are widely used and both have been shown to be greatly effective, with the latter seen as essential for transformer neural networks~\cite{Attention}.
 
 Another feature used to stabilize training is the manual clipping of the gradients before applying the parameter update.
 This can be done based on some maximal value, but is more commonly done by scaling the gradient such that their combined norm does not exceed some threshold~\cite{WhyGradientClipping}.

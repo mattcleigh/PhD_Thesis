@@ -191,15 +191,15 @@ Models such as the perceiver~\cite{Perceiver} project input information onto a c
 \section{The Graph Network Block}
 \label{sec:gn_block}
 
-The Graph Network Block (GN-Block)~\cite{RelationalInductiveBiases} is a useful building block for constructing deep learning models that operate on graph-structured data.
+The Graph Network Block (GN Block)~\cite{RelationalInductiveBiases} is a useful building block for constructing deep learning models that operate on graph-structured data.
 It offers a framework that generalizes to many other existing graph-based models, such as graph convolutional networks (GCNs)~\cite{GCN}, graph attention networks (GATs)~\cite{GraphAttentionNetworks}, deep sets~\cite{DeepSets}, and even transformers~\cite{Attention}.
-A GN-Block is defined as a series of operations that update the node, edge, and global attributes via facilitating the exchange and aggregation of information according to the structure of the graph.
-The GN-Block does not change the cardinality of the features present, only updating their attributes,
+A GN Block is defined as a series of operations that update the node, edge, and global attributes via facilitating the exchange and aggregation of information according to the structure of the graph.
+The GN Block does not change the cardinality of the features present, only updating their attributes,
 \begin{equation}
     \text{GN}(\mathcal{N}, \mathcal{E}, \u) = (\mathcal{N}', \mathcal{E}', \u').
 \end{equation}
 The GN block is composed of three sub-blocks involving three update functions, $\phi^x$, $\phi^e$, and $\phi^u$, and three aggregation functions, $\rho^{e \to x}$, $\rho^{e \to u}$, and $\rho^{x \to u}$.
-Given an input graph $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$ the GN-Block proceeds as follows.
+Given an input graph $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$ the GN Block proceeds as follows.
 
 \begin{enumerate}
     \item \textbf{Edge Block:} The edges are updated using the current edge attributes, the attributes of the sender and receiver nodes, and the global attribute.
@@ -229,29 +229,29 @@ Given an input graph $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$ the GN-Block
     \end{equation}
 \end{enumerate}
 
-The GN-Block describes a basic graph to graph transformation which can be composed to form a deeper model.
+The GN Block describes a basic graph to graph transformation which can be composed to form a deeper model.
 To make the block learnable, each of the update or aggregation functions may be parameterized by a separate neural network.
 The only requirement for any of the aggregation functions is that they are permutation invariant and may accept a variable number of arguments.
 This structure also lends itself to the different types of tasks performed on graph type data.
-For example, the final GN-Block in the stack may only contain an edge block for an edge-level task.
+For example, the final GN Block in the stack may only contain an edge block for an edge-level task.
 
-It is important to investigate exactly what inductive biases are being imposed by the GN-Block.
+It is important to investigate exactly what inductive biases are being imposed by the GN Block.
 First, it is clear that the updates to the graph do not depend on the order of the nodes.
 Formally, the node and edge updates $(\mathcal{N}, \mathcal{E}) \rightarrow (\mathcal{N}', \mathcal{E}')$ are permutation equivariant to the node set, and the global update $U \rightarrow U'$ is permutation invariant.
-The GN-Block applies the same update and aggregation functions to all nodes and edges in the graph.
+The GN Block applies the same update and aggregation functions to all nodes and edges in the graph.
 This reflects the relational inductive bias which seeks to learn general rules that apply to all entities in the system while also adhering to the equivalence of the elements within the set.
-Furthermore, as the GN-Block only prescribes the rules for how the features of a graph are updated, it is agnostic to the structure and size of the input graph.
+Furthermore, as the GN Block only prescribes the rules for how the features of a graph are updated, it is agnostic to the structure and size of the input graph.
 This allows the same model to be applied to input sets with varying cardinality or connectivity.
 This is a crucial feature for many applications, such as in collider physics where the number of particles in an event can vary.
 Finally, information flow between elements of the set can follow two paths.
 Either, the information propagates along the edges of the graph, or it is aggregated into the global attribute, then redistributed to the nodes.
 This allows for the model to learn both local and long-range interactions.
 
-Almost all GNNs variants facilitate message passing can be thought of as some specialization of the GN-Block depending on the forms of the $\phi$ and $\rho$ functions and the existence of edge, node, and global features.
-A full GN-Block is shown in \Cref{fig:full_gn_block}.
+Almost all GNNs variants facilitate message passing can be thought of as some specialization of the GN Block depending on the forms of the $\phi$ and $\rho$ functions and the existence of edge, node, and global features.
+A full GN Block is shown in \Cref{fig:full_gn_block}.
 A basic implementation, where all graph attributes are tensors, can be done using MLPs for each of the update functions, and summation for the aggregation functions.
 This creates the update shown in \Cref{alg:gn_block}, where the square brackets denote tensor concatenation.
-Even the deep set, which has no pairwise interactions between the nodes can be seen as a reduced form of a GN-Block, as shown in \Cref{fig:deep_set}.
+Even the deep set, which has no pairwise interactions between the nodes can be seen as a reduced form of a GN Block, as shown in \Cref{fig:deep_set}.
 Here the operations are simply,
 \begin{align}
     \x_i' &= \text{MLP}_v\left(\left[\x_i, \u\right]\right),\\
@@ -259,7 +259,7 @@ Here the operations are simply,
 \end{align}
 
 \begin{algorithm}
-    \caption{Basic GN-Block using MLPs}
+    \caption{Basic GN Block using MLPs}
     \label{alg:gn_block}
     \begin{algorithmic}[1]
         \State \textbf{Input:} Graph attributes $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$
@@ -291,7 +291,7 @@ Here the operations are simply,
         \caption{Deep Set}
         \label{fig:deep_set}
     \end{subfigure}
-    \caption{Examples of different GN-Block implementations \subref{fig:full_gn_block} A full GN-Block has persistent edge and global features. \subref{fig:deep_set} A deep set only applies pooling to the node features to produce a global feature. Adapted from \textcite{RelationalInductiveBiases}.}
+    \caption{Examples of different GN Block implementations \subref{fig:full_gn_block} A full GN Block has persistent edge and global features. \subref{fig:deep_set} A deep set only applies pooling to the node features to produce a global feature. Adapted from \textcite{RelationalInductiveBiases}.}
 \end{figure}
 
 \section{Transformers are Graph Networks}
@@ -309,7 +309,7 @@ Transformers have become so ubiquitous that they are now considered the default 
 There are many variants for the transformer model, but they all share the same basic features.
 Contrary to popular belief, these models do not natively run on sequences but on sets, and must be adapted to work on data with an inherent order.
 We will focus on two main types of transformers, the transformer encoder and the transformer decoder.
-The transformer encoder (TE) is a variant of the GN-Block called a non-local neural network (NLNN)~\cite{NonlocalNeuralNetworks} as shown in \Cref{fig:transformer}.
+The transformer encoder (TE) is a variant of the GN Block called a non-local neural network (NLNN)~\cite{NonlocalNeuralNetworks} as shown in \Cref{fig:transformer}.
 This function operates on a pure set, with no persistent edge or global features.
 It involves and message passing step equipped with an attention mechanism, followed by a node update step using an MLP\@.
 
@@ -355,7 +355,7 @@ The message weight is based on a dot product between additional linear projectio
 Aggregation is simply a weighted mean of the incoming messages, where a softmax operation is applied to the attention logits to ensure that they sum to one.
 To prevent the gradients from exploding, the attention logits are scaled by the square root of the dimensionality of the key and value tensors $d_k$.
 
-In the framing of the GN-Block, SDPA has the edge update is factorized into a tuple containing a scalar expressing the message weight $\alpha_k'(\x_{s_k}, \x_{r_k})$ and a vector function for calculating the message content $\mathbf{v}_k'(\x_{s_k})$.
+In the framing of the GN Block, SDPA has the edge update is factorized into a tuple containing a scalar expressing the message weight $\alpha_k'(\x_{s_k}, \x_{r_k})$ and a vector function for calculating the message content $\mathbf{v}_k'(\x_{s_k})$.
 Only $\alpha_k'$ depends on the pairwise interaction of both the sender and receiver nodes.
 The pooling operation $\rho^{e \to x}$ normalizes over the receiver weights before aggregating the messages.
 The block can be written as,
@@ -430,7 +430,7 @@ This means that a single MHA function is typically parameterized by four square 
 To enhance the model's expressivity, one can replace linear projections with affine transformations by including bias terms. However, it is important to note that the bias of the key operation is entirely redundant~\cite{RoleBiasTerms}.
 
 Key to the success of transformers is the ease of implementation.
-While many variants of GN-Block block variants require custom libraries and are challenging to implement from scratch, MHA can be implemented in PyTorch using standard linear algebra operations, as demonstrated in \Cref{code:attention}.
+While many variants of GN Block block variants require custom libraries and are challenging to implement from scratch, MHA can be implemented in PyTorch using standard linear algebra operations, as demonstrated in \Cref{code:attention}.
 All heads are computed in parallel using smart reshaping of the tensors.
 This significantly simplifies the process of designing, building, testing, and exporting models.
 
@@ -494,7 +494,7 @@ Contrary to popular belief, self-attention with these mechanisms does not requir
 %     \text{aggregate}: (N, N, d) & \rightarrow (N, d).
 % \end{align}
 
-% The basic GN-Block in \Cref{alg:gn_block} does this by concatenating the sender and receiver node attributes before passing them through an MLP\@.
+% The basic GN Block in \Cref{alg:gn_block} does this by concatenating the sender and receiver node attributes before passing them through an MLP\@.
 % The operations and dimensions of the tensors of such a block are,
 % \begin{align}
 %     \text{concatenate}: (N, d) & \rightarrow (N, N, 2d) \\
@@ -558,7 +558,7 @@ Extra normalization within the sub-blocks is also common.
 
 \subsubsection{Transformer Encoder}
 
-A single PreNorm TE-Block is shown in \Cref{fig:transformer_blocks}.
+A single PreNorm TE Block is shown in \Cref{fig:transformer_blocks}.
 The update is given by,
 \begin{equation}
 \begin{aligned}
@@ -566,7 +566,7 @@ The update is given by,
     \X & \leftarrow \X + \text{FFN}(L_\text{norm}(\X)).
 \end{aligned}
 \end{equation}
-A full TE is composed of many TE-Blocks stacked in series forming a permutation equivariant set to set transformation.
+A full TE is composed of many TE Blocks stacked in series forming a permutation equivariant set to set transformation.
 For many tasks, the TE is the main feature extractor.
 
 \subsubsection{Transformer Decoder}
@@ -607,7 +607,7 @@ Consequently, edge information can be integrated into a transformer through the 
 
 The Particle Transformer (ParT)~\cite{ParticleTransformerJet} uses a TE to embed a set of particles, defined by their kinematics.
 For each pair of particles, specific edge features are constructed using Lund Plane variables~\cite{LundJetPlane}.
-The model uses an MLP to embed these edge features into a tensor of shape $(N, N, H)$, which becomes the attention bias in each of the TE-Blocks.
+The model uses an MLP to embed these edge features into a tensor of shape $(N, N, H)$, which becomes the attention bias in each of the TE Blocks.
 
 The bias tensor is commonly set to negative infinity for specific node pairs and all heads, forcing the attention weight to zero after the softmax operation and eliminating the message weight. This allows the transformer to function on non-fully connected graphs without changing any of the underlying matrix operations.
 It is also one of the main mechanisms for adapting the transformer to work on sequences, where the nodes are presented in a specific order.
