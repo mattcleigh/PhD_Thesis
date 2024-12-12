@@ -634,7 +634,7 @@ $B$ can be parameterized as a learnable Toeplitz matrix, ALiBi~\cite{ALIBI} fixe
 Global attributes are used to condition updates or can be used as outputs for graph-level tasks.
 In \Cref{alg:gn_block}, the global attributes are updated by summing the node attributes which is then passed through an MLP\@.
 However, a CA block provides a more expressive pooling operation, even when the cardinality of the receiving set is one.
-This is known as class attention~\cite{GoingDeeper}, and is utilized in vision transformers for image classification.
+This is known as class-attention~\cite{GoingDeeper}, and is utilized in vision transformers for image classification.
 These models typically have several TE layers for feature extraction, followed by a few CA layers to repeatedly pool the features into a single global attribute which is used for classification.
 
 Global information can be redistributed to augment the message passing step by including them as inputs in the FFN layer~\cite{PCJeDiDiffusionParticle}.

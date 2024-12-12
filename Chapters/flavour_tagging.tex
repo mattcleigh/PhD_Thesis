@@ -14,6 +14,7 @@ Spice would be so performant and efficient that it would form the basis of the n
 One observation made during this project is that progress in machine learning is much faster than progress in HEP.
 Spice was being developed and presented to the flavour tagging group when GN1 was still undergoing collaboration.
 At the time of this writing, GN2 is being calibrated, and significant effort is being made to keep it up to date with the latest developments in transformer design.
+
 One of the main contributions of this thesis was the development of Salt~\cite{Salt}, a repository for training transformers for flavour tagging, designed to be continuously updated with the latest research in order to keep the models used by the ATLAS collaboration up to date with the state-of-the-art models used by the broader machine learning community.
 
 \section{Datasets}
@@ -32,7 +33,7 @@ The branching fractions of the $Z'$ boson are shown in \Cref{tab:zprime_branchin
 
 \begin{table}[ht]
     \centering
-    \begin{tabular}{lcc}
+    \begin{tabular}{lr}
         \toprule
         Decay Mode & Branching Fraction \\
         \midrule
@@ -92,7 +93,7 @@ A track associated with multiple jets is assigned to the jet with the smallest $
 
 \begin{table}
     \centering
-    \begin{tabular}{ll}
+    \begin{tabular}{lr}
         \toprule
         Variable & Requirement \\
         \midrule
@@ -136,7 +137,7 @@ If one of the tracks is labelled as ``Fake'' or from a pileup interaction, the p
 
 \begin{table}
     \centering
-    \begin{tabular}{ll}
+    \begin{tabular}{rl}
         \toprule
         Class & Description \\
         \midrule
@@ -312,6 +313,7 @@ Most notably missing are any strong node updates after the message passing step 
 \end{figure}
 
 \subsection{GN++}
+\label{sec:gnpp}
 
 The GN++ model is based on the complete GN Block architecture described in \Cref{sec:gn_block} with the only omission being the lack of a $\rho^{e \to u}$ pooling operation as we found that it was computationally expensive and did not improve performance.
 This model is designed to be a more expressive graph network than GN1.
@@ -378,18 +380,20 @@ This provides us a good baseline to slowly add complexity to the model and inves
 \subsection{Spice}
 
 The Spice model is based on the transformer-encoder architecture described in \Cref{sec:transformer_variants}.
-As a transformer, each layer does not produce or retain edge features, and message passing is performed using multi-headed self-attention.
+As a transformer, each layer does not produce or retain edge features, only operating on the set of notes using multi-headed self-attention to perform message passing.
 
-We find the best performance using four attention heads.
-Like GN++, the model is equipped with strong node updates in the form of MLPs, which double the hidden dimension of the nodes.
+Comparatively, the layer structure of the TE Block is significantly simpler than the GN Block, only requiring four linear layers and a single MLP\@.
 The information flow diagram is shown in \Cref{fig:spice_graph}.
+We find the best performance using four attention heads.
+Like GN++, the model is equipped with MLPs for strong node updates, which double the hidden dimension of the nodes.
 
 To construct the pooled graph representation $\con$, we use three CA Blocks with four attention heads to send messages from each track onto a single learnable class token~\cite{GoingDeeper}.
 This process allows the model to decide on a jet-by-jet basis what information to request from the tracks to assist with classification.
 Like GN1, three separate MLPs perform the graph-, node-, and edge-level tasks.
 These three MLPs and the track initializer are much smaller than the ones used in GN1, which reduces the number of parameters in the model.
 
-Spice's primary hyperparameters are the embedding dimension and the number of TE Blocks, which vary to investigate the tagger's scaling capabilities.
+To ensure a fair comparison, we ensure that Spice has roughly the same number of trainable parameters as GN1.
+Spice's primary hyperparameters are the embedding dimension and the number of TE Blocks which we set to 64 and 7, respectively, resulting in a model with 800k trainable parameters.
 The model was implemented using standard PyTorch operations and is thus conceptually easier to work with than GN++ and GN1.
 
 \begin{figure}[h!]
@@ -430,75 +434,66 @@ We used the AdamW~\cite{AdamW} optimizer with a $1.0 \times 10^{-4}$ weight deca
 The training was performed for a maximum of 50 epochs, and the checkpoint with the lowest validation loss was saved for evaluation.
 Gradient clipping was applied with a maximum norm of 10.
 
-\section{Results}
-
-We can turn models into binary classifiers using a combination of the three outputs.
-
-into a single $b$-tagging score we use the following formula,
-\begin{equation}
-    D_b = \log\frac{p_b}{(1-f_c)p_l + f_c p_c},
-\end{equation}
-where $p_b$, $p_c$, and $p_l$ are the probabilities of the jet being a $b$-, $c$-, and light-jet respectively, and $f_c$ is a free parameter that provides a trade-off between $c$- and light-jet rejection.
-The choice of $f_c$ is arbitrary and in GN1 it is set to $0.05$, but for our models we found a better balance at $0.02$.
-This procedure may also be used to construct a $c$-tagging score $D_c$ with an equivalent $f_b$ parameter.
-We set $f_b = 0.2$ for the $c$-tagging scores, matching GN1.
-
+\section{Experiments and Results}
 \newcommand{\bnom}{\epsilon_b^{70}}
 \newcommand{\cnom}{\epsilon_c^{25}}
-With the scores defined, the performance of the models is quantified quantified by the rejection rate $r_a$ for a specific background $a$, measured at fixed signal efficiency $\epsilon_s$.
-The background rejection is defined as the reciprocal of the background efficiency $r_a = \sfrac{1}{\epsilon_a}$.
+
+The performance of all models is evaluated separately using the two test datasets, $\ttbar$ and $Z'$, which is populated by jets with $\pt < 250~\GeV$ and $\pt \geq 250~\GeV$, respectively.
+In addition to the loss metrics, the quality of the models is determined by their $b$- and $c$-tagging capabilities.
+
+We can derive specific signal discriminants using a combination of the three outputs on the graph-level task.
+For example, taking class-1 as the signal class, the discriminant $D_1$ is defined as,
+\begin{equation}
+    D_1 = \log\frac{p_1}{f_2 p_2 + (1-f_2)p3},
+\end{equation}
+where $p_1$, $p_2$, and $p_3$ are the three predicted class probabilities, and $f_2$ is an arbitrary parameter that provides a trade-off between rejection rates of the two background classes.
+This process is applied to our models to construct $D_b$ and $D_c$, respectively used for $b$-tagging and $c$-tagging.
+For our models, the free parameters are set to $f_b=0.02$ and $f_c=0.2$, whereas $f_b=0.05$ and $f_c=0.2$ were used for GN1.
+
+With the discriminants defined, the performance of the models is quantified by the rejection rate $r_B$ measured at targetted signal efficiency $\epsilon_S$ for some for a specific background $B$ and signal $S$.
+The background rejection rate is defined as the reciprocal of the background efficiency $r_B = \sfrac{1}{\epsilon_B}$.
 Specific signal efficiencies are labelled as working points (WPs) and are chosen to match the requirements of an analysis.
-Standard WPs for $b$-tagging algorithms in ATLAS are at 60\%, 70\%, 77\%, and 85\%, while the WPs for $c$-tagging are considerably lower, with a WP of 25\% being a common choice.
-For brevity, we label the 70\% WP as the nominal WP for $b$-tagging $\bnom$ and the 25\% WP as the nominal WP for $c$-tagging $\cnom$.
-Thus to better compare the models, we use receiver operating characteristic (ROC) curves, allowing us to measure the performance of the model at all possible operating points.
+The standard WPs for $b$-tagging algorithms in ATLAS are at 60\%, 70\%, 77\%, and 85\%, while the WPs for $c$-tagging are considerably lower, with a WP of 25\% being a common choice.
+For brevity, we label the 70\% WP as the nominal WP for $b$-tagging $\bnom$ and the 25\% WP as the nominal WP for $c$-tagging $\cnom$, as well as $r_b$, $r_c$, and $r_l$ as the rejection rates for $b$-jets, $c$-jets, and light-jets, respectively.
 
-The performance of all models is evaluated separately using the two test datasets.
-We also individually evaluate the $b$-tagging and $c$-tagging scores.
 
-\subsection{Graph Network Ablation Studies}
+In addition to these specific signal efficiencies, we also plot the receiver-operator characteristic (ROC) curves for the models.
+These plot $r_B$ as a function of $\epsilon_S$, thus providing a complete picture of the model's performance at all possible WPs.
 
-In order to test if each of the proposed changes to the graph network to move from GN1 to GN++ are beneficial we perform a grid search over each of the features in \Cref{tab:gnpp_grid}.
-The two extremes are the minimal model, GNA which has features deactivated and is similar in design to GN1, and the maximal model GN++, which has all of features activated.
-For this section only we limit the training to 5 epochs to reduce the computational cost.
+For a fair comparison, we have designed GN++ and Spice to have roughly the same number of trainable parameters as GN1.
+However, an interesting property of these models is how well they scale, both in terms of performance and computational cost.
+We introduce three additional networks: GN++large, Spice-large, and Spice-huge.
+The two new transformers increase the embedding dimension to 128 and 256, corresponding to 1.4M and 4.2M trainable parameters, respectively.
+GN++large also has an embedding dimension of 128 and has 1.6M trainable parameters\footnote{Note that the node update MLPs within each block always double the embedding dimension.}.
 
-To capture overall trends on the inclusion of these features we can use the $\mathcal{L}_{\text{graph}}$ as measured on the test set.
-This is shown in the violin plots of \Cref{fig:violin} which can capture first order effects.
-The secondary effects on feature importance can be analysed by training a random forest model to predict the minimum validation $\mathcal{L}_{\text{graph}}$, using the feature activations as input.
-To assess the impact of individual features, the performance of the forest can be evaluated after permuting the specific feature column within the dataset.
-The results of this analysis are shown in \Cref{tab:feature_importance}.
+\subsection{Graph Network Grid Search}
 
-Notably, all features are beneficial and the best performance was achieved by the maximal model GN++.
-The results from the importance studies show that the most crucial feature is the use of persistent edge information by a wide margin.
-This is followed by the stronger node updates using MLPs.
-The least significant features are the use of PreNorm and residual connections and the latter was only beneficial if combined with node feed-forward updates.
-In addition, these features are designed to stabilize the training of deep models, and as we limit ourselves to only 5 layers to match GN1, the benefits are less pronounced.
-Persistent global information was not significant, as we are operating on fully connected graphs, therefore long range interactions are already captured by the message passing.
+We perform a grid search to test whether each of the proposed additions to the GNN design proposed in \Cref{sec:gnnp} are beneficial.
+These features are persistent edges, persistent global information, PreNorm, residual connections, and multiple attention heads.
+In total, 64 networks were trained in this grid search, covering all combinations.
+The two extremes are the minimal model, GNA, which has all features deactivated and is similar in design to GN1, and the maximal model, GN++, which has all features activated.
+We limit the training to 5 epochs for this section to reduce the computational cost which took approximately 10 hours with each network on a single NVIDIA 3080 GPU\@.
+
+We use the average $\mathcal{L}_{\text{graph}}$ as measured on the test set to capture the overall trends in performance.
+Several methods exist to determine the importance of hyperparameters in neural networks.
+The violin plots in \Cref{fig:violin} illustrate first-order effects on loss. To estimate higher-order effects, we train a random forest to predict the minimum validation $\mathcal{L}_{\text{graph}}$ using the model features.
+We then calculate the drop in the forest's performance after permuting each feature column.
+These changes are normalized, and the results are shown in \Cref{tab:feature_importance}.
+
+Notably, all features are beneficial, and the best performance was achieved by the maximal model GN++.
+The most crucial feature is the use of persistent edge information by a wide margin, followed by the node updates using MLPs.
+Interestingly, the residual connections are deemed the least important feature by the random forest, but the violin plots show a clear performance improvement when activated.
+On closer inspection, we found that the residual connections were only beneficial when combined with the node MLP updates.
+Otherwise, they led to no change in the loss.
+Residual connections, along with PreNorm, exist to prevent over-smoothing and stabilize the training of deep models.
+However, as we limit ourselves to only five layers to match GN1, the benefits are less pronounced.
+Persistent global information was not significant, as we are operating on fully connected graphs; therefore, long-range interactions are already captured by the message passing.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.99\textwidth]{figures/flavour_tagging/violin.pdf}
     \caption{Violin plots showing the distribution of $\mathcal{L}_{\text{graph}}$ measured on the validation set. Each group represents the activation of a specific graph network feature.}
     \label{fig:violin}
-\end{figure}
-
-We further investigate the ablation studies using the $b$-tagging performance on the $\ttbar$ test sample.
-For each feature we compare four models, GNA, GNA with the feature activated, GN++, and GN++ with the feature deactivated.
-The results for the four most important features are shown in \Cref{fig:ablation}.
-For this sample the GN++ tagger is the best performing model, with around 25\% increase over GNA in both light and $c$-jet rejection at $\bnom$.
-At the higher efficiency WP of 85\% the improvement drops to around 20\% and 15\% for light and $c$-jets respectively.
-Interestingly, the persistent edge information seems to be such a crucial feature that activating only this feature results in a more performant tagger than the one with all others.
-Node updates using MLPs barely improves the performance of the model when applied alone as we observed training to be slow and unstable.
-However, when combined the other features which assist in stabilizing the training, the performance is significantly improved.
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_ttbar_edge.pdf}
-    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_ttbar_node.pdf}
-    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_ttbar_mha.pdf}
-    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_ttbar_pg.pdf}
-    \caption{ROC curves for the $b$-tagging scores for $\ttbar$ jets with $20 < \pt < 250~\GeV$ for the ablation studies.
-    From top-left clockwise the tested features are persistent edge information, nodewise feed-forward updates, multi-headed attention, and persistent global information. The rejection values are calculated separately for light- and $c$-jets. The bottom two panels in each plot show the ratio of these rejection values to the GNA tagger. The error bands show binomial uncertainties. The left plots show the effect of activating persistent edge information in the graph network and the right plots show the effect of activating nodewise feed-forward updates.}
-    \label{fig:ablation}
 \end{figure}
 
 \begin{table}
@@ -508,7 +503,7 @@ However, when combined the other features which assist in stabilizing the traini
         Feature & Importance \\
         \midrule
         Persistent edge information & 0.51 \\
-        Nodewise feed-forward updates & 0.29 \\
+        Node MLP updates & 0.29 \\
         Multi-headed attention & 0.06 \\
         Persistent global information & 0.05 \\
         PreNorm & 0.05 \\
@@ -519,58 +514,35 @@ However, when combined the other features which assist in stabilizing the traini
     \label{tab:feature_importance}
 \end{table}
 
-\subsection{Tagging Performance}
+We investigate the feature importance in $b$-tagging on the $\ttbar$ test sample.
+For each feature, we compare four models: GNA, GNA with the feature activated, GN++, and GN++ with the feature deactivated.
+The results for the four most important features are shown in \Cref{fig:ablation}.
+The GN++ tagger is the best-performing model for this sample, with around a 25\% increase over GNA in both light and $c$-jet rejection at $\bnom$, though the performance gain drops at higher signal efficiencies.
+Interestingly, the persistent edge information is such a crucial feature that activating only this feature results in a more performant tagger than the one with all others.
+Node updates using MLPs seemingly require the other features which assist in stabilizing the training.
 
-We look at the performance of both $b$- and $c$-tagging scores for the $\ttbar$ and $Z'$ samples.
-We use the ROC curves to compare the performance of the models at all possible operating points, but we also show specific values for the 70\% WP for $b$-tagging and the 25\% WP for $c$-tagging in \Cref{tab:comparison}.
+Our grid search has highlighted the value of specific features in optimizing our GNN design.
+After many iterations we believe that we have settled on a model with highly expressive layers and that GN++ can be seen as a reasonably optimized model for flavour tagging.
 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_ttbar_edge.pdf}
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_ttbar_node.pdf}
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_ttbar_mha.pdf}
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_ttbar_glob.pdf}
+    \caption{ROC curves for the $b$-tagging discriminants using select GNNs from the hyperparameter grid search on $\ttbar$ jets with $20 < \pt < 250~\GeV$.
+    Starting from the top left and moving clockwise, the tested features are persistent edge information, node MLP updates, multiple attention heads, and persistent global information. The rejection values are calculated separately for light- and $c$-jets. The bottom two panels in each plot show the ratio of these rejection values to the GNA tagger. Error bands are derived from binomial uncertainties.}
+    \label{fig:ablation}
+\end{figure}
 
-To ensure a fair comparison, we introduce models of various sizes, making sure to have some with roughly the same number of trainable parameters as GN1.
-The GN++ and GN1 models already have roughly equivalent sizes, and thus we design a Spice variant with approximately 800k.
-This model has 7 TE Blocks and an embedding dimension of 64.
-We then investigate how these models scale by introducing two new transformers, Spice-large and Spice-huge.
-Both use the same number of layers, but Spice-large has an embedding dimension of 128 and Spice-huge has an embedding dimension of 256\footnote{Note that the FFN within each block always double the embedding dimension.}.
-These correspond to 1.4M and 4.2M trainable parameters respectively.
-We also introduce GN++large which also has an embedding dimension of 128, leading to 1.6M trainable parameters.
+\FloatBarrier
 
 \subsection{Comparison to GN1}
 
-The results for the $\ttbar$ sample are shown in \Cref{fig:ttbar_roc}.
-Both new models of equivalent size to GN1 outperform it for $\epsilon_S<90\%$.
-For $b$-tagging at $\bnom$, Spice offers a 47\% improvement in light-jet rejection and 38\% improvement in $c$-jet rejection over GN1.
-The larger models further increase this performance gain, with Spice-huge offering a 73\% improvement in light-jet rejection and 63\% improvement in $c$-jet rejection.
-For $c$-tagging, most of the performance improvement is
-found at much lower signal efficiencies.
-At the $\cnom$, Spice improves over GN1 by 16\% in $b$-jet rejection and 27\% in light-jet rejection.
-It is interesting that Spice is consistently better than GN++ for both $b$- and $c$-tagging on this dataset, as it lacks the feature determined to be the most important in the ablation studies, the persistent edge information.
-However, these models are trained for 10 times longer than the ablation studies, so it is possible that the transformer based model is able to learn the same information in a more efficient manner.
-For $c$-tagging, once again the most performant model is Spice-huge, which is able to achieve a 26\% $b$-jet rejection improvement and 50\% light-jet rejection improvement over GN1 at $\cnom$.
+Quantitative comparisons between the new networks and GN1 are conducted using the $b$- and $c$-tagging performance on the test $\ttbar$ and $Z'$ datasets.
+The rejection rates at the nominal WPs are summarized in \Cref{tab:comparison} and ROC curves are shown in \Cref{fig:large_rocs}.
 
-The results for the much higher $\pt$ $Z'$ sample are shown in \Cref{fig:zprime_roc}.
-All models once again outperform GN1.
-For the smaller networks GN++ provides higher rejection rates than Spice.
-These jets have an order of magnitude higher $\pt$ than the $\ttbar$ jets, and the GN++ model seems to be better suited for this data type.
-However, by scaling the models, Spice-large is easily able to outperform GN++ and even GN++large.
-It achieves and improvement over GN1 of 25\% in light-jet rejection and 12\% in $b$-jet rejection at $\bnom$.
-In $c$-tagging, Spice-large is able to achieve a 27\% improvement in $b$-jet rejection and 22\% improvement in light-jet rejection at $\cnom$.
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_ttbar_large.pdf}
-    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/c_roc_ttbar_large.pdf}
-    \caption{ROC curves for the $b$-tagging scores (left) and $c$-tagging scores (right) for $\ttbar$ jets with $20 < \pt < 250~\GeV$. The rejection values are calculated separately for each background type. The bottom two panels show the ratio of these rejection values to the GN1 tagger. Error bands are derived from binomial uncertainties.}
-    \label{fig:ttbar_roc}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_zprime_large.pdf}
-    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/c_roc_zprime_large.pdf}
-    \caption{ROC curves for the $b$-tagging scores (left) and $c$-tagging scores (right) for $Z'$ jets with $\pt > 250~\GeV$. The rejection values are calculated separately for each background type. The bottom two panels show the ratio of these rejection values to the GN1 tagger. Error bands are derived from binomial uncertainties.}
-    \label{fig:zprime_roc}
-\end{figure}
-
-\newcommand{\alen}{\hskip 35pt}
+\newcommand{\alen}{\hskip 40pt}
 \newcommand{\blen}{\hskip 25pt}
 \begin{table}[ht]
     \centering
@@ -579,7 +551,7 @@ In $c$-tagging, Spice-large is able to achieve a 27\% improvement in $b$-jet rej
         & \multicolumn{4}{c@{\alen}}{$\ttbar$} & \multicolumn{4}{c}{$Z'$} \\
         & \multicolumn{2}{c@{\blen}}{$\bnom$} & \multicolumn{2}{c@{\alen}}{$\cnom$}
         & \multicolumn{2}{c@{\blen}}{$\bnom$} & \multicolumn{2}{c}{$\cnom$} \\
-        & $r_B^c$ & $r_B^l$ & $r_B^b$ & $r_B^l$ & $r_B^c$ & $r_B^l$ & $r_B^b$ & $r_B^l$ \\
+        & $r_c$ & $r_l$ & $r_b$ & $r_l$ & $r_c$ & $r_l$ & $r_b$ & $r_l$ \\
         \midrule
         Spice & 38 & 47 & 16 & 27 & 2 & 8 & 12 & 9 \\
         Spice-large & 54 & 41 & 23 & 38 & 7 & 21 & 20 & \textbf{22} \\
@@ -588,20 +560,50 @@ In $c$-tagging, Spice-large is able to achieve a 27\% improvement in $b$-jet rej
         GN++large & 59 & 46 & 21 & 42 & 6 & 17 & 23 & 21 \\
         \bottomrule
     \end{tabular}
-    \caption{The percentage improvement in background rejection rates for the different models with respect to GN1 at the $\bnom = 70\%$ $b$-tagging and $\cnom = 25\%$ $c$-tagging working points using the $\ttbar$ and $Z'$ test datasets. The rejection rates are measured for the light-jet background $r_B^l$, the $c$-jet background $r_B^c$, and the $b$-jet background $r_B^b$.}
+    \caption{The percentage improvement over GN1 in the background rejection rates at the nominal $b$-tagging and $c$-tagging working points using the $\ttbar$ and $Z'$ test datasets. The rejection rates are measured for the light-jet background $r_l$, the $c$-jet background $r_c$, and the $b$-jet background $r_b$.}
     \label{tab:comparison}
 \end{table}
 
+We begin by comparing the performance on the $\ttbar$ sample.
+All new GNNs outperform GN1 at all tasks at all efficiencies, with the only exception being $c$-jet rejection at very high levels of $b$-tagging, $\epsilon_b > 92\%$, where all taggers converge.
+The smaller networks, GN++ and Spice, outperform GN1 at $\bnom$ for both $b$- and $c$-tagging.
+Spice also matches or exceeds GN++ significantly in separating $b$ and light-jets, which is noteworthy as Spice lacks the feature determined to be the most important in the grid search, namely the persistent edge information.
+It also is composed of significantly simpler layers.
+Given the extended training period, which is ten times longer than the grid search, it is plausible that the transformer efficiently acquires the same critical information, albeit through a simpler architecture.
+The larger models extend this performance gain, with Spice-huge offering a 73\% improvement in $r_l$ and 63\% improvement in $r_c$ over GN1 at $\bnom$.
+For $c$-tagging, Spice-huge remains the top performer, achieving a 26\% improvement in $b$-jet rejection and a 50\% improvement in light-jet rejection over GN1 at $\cnom$.
+
+On the $Z'$ sample, all new taggers once again outperform GN1.
+Interestingly, for this sample, the GN++ outperforms the equivalently sized Spice.
+Jets in this dataset have roughly an order of magnitude higher $\pt$ than the previous one, and thus, some features in the GN++ architecture are better suited to this data type.
+However, the transformers demonstrate stronger scaling capabilities, with clear improvement with each tier in model size.
+Spice-large is on par with GN++large, and Spice-huge is the top performer.
+It achieves an improvement over GN1 of 25\% in light-jet rejection and 12\% in $b$-jet rejection at $\bnom$.
+In $c$-tagging, Spice-large is able to achieve a 27\% improvement in $b$-jet rejection and 22\% improvement in light-jet rejection at $\cnom$.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_ttbar_large.pdf}
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/c_roc_ttbar_large.pdf}
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_zprime_large.pdf}
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/c_roc_zprime_large.pdf}
+    \caption{ROC curves for the $b$-tagging (left) and $c$-tagging discriminants (right) for $\ttbar$ jets with $20 < \pt < 250~\GeV$ (top) and $Z'$ jets with $\pt > 250~\GeV$ (bottom).
+    All new models are compared to the benchmark GN1. The rejection values are calculated separately for each background type and the bottom two panels show the ratio to GN1. Error bands are derived from binomial uncertainties.}
+    \label{fig:large_rocs}
+\end{figure}
+
 \subsection{Auxiliary Task Ablation Studies}
 
-We also investigated if the model still benefits from the two extra auxiliary tasks that were highly beneficial to GN1.
-For this we used the Spice-large model, and trained three models, setting $\alpha$, $\beta$, and both to zero.
-The results are shown in \Cref{fig:auxiliary} and show that while not as crucial as in GN1, the auxiliary tasks still provide a marginal performance boost on average.
-This is most notable for high $\pt$ jets, as shown by the $Z'$ sample.
-There are however a couple of specific cases where the auxiliary tasks are detrimental to the performance of the model.
-For high signal efficiencies in $c$-tagging, $\approx 80\%$, on the $\ttbar$ sample the model with no vertex task performs around 2\% better than the model with all tasks.
-However, this improvement is not significant and it is in a region not typically used in analyses.
-Therefore, we conclude that the auxiliary tasks are still beneficial to the model.
+We conducted an investigation to determine whether the transformer continues to benefit from the two auxiliary tasks that proved highly advantageous in GN1.
+To this end, we utilized the Spice-large model and trained three variants, adjusting $\alpha$, $\beta$, or both to zero.
+
+The results, as depicted in \Cref{fig:auxiliary}, indicate that while the auxiliary tasks are not as critical as in GN1, they do confer a marginal performance boost on average.
+This boost is most pronounced for high $\pt$ jets, as evidenced by the $Z'$ sample.
+However, there are specific scenarios where the auxiliary tasks negatively impact the tagging performance.
+For instance, at high signal efficiencies in $c$-tagging, $\epsilon_c \approx 80\%$, on jets with $\pt < 250~\GeV$, the model without the vertex task performs approximately 2\% better than the model with all tasks.
+Nevertheless, this improvement is not significant and occurs in a region not typically utilized in analyses.
+
+In conclusion, the auxiliary tasks remain beneficial to the overall performance.
 
 \begin{figure}[ht]
     \centering
@@ -609,30 +611,33 @@ Therefore, we conclude that the auxiliary tasks are still beneficial to the mode
     \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/c_roc_ttbar_aux.pdf}
     \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/b_roc_zprime_aux.pdf}
     \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/c_roc_zprime_aux.pdf}
-    \caption{ROC curves for the $b$-tagging scores (left) and $c$-tagging scores (right) for $\ttbar$ jets with $20 < \pt < 250~\GeV$ (top) and $Z'$ jets with $\pt > 250~\GeV$ (bottom). The rejection values are calculated separately for each background type. The bottom two panels show the ratio of these rejection values to the Spice-large tagger. Error bands are derived from binomial uncertainties.}
+    \caption{ROC curves for the $b$-tagging (left) and $c$-tagging discriminants (right) for $\ttbar$ jets with $20 < \pt < 250~\GeV$ (top) and $Z'$ jets with $\pt > 250~\GeV$ (bottom).
+    All new models are compared to the benchmark Spice-large. The rejection values are calculated separately for each background type and the bottom two panels show the ratio to Spice-large. Error bands are derived from binomial uncertainties.}
     \label{fig:auxiliary}
 \end{figure}
 
+\FloatBarrier
 
-\subsubsection{Computational Cost}
+\subsubsection{Computational Cost to Scaling}
 
-Key to the practicality of these models is the computational cost associated with running inference on them.
-The GPU and CPU times are shown in \Cref{tab:inference}.
-The GPU times are relevant for training the model, and it highlights the ease at which the models can be produced.
-When running the taggers for offline analysis, they will be exported via ONNX runtime and run on the CPU\@.
-The GN++ models are the slowest to run on both the CPU and GPU\@.
-This is likely due to the inefficient implementation of the graph layers in the custom graph library.
-This is in contrast to the transformer based models which barely increase in inference time when running on the GPU as so many of the operations are basic matrix multiplications and thus highly parallelized.
-Even though the expressivity of a single GN++ layer is theoretically much higher than a single transformer layer, the efficiency of the latter allows it to out-scale the former.
-Therein lies the strength of the transformer architecture.
-There are potentially many more expressive and smarter graph network designs that posses stronger inductive biases, but the efficiency of the transformer architecture means that simply by scaling the model, it can outperform them.
+A critical factor in evaluating the practicality of these models is the computational cost associated with running inference.
+As shown in \Cref{tab:inference}, the GPU times are relevant for training the model, highlighting the ease with which these models can be produced. For offline analysis, taggers will be exported via ONNX runtime and run on the CPU\@.
 
-It is also worth commenting on the ease at which these models can be exported using ONNX runtime.
-For both GN1 and GN++, significant effort was spent creating adaptation functions to convert the PyTorch Geometric layers, or the layers from the custom graph library, into ONNX compatible layers.
-Each time a new layer was designed, it required new adaptation functions.
-In contrast, the transformer model uses standard matrix operations, and thus can be exported directly to ONNX without any additional work.
+The GN++ models are the slowest on both CPU and GPU, likely due to the inefficient implementation of the graph layers in the custom graph library.
+In contrast, transformer-based models show minimal increases in inference time when running on the GPU, benefiting from the highly parallelized nature of basic matrix multiplications.
+Despite the higher theoretical expressivity of a single GN++ layer compared to a transformer layer, the efficiency of the latter allows it to scale more effectively.
 
-\begin{table}
+This efficiency underscores the strength of transformer architecture.
+While advanced graph network designs may offer stronger inductive biases, the simple scalability of transformer models can match or exceed their performance.
+
+Moreover, it is worth noting the ease with which these models can be exported using ONNX runtime~\cite{onnxruntime}.
+ONNX is the framework used by the ATLAS collaboration for running deep learning models in their analysis framework.
+For both GN1 and GN++, significant effort was spent creating adaptation functions to convert the PyTorch Geometric layers or the layers from the custom graph library into ONNX-compatible operations.
+Each new layer design required new adaptation functions.
+In contrast, the transformer model, utilizing standard matrix operations, can be exported directly to ONNX without additional work.
+This is not a minor feature, as it allows for rapid development and deployment, saving weeks of time in the development cycle.
+
+\begin{table}[h!]
     \centering
     \begin{tabular}{lrrr}
         \toprule
@@ -646,42 +651,54 @@ In contrast, the transformer model uses standard matrix operations, and thus can
         Spice-huge & 4.2M & 0.08 & 7.3 \\
         \bottomrule
     \end{tabular}
-    \caption{Inference times for the different models on a CPU (AMD EPYC 7742) and GPU (NVIDIA 3090). The CPU times were measured using ONNX exported versions of the models.}
+    \caption{Inference times for the different models on a CPU (AMD EPYC 7742) and GPU (NVIDIA 3090). The CPU times were measured using ONNX runtime.}
     \label{tab:inference}
 \end{table}
 
-\section{GN2 Tagger}
+\FloatBarrier
 
-The Salt model was adapted into the new GN2 tagger which is being developed in the Salt~\cite{Salt} framework and is actively being used by the ATLAS Collaboration.
+\section{The GN2 Tagger}
 
-Several and architectural changes were made to the model, differentiating it from the Spice.
-There are now 8 TE Blocks, each with an embedding dimension of 192 and a FFN hidden dimension of 256.
-This results in a model with 1.5M trainable parameters.
-Eight attention heads are used and during training dropout is applied to the attention weights with a drop probability of 0.1.
-The three class attention operations were also replaced with a single global attention layer for calculating the pooled graph representation.
+Developed in the Salt~\cite{Salt} framework, Spice was adapted into the new GN2 model, the new recommended flavour tagger, which is actively used by the ATLAS Collaboration.
+
+Several and architectural changes were made transitionin from Spice to GN2.
+There are now 8 TE Blocks, each with an embedding dimension of 192 and an MLP hidden dimension of 256, resulting in 1.5M trainable parameters.
+Eight attention heads are used and during training dropout~\cite{Dropout} is applied to the attention matrix with a drop probability of 0.1.
+The three class-attention operations were also replaced with a single global attention layer for calculating the pooled graph representation.
 The model is trained using a single learning rate cycle which lasts for 40 epochs with a maximal learning rate of $5.0 \times 10^{-4}$.
 The training set has also been expanded 192M jets.
 
-GN2 marks a significant improvement over the previous flavour tagging models, as shown in \Cref{fig:ftag_better}, covering over four times greater background rejection $70\%$ $b$-tagging efficiency on $\ttbar$ jets compared to DL1, the tagger used only a few years ago.
-Compared to GN1 the improvements are around 50-80\%.
+GN2 marks a significant improvement over the previous flavour tagging models, as shown in \Cref{fig:ftag_better}, resulting in over four times greater background rejection $70\%$ $b$-tagging efficiency on $\ttbar$ jets compared to DL1~\cite{DL1}, the algorithm used only a few years ago.
+Compared to GN1 the improvements are around $50-80\%$.
+ROC curves comparing GN1, GN2, and deep sets based DL1d~\cite{DL1D}  are shown in \Cref{fig:gn2}.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.6\textwidth]{figures/flavour_tagging/year_improvement.pdf}
-    \caption{The $c$- and light-jet rejection of the different ATLAS flavour tagging algorithms over time in Monte Carlo simulationed jets. The rejections are provided at the 70\% $b$-tagging WP. The improvement with respect to the DL1 rejection is marked on each bar. Between DL1r and DL1d, a transition from Run 2 to Run 3 reconstruction took place. Image taken from Ref.~\cite{GN2Plots}.}
+    \includegraphics[width=0.75\textwidth]{figures/flavour_tagging/year_improvement.pdf}
+    \caption{The $c$- and light-jet rejection of the different ATLAS flavour tagging algorithms over time in MC simulated $\ttbar$ jets. The rejections are provided at the $\bnom$. The improvement with respect to the DL1 rejection is marked on each bar. Between DL1r and DL1d, a transition from Run 2 to Run 3 reconstruction took place. Plot taken from Ref.~\cite{GN2Plots}.}
     \label{fig:ftag_better}
 \end{figure}
 
-\section{Further utilization of GN2 and Salt}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/fig_06a.pdf}
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/fig_07a.pdf}
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/fig_06b.pdf}
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/fig_07b.pdf}
+    \caption{ROC curves for the $b$-tagging (left) and $c$-tagging discriminants (right) for $\ttbar$ jets with $20 < \pt < 250~\GeV$ (top) and $Z'$ jets with $250 < \pt < 6000~\GeV$ (bottom). The GN1 and GN2 are compared to the baseline DL1d tagger with the bottom two panels showing the ratio of the rejection rates. Error bands are derived from binomial uncertainties. Plots are taken from Ref.~\cite{GN2Plots}.}
+    \label{fig:gn2}
+\end{figure}
 
-The GN2 tagger and the Salt framework have been used extensively in other analyses and areas of the collaboration.
+\subsection{Further utilization of GN2 and Salt}
 
-In addition to flavour tagging, the GN2 tagger was retrained for identifying large-radius jets originating from boosted Higgs bosons decaying into $b\bar{b}$ and $c\bar{c}$ pairs~\cite{GN2X}.
-In this scheme the main backgrounds are top quark pairs and multiset events.
-The model, named GN2X, offered considerable classification performance over the established baselines as shown in \Cref{fig:gn2x}.
+The GN2 model, alongside the Salt framework, has been extensively utilized across various analyses and projects within the ATLAS Collaboration.
+In addition to its application in flavour tagging, the GN2 tagger was retrained to identify large-radius jets originating from boosted Higgs bosons decaying into $b\bar{b}$ and $c\bar{c}$ pairs~\cite{GN2X}.
+In this context, the principal backgrounds are top quark pairs and multi-jet events.
+The model, designated as GN2X, demonstrated significant classification performance improvements over established baselines, as illustrated in \Cref{fig:gn2x}.
 
-GN2 was also repurposed for constituent-based $b$-jet calibration, whereby the model was trained to regress correction factors for the jet kinematics~\cite{GN2Calib} and initial results are shown in \Cref{fig:gn2calib}.
-Outside even jets, the model and Salt framework is now a part of several ongoing projects within the ATLAS including e/gamma calibration, pileup rejection, multi-top analyses, and lepton tagging.
+Moreover, GN2 was adapted for constituent-based $b$-jet calibration, where the model was trained to regress correction factors for the jet kinematics~\cite{GN2Calib}.
+The initial results are presented in \Cref{fig:gn2calib}.
+The GN2 model and Salt framework have been incorporated into numerous ongoing works within ATLAS, including $\tau$-jet identification, vertex regression, electron/gamma energy calibration, pileup rejection, multi-top analyses, and lepton tagging.
 
 \begin{figure}
     \centering
@@ -692,40 +709,25 @@ Outside even jets, the model and Salt framework is now a part of several ongoing
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/gn2x.pdf}
-    \caption{ROC curves for $H(b\bar{b})$ tagging against top and multi-jet backgrounds for jets with $\pt>250~\GeV$ and $50<m<200~\GeV$. Performance of the GN2X algorithm is compared to the $D_{Xbb}$ and VR subjet baselines. Error bands are derived from binomial uncertainties. Plot taken from Ref.~\cite{GN2X}.}
-    \label{fig:gn2x}
+    \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/fig_10.pdf}
+    \caption{Mass distributions for truth, jets reconstructed using the nominal/conventional calibration as well as the large-R regression model predictions, which use the GN2 model. QCD jets are from multi-jet jet production with the heavy-flavour hadron content determined from quantum chromodynamics. The width of the coloured lines represents the statistical uncertainty. .}
+    \label{fig:gn2calib}
 \end{figure}
 
 \subsection{Future Work}
 
-There are a number of avenues for future work that could be explored to further improve the performance of the models.
+Future work aims to enhance model performance.
+Research and development in the latest iteration of the tagger, GN3, is ongoing.
+This model includes contributions from neutral and charged PFlow objects and early results show promise.
+However, this inclusion balloons the multiplicity of the input set to around 120, meaning significant work is being done behind the scenes to optimize computational performance.
 
-As of writing research and development in the latest iteration of the tagger GN3 is ongoing.
-This model includes contributions from neutral and charge particle flow objects, as opposed to being entirely track based.
-Early results indicate that this increases the tagger performance.
-However, the multiplicity of the input set also increases to around 120, meaning significant work is being done behind the scenes to optimize computational performance to handle this increase in complexity, such as the incorporation of flash-attention~\cite{FlashAttentionFastMemoryEfficient}.
+Reframing the auxiliary tasks could also improve the model.
+The vertexing task, unchanged from GN1 and based on~\textcite{SecondaryVertexFinding}, currently uses concatenated embeddings and an MLP for vertex prediction.
+Leveraging the transformer's attention mechanism may enhance this task, though it would require substantial model restructuring and conflict with existing optimizations.
+The vertexing task also resembles semantic segmentation in computer vision, where models like MaskFormer~\cite{MaskFormer} have shown success in vertex fitting for jets~\cite{MaskFormerJets}.
 
-Another possible improvement to the model a reframing of the auxiliary tasks.
-The vertexing task is largely unchanged from GN1, which itself was based on the work by~\textcite{SecondaryVertexFinding}.
-In this task all pairs of output embeddings are concatenated (with both permutations) and passed through an MLP to predict the vertex label.
-However, since moving to the transformer architecture, it might be worth utilizing the attention mechanism to perform this task.
-Storing and updating the attention mechanism from each layer provides the required $N^2$ interaction matrix which could be used directly to perform this task.
-This is in essence attempting to construct persistent edge information in the transformer model which proved to be so beneficial in the graph network models.
-However, it would require a significant reworking of the model, and would clash with the computation improvements that have been made to the model.
-For example, flash-attention operates by never manifesting the full attention matrix.
-
-The vertexing task also has many similarities with the task of semantic segmentation in computer vision.
-Both of these tasks predict the class of compositional elements within the input data.
-Current state-of-the-art models for semantic segmentation use the MaskFormer model~\cite{MaskFormer} and initial work has shown that this too can be used to perform vertex fitting in jets~\cite{MaskFormerJets}.
-
-Finally, there has been alot of work done on the design of specialised transformer-like layers that adhere to symmetries in the input data~\cite{GeometricAlgebraTransformer}.
-This has been applied successfully to constructing classifiers for physics data that are invariant under the Lorentz group~\cite{LorentzEquivariantGeometricAlgebra}.
-It would be interesting to see if such a model could be used for flavour tagging.
-The reason why this is in question, as these models showed impressive performance when applied to input data containing particle 4 momentum.
-However, the inputs to the tagger are sets of tracks and track reconstruction is not invariant under the Lorentz group.
-While these models do describe a mechanism by which symmetry can be broken in the transformations, it remains to be seen if they can be applied to the ATLAS flavour tagging problem.
-
+Additionally, transformer-like layers designed to respect input data symmetries~\cite{GeometricAlgebraTransformer} have excelled in physics data classification under Lorentz invariance~\cite{LorentzEquivariantGeometricAlgebra}.
+Adapting this approach to flavour tagging, despite the lack of Lorentz invariance in reconstructed track data, remains an intriguing prospect.
 
 
 
