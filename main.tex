@@ -31,13 +31,15 @@
 \usepackage{placeins}
 
 \newcommand{\todo}[1]{\\\textcolor{red}{TODO:\@ {#1}}\\}
-\newcommand{\citetemp}[1]{\textcolor{red}{#1}}
 
 % Make subfigure labels lowercase
 % \captionsetup[subfigure]{labelformat=simple, labelsep=colon}
 % \renewcommand{\thesubfigure}{(\alph{subfigure})}
 
 % Some commands for units
+
+\newcommand{\nuflow}{\mbox{$\nu$-Flows}}
+\newcommand{\nuff}{\mbox{$\nu$-FF}}
 \newcommand{\WP}{\text{WP}}
 \newcommand{\lnorm}{L_{\text{norm}}}
 \newcommand{\ff}{\text{MLP}}
@@ -45,10 +47,12 @@
 \newcommand{\relu}{\text{ReLU}}
 \newcommand{\mm}{\unit{\milli\meter}}
 \newcommand{\eV}{\unit{\electronvolt}}
+\newcommand{\KeV}{\unit{\kilo\electronvolt}}
 \newcommand{\MeV}{\unit{\mega\electronvolt}}
 \newcommand{\GeV}{\unit{\giga\electronvolt}}
 \newcommand{\TeV}{\unit{\tera\electronvolt}}
 \newcommand{\pt}{p_{\text{T}}}
+\newcommand{\ptv}{\p_{\text{T}}}
 \newcommand{\ttbar}{t\bar{t}}
 \newcommand{\ba}{\mathbf{a}}
 \newcommand{\x}{\mathbf{x}}
@@ -57,6 +61,7 @@
 \newcommand{\y}{\mathbf{y}}
 \newcommand{\z}{\mathbf{z}}
 \renewcommand{\k}{\mathbf{k}}
+\newcommand{\p}{\mathbf{p}}
 \newcommand{\q}{\mathbf{q}}
 \renewcommand{\u}{\mathbf{u}}
 \newcommand{\e}{\boldsymbol{\epsilon}}
@@ -71,9 +76,12 @@
 \newcommand{\diff}{\mathrm{d}}
 \newcommand{\normal}{\mathcal{N}(\mathbf{0}, \mathbb{I})}
 \newcommand{\frach}{\vphantom{\frac{1}{2}}}
+\newcommand{\ptmiss}{\ptv^{\text{miss}}}
+\newcommand{\bnom}{\epsilon_b^{70}}
+\newcommand{\cnom}{\epsilon_c^{25}}
 
 \DeclareRobustCommand{\bigO}{%
-  \text{\usefont{OMS}{cmsy}{m}{n}O}%
+\text{\usefont{OMS}{cmsy}{m}{n}O}%
 }
 
 % Maths
@@ -127,12 +135,13 @@
 \pagestyle{thesis}
 
 % \include{Chapters/introduction}
-% \include{Chapters/standard_model}
+\include{Chapters/standard_model}
 % \include{Chapters/lhc_atlas_detector}
-% \include{Chapters/deep_learning}
-% \include{Chapters/graph_networks}
+\include{Chapters/deep_learning}
+\include{Chapters/graph_networks}
 \include{Chapters/flavour_tagging}
-% \include{Chapters/generative_models}
+\include{Chapters/generative_models}
+\include{Chapters/neutrino_unfolding}
 % \include{Chapters/jet_generation}
 % \include{Chapters/anomaly_detection}
 % \include{Chapters/foundation_models_hep}
@@ -140,7 +149,7 @@
 
 \appendix
 
-% \include{Appendices/AppendixA}
+\include{Appendices/neutrino.tex}
 
 \printbibliography[heading=bibintoc]
 

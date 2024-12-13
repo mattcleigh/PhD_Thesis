@@ -85,7 +85,7 @@ In these experiments, the inputs to the model stem from the tracks, and no calib
 Charged particle tracks are required to pass the loose selection criteria~\cite{DL1D} as shown in \Cref{tab:track_loose}.
 The primary vertex (PV) is the vertex with the highest sum of squared transverse momenta of the associated tracks.
 The impact parameters (IPs) for each track are measured with respect to the PV of the event.
-Jets are reconstructed from particle-flow objects~\cite{PFlow} using the anti-$k_t$ algorithm with a radius parameter of $R = 0.4$.
+Jets are reconstructed from particle-flow objects~\cite{PFlow} using the anti-$k_t$~\cite{AntiKt} algorithm with a radius parameter of $R = 0.4$.
 More details are covered in \Cref{sec:particle_flow}.
 Tracks are associated with a jet based on the $\Delta R$ separation to the jet axis.
 The threshold decreases as a function of the jet $\pt$ to account for the increased collimation of the jet cone, from $\Delta R = 0.45$ at $\pt = 20~\GeV$ to $\Delta R = 0.25$ at $\pt \geq 200~\GeV$.
@@ -435,8 +435,6 @@ The training was performed for a maximum of 50 epochs, and the checkpoint with t
 Gradient clipping was applied with a maximum norm of 10.
 
 \section{Experiments and Results}
-\newcommand{\bnom}{\epsilon_b^{70}}
-\newcommand{\cnom}{\epsilon_c^{25}}
 
 The performance of all models is evaluated separately using the two test datasets, $\ttbar$ and $Z'$, which is populated by jets with $\pt < 250~\GeV$ and $\pt \geq 250~\GeV$, respectively.
 In addition to the loss metrics, the quality of the models is determined by their $b$- and $c$-tagging capabilities.

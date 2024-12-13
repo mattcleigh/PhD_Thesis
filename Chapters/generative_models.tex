@@ -109,6 +109,7 @@ However, the main issue is that GANs tend not to cover the full data distributio
 Most of the generation we are looking for in fast simulation is conditional, as detector response depends on the properties of the incoming particle, making GANs not optimal for this task.
 
 \section{Normalizing Flows}
+\label{sec:flows}
 
 NFs are a popular tool for both variational inference~\cite{VariationalInferenceNormalizing, NormalizingFlowsProbabilistic}
 and density estimation~\cite{NICENonlinearIndependent}.
@@ -166,7 +167,7 @@ As NFs describe continuous morphs of data if the latent distribution is connecte
 This causes issues when attempting to model data with disconnected support.
 Discrete data needs to be \textit{dequantized} before being fed into the flow to prevent singularities from occurring during training, a notable feature in image modelling where pixel values tend to be quantized to 8-bit integers~\cite{FlowImprovingFlowBased}.
 
-In HEP, NFs have been widely adopted for many tasks including unfolding, fast simulation, and template building, which are covered in detail in \Cref{ch:nuflows}, \Cref{ch:jet_generation}, and \Cref{ch:anomaly_detection} respectively.
+These types of networks have succesfully applied to collider physics, with notable applications including event generation~\cite{EventGen}, template construction~\cite{ANODE, CATHODE, CURTAINs}, unfolding~\cite{PartonsAndBack}, and detector simulation~\cite{CaloFlow, CaloFlow2}.
 
 \subsection{Flow Layers}
 
@@ -286,7 +287,6 @@ This means that the using the flow in forward-mode is highly efficient.
 The reverse-mode however must be performed sequentially, as the transformation of each element is conditioned on the previous elements, as shown in \Cref{fig:autoregressive_flow}.
 This makes autoregressive flows fast for training but slow for sampling.
 Alternatively one could parametrize the layer inversely, choosing efficient sampling but slow training~\cite{ImprovingVariationalInference}.
-
 
 \begin{figure}[ht]
     \centering
