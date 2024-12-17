@@ -1,0 +1,44 @@
+\chapter{Diffusion Models for Surrogate Simulation}
+
+Developing probabilistic generative models for physics data is a challenging, yet rewarding task.
+A challenge posed by the increasing data collected by collider experiments is the required computing resources for detailed simulated collisions.
+Fast surrogate models can reduce the computational cost of both event and detector simulation.
+These models can also be used for anomaly detection via template methods, or be used for the inverse problem of unfolding.
+
+One of the early objectives of this thesis was to develop a generative model specifically for collider data.
+However, simply reusing the highly successful models from the wider machine learning community proved insufficient.
+Unlike the models used in CV, collider data is inherently point-like, and unlike to the models used in NLP, it is unordered and continuous.
+These characteristics make physics data well suited to graph neural networks, hence the success of such models on classification, as discissed in ~\Cref{ch:flavour}.
+These results motivated our pursuit of a generative model for physics data.
+
+
+Other research groups investigated GNNs trained as GANs~\cite{MPGAN} which met success, but also included all the drawbacks of GANs as detailed in ~\Cref{ch:generative_models}.
+
+We began work on a graph based VAE, however one of the main issues was the loss used in the reconstruction.
+These modes used GNN decoders which would a point cloud of noise into the reconstructed point cloud whose transformation was conditioned on the latent space.
+This worked on toy datasets, but failed at generating good samples of particle physics data.
+One of the main issues was the finding a good permutation invariant loss term to use for reconstruction.
+Many attempts were made, iterating on modifications to Sinkhorn~\cite{Sinkhorn}, Champfer~\cite{Chamfer}, and optimal transport losses.
+Even physically motivated metrics specific to collider data~\cite{MetricOfCollider}, yeilded poor results.
+
+During this time, the diffusion models started to gain traction in the wider machine learning community, and a realization was made that this could be the key to solving the problem.
+A key insight was that the training objective in diffusion training is not full generation, but denoising.
+Given set of nodes each individually corrupted with noise, then training the model to remove the noise is a permutation equivariant task and thus could be done with simply MSE as the loss.
+This led us to the first successful diffusion model for generating particle type data.
+
+This chapter details a collection published of work used to develop models for the conditional generation point cloud data, including particle physics jets~\cite{PCJedi, EpicJedi, PCDroid} and full events~\cite{PIPPIN}.
+It also covers the use of these models for template based anomaly detection~\cite{Drapes}.
+
+
+\section{Introduction}
+
+\section{PC-JeDi}
+
+\section{PC-Droid}
+
+% \section
+
+\section{Anomaly Detection}
+
+\subsection{Introduction}
+

@@ -1,0 +1,91 @@
+% Bibliographies
+\newcommand{\includewithbib}[1]{
+    \begin{refsection}
+        \include{#1}
+        \printbibliography[heading=none]
+    \end{refsection}
+}
+
+
+% Misc
+\newcommand{\ensmath}[1]{\ensuremath{#1}\xspace}
+\newcommand{\frach}{\vphantom{\frac{1}{2}}}
+\newcommand{\WP}{\text{WP}}
+\newcommand{\todo}[1]{\\\textcolor{red}{TODO:\@ {#1}}\\}
+\DeclareRobustCommand{\bigO}{\text{\usefont{OMS}{cmsy}{m}{n}O}}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+
+% Vector + Maths
+\newcommand{\ba}{\mathbf{a}}
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\edge}{\mathbf{e}}
+\renewcommand{\vert}{\mathbf{v}}
+\newcommand{\y}{\mathbf{y}}
+\newcommand{\z}{\mathbf{z}}
+\renewcommand{\k}{\mathbf{k}}
+\newcommand{\p}{\mathbf{p}}
+\newcommand{\q}{\mathbf{q}}
+\renewcommand{\u}{\mathbf{u}}
+\newcommand{\e}{\boldsymbol{\epsilon}}
+\newcommand{\w}{\boldsymbol{\omega}}
+\newcommand{\bias}{\mathbf{b}}
+\newcommand{\con}{\mathbf{c}}
+\newcommand{\X}{\mathbf{X}}
+\newcommand{\W}{\mathbf{W}}
+\newcommand{\Y}{\mathbf{Y}}
+\newcommand{\Z}{\mathbf{Z}}
+\newcommand{\Con}{\mathbf{C}}
+\newcommand{\diff}{\mathrm{d}}
+\newcommand{\normal}{\ensmath{\mathcal{N}(\mathbf{0}, \mathbb{I})}}
+
+% Kinematics
+\newcommand{\px}{\ensmath{p_x}}
+\newcommand{\py}{\ensmath{p_y}}
+\newcommand{\pz}{\ensmath{p_z}}
+\newcommand{\pt}{\ensmath{p_\mathrm{T}}}
+\newcommand{\ptv}{\ensmath{\p_\mathrm{T}}}
+\newcommand{\miss}[1]{\ensmath{#1^{\mathrm{miss}}}}
+\newcommand{\ptmiss}{\miss{\ptv}}
+\newcommand{\pxmiss}{\miss{\px}}
+\newcommand{\pymiss}{\miss{\py}}
+
+% Neutrino Flows
+\newcommand{\vff}{\mbox{\ensuremath{\nu\text{-FF}}}\xspace}
+\newcommand{\vflows}{\mbox{\ensuremath{\nu\text{-Flows}}}\xspace}
+\newcommand{\vsample}{\mbox{\ensuremath{\nu\text{-Flows(sample)}}}\xspace}
+\newcommand{\vmode}{\mbox{\ensuremath{\nu\text{-Flows(mode)}}}\xspace}
+\newcommand{\vvflows}{\mbox{\ensuremath{\nu^2\text{-Flows}}}\xspace}
+\newcommand{\vvflowsPy}{\mbox{\ensuremath{\nu^2\text{-Flows (Pythia8)}}}\xspace}
+\newcommand{\vtruth}{\mbox{\ensuremath{\nu\text{-Truth}}}\xspace}
+\newcommand{\vweight}{\mbox{\ensuremath{\nu\text{-Weighting}}}\xspace}
+\newcommand{\ellipse}{\mbox{Ellipse}\xspace}
+\newcommand{\ptvv}{\ensmath{\ptv^{\nu\bar\nu}}}
+
+\newcommand{\Wboson}{\ensmath{W\;\text{boson}}}
+\newcommand{\Wbosons}{\ensmath{W\;\text{bosons}}}
+\newcommand{\ttbar}{\ensmath{t\bar{t}}}
+\newcommand{\mttbar}{\ensmath{m_{\ttbar}}}
+\newcommand{\dphill}{\ensmath{\Delta\phi(\ell^+\ell^-)}}
+\newcommand{\pttop}{\ensmath{\pt^t}}
+\newcommand{\mtop}{\ensmath{m_t}}
+\newcommand{\pttt}{\ensmath{\pt^{\ttbar}}}
+\newcommand{\ytt}{\ensmath{y_{\ttbar}}}
+
+% Machine Learning
+\newcommand{\lnorm}{L_{\text{norm}}}
+\newcommand{\ff}{\text{MLP}}
+\newcommand{\mlp}{\text{MLP}}
+\newcommand{\relu}{\text{ReLU}}
+
+% Units
+\newcommand{\mm}{\unit{\milli\meter}}
+\newcommand{\eV}{\unit{\electronvolt}}
+\newcommand{\KeV}{\unit{\kilo\electronvolt}}
+\newcommand{\MeV}{\unit{\mega\electronvolt}}
+\newcommand{\GeV}{\unit{\giga\electronvolt}}
+\newcommand{\TeV}{\unit{\tera\electronvolt}}
+
+% Flavour tagging
+\newcommand{\bnom}{\ensmath{\epsilon_b^{70}}}
+\newcommand{\cnom}{\ensmath{\epsilon_c^{25}}}

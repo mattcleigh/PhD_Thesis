@@ -597,7 +597,7 @@ This set-to-set transformation is the basis of many generative of sequence-to-se
 
 When viewing the transformer as a GNN, the inclusion of edge information becomes intuitive.
 For message passing on a single graph, if not represented sparsely, edge information is stored in a tensor $\edge \in \mathbb{R}^{N \times N \times d_e}$.
-In the SDPA operation in \cref{eq:attention}, the attention matrix defined by,
+In the SDPA operation in \Cref{eq:attention}, the attention matrix defined by,
 \begin{equation}
     \mathbf{A} = \text{softmax}\left( \frac{\mathbf{Q} \mathbf{K}^T}{d_k} + \mathbf{B} \right),
 \end{equation}

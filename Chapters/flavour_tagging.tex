@@ -4,30 +4,31 @@
 
 This chapter describes the design and implementation of several new GNNs and transformers for flavour tagging.
 Jet flavour tagging is a crucial feature in many jet-based analyses at ATLAS, and an overview is provided in \Cref{sec:flavour_tagging}.
-These models attempt to identify a jet's flavour based on the properties of the reconstructed charged particle tracks associated with it.
+These models aim to identify a jet's flavour, which corresponds to the flavour of the quark that initiated the jet, by analysing the properties of the associated charged particle tracks.
+This task can be framed as a standard multi-class classification problem, making it particularly well-suited for applying deep learning techniques.
 
-The new models build on GN1, a GNN which uses the GATv2 system of message passing~\cite{GATv2}.
+The previous state-of-the-art flavour tagger used in ATLAS was GN1, a GNN that uses the GATv2 system of message passing~\cite{GATv2}.
+We introduce two new models and their variants. Each are GNNs with different architectures and mechanisms for message passing.
 The first new model is called GN++ and is based on the complete GN Block architecture described in \Cref{sec:gn_block}, complete with persistent edge information and global attributes.
 The second new model, Spice, is based on the transformer-encoder architecture described in \Cref{sec:transformer}.
-Spice would be so performant and efficient that it would form the basis of the new GN2 flavour tagger adopted by the ATLAS collaboration.
+Spice would turn out to be so performant and efficient that it would form the basis of the new GN2 flavour tagger adopted by the ATLAS collaboration~\cite{GN2Plots}.
 
-One observation made during this project is that progress in machine learning is much faster than progress in HEP.
-Spice was being developed and presented to the flavour tagging group when GN1 was still undergoing collaboration.
-At the time of this writing, GN2 is being calibrated, and significant effort is being made to keep it up to date with the latest developments in transformer design.
-
-One of the main contributions of this thesis was the development of Salt~\cite{Salt}, a repository for training transformers for flavour tagging, designed to be continuously updated with the latest research in order to keep the models used by the ATLAS collaboration up to date with the state-of-the-art models used by the broader machine learning community.
+One observation made during this project is that the field of machine learning moves is significantly faster compared to HEP.
+Spice was being developed and presented to the flavour tagging group while GN1 was still undergoing calibration.
+To address this rapid progression and prevent obsolescence, a major contribution of this thesis is the development of Salt~\cite{Salt}, a repository for the dedicated research, development, and deployment of deep learning algorithms for flavour tagging.
+It ensures that the models used by the ATLAS collaboration remain up-to-date with the state-of-the-art models employed by the broader machine learning community.
 
 \section{Datasets}
 
 Training and evaluating GN++ and Spice required the use of simulated datasets in order to provide a ground truth for the jet flavour.
 This work reuses the same samples as the previous flavour taggers, DIPS and GN1, and further information can be found in \textcite{AlexThesis} and Ref.~\cite{GN1}.
-The training datasets are selected to cover a wide range of $\pt$ values and are further resampled to ensure that the jet $\pt$ and $\eta$ distributions are identical for the three jet flavours used in the classification, namely $b$-, $c$-, and light-jets.
+The training datasets were selected to cover a wide range of $\pt$ values and were further resampled to ensure that the jet $\pt$ and $\eta$ distributions were identical for the three jet flavours used in the classification, namely $b$-, $c$-, and light-jets.
 
-Two simulated datasets are used.
-The first dataset comprises $\ttbar$ events and covers the $\pt < 250~\GeV$ phase space.
+Two simulated datasets were used.
+The first dataset comprises $\ttbar$ events and covers the $20 < \pt < 250~\GeV$ phase space.
 The simulation settings for this sample were derived from best fits of jet multiplicity and top quark momentum in data~\cite{ttbar1, ttbar2}.
 The second dataset consists of $Z'$ events to enhance the training statistics in the high momentum phase space, $\pt > 250~\GeV$.
-The $Z'$ boson is a non-SM particle, and its properties, such as its cross-section, were precisely tuned to produce a flat mass distribution, leading to a relatively uniform distribution of jets with $\pt$ up to $5~\TeV$.
+The $Z'$ boson is a non-SM particle, and its properties, such as its cross-section, were artificially adapted to produce a flat mass distribution, leading to a relatively uniform distribution of jets with $\pt$ up to $5~\TeV$.
 The branching fractions were adjusted to produce a roughly equal distribution of $b$-, $c$-, and light-jets.
 The branching fractions of the $Z'$ boson are shown in \Cref{tab:zprime_branching} and the distributions of the jet $\pt$ and $\eta$ values are shown in \Cref{fig:jet_pt_eta}.
 
@@ -74,22 +75,22 @@ Decays of $b$- and $c$-hadrons were simulated using the \textsc{EvtGen v1.6.0} p
 The detector response was performed using the \textsc{Geant4} simulation package~\cite{Geant4} with the ATLAS simulation setup~\cite{ATLASSim}.
 Interactions with heavy flavour hadrons and the detector material were not simulated but accounted for in correction factors and systematic uncertainties.
 Pileup was modelled by overlaying extra minimum bias events using the \textsc{Pythia 8.160} generator with the \textsc{A3} tune~\cite{A3} and the \textsc{NNPDF2.3LO} parton distribution functions.
-These signals are combined with the hard-scatter signals during the digitization step.
+These signals were combined with the hard-scatter signals during the digitization step.
 In-time pileup was modelled using an average of 40 interactions per bunch crossing, while out-of-time pileup was modelled using bunch crossings before and after the primary interaction.
 
 \subsection{Reconstruction}
 
 The simulation output was reconstructed using the standard ATLAS reconstruction procedure described in \Cref{sec:event_reconstruction}.
-In these experiments, the inputs to the model stem from the tracks, and no calibrated physics objects, such as reconstructed photons, electrons, or muons, are used.
+In these experiments, the inputs to the model stem from the tracks, and no calibrated physics objects, such as reconstructed photons, electrons, or muons, were used.
 
-Charged particle tracks are required to pass the loose selection criteria~\cite{DL1D} as shown in \Cref{tab:track_loose}.
+Charged particle tracks were required to pass the loose selection criteria~\cite{DL1D} as shown in \Cref{tab:track_loose}.
 The primary vertex (PV) is the vertex with the highest sum of squared transverse momenta of the associated tracks.
-The impact parameters (IPs) for each track are measured with respect to the PV of the event.
-Jets are reconstructed from particle-flow objects~\cite{PFlow} using the anti-$k_t$~\cite{AntiKt} algorithm with a radius parameter of $R = 0.4$.
+The impact parameters (IPs) for each track was measured with respect to the PV of the event.
+Jets were reconstructed from particle-flow objects~\cite{PFlow} using the anti-$k_t$~\cite{AntiKt} algorithm with a radius parameter of $R = 0.4$.
 More details are covered in \Cref{sec:particle_flow}.
-Tracks are associated with a jet based on the $\Delta R$ separation to the jet axis.
+Tracks were associated with a jet based on the $\Delta R$ separation to the jet axis.
 The threshold decreases as a function of the jet $\pt$ to account for the increased collimation of the jet cone, from $\Delta R = 0.45$ at $\pt = 20~\GeV$ to $\Delta R = 0.25$ at $\pt \geq 200~\GeV$.
-A track associated with multiple jets is assigned to the jet with the smallest $\Delta R$ separation.
+A track associated with multiple jets was assigned to the jet with the smallest $\Delta R$ separation.
 
 \begin{table}
     \centering
@@ -112,28 +113,28 @@ A track associated with multiple jets is assigned to the jet with the smallest $
 
 \subsection{Truth Labelling}
 
-As with GN1, these networks are trained to perform three complementary tasks.
+As with GN1, these networks were trained to perform three complementary tasks.
 The primary task is to classify the jet flavour.
 The first \textit{auxiliary} task is to predict the origin of each track within the jet. The second \textit{auxiliary} task is to segment the jet: given any two tracks from the same jet, determine if they emerged from the same vertex. Each of these requires defining ground truth labels.
 
 For the primary task, the truth labels of the jets stem from the existence of generator level particles within a $\Delta R$ separation of 0.3.
-The jet is associated with the particle with the highest priority within this radius.
-The considered particles in order of decreasing priority are, $b$-hadrons, $c$-hadrons, and $\tau$ leptons, which will result in the jet being labelled as a $b$-jet, $c$-jet, $\tau$-jet respectively.
-If no such particles are found, the jet is labelled as a light-jet.
+The jet was associated with the particle with the highest priority within this radius.
+The considered particles in order of decreasing priority were, $b$-hadrons, $c$-hadrons, and $\tau$ leptons, which will result in the jet being labelled as a $b$-jet, $c$-jet, $\tau$-jet respectively.
+If no such particles were found, the jet was labelled as a light-jet.
 We discard $\tau$-jets for this study.
 
-The labels for the track origin are derived by matching the reconstructed track hits to the simulated hits a particle made during the \textsc{Geant4} simulation.
-This matching criterion is performed using the~\textit{truth-matching probability} (TMP)~\cite{PerformanceATLASTrack}, this is a ratio of the matched hits to the total number of hits in the track with added factors to account for the varying hit efficiencies of the pixel detector, SCT, and TRT\@.
-Each track is associated with the truth particle with the highest TMP\@.
-If no truth particle leads to a TMP greater than 0.75, the track is labelled ``Fake'' as it is likely to have been reconstructed from signals produced by multiple overlapping particles.
-Once the track is associated with a truth particle, it is classified based on the origin.
+The labels for the track origin were derived by matching the reconstructed track hits to the simulated hits a particle made during the \textsc{Geant4} simulation.
+This matching criterion was performed using the~\textit{truth-matching probability} (TMP)~\cite{PerformanceATLASTrack}, this is a ratio of the matched hits to the total number of hits in the track with added factors to account for the varying hit efficiencies of the pixel detector, SCT, and TRT\@.
+Each track was associated with the truth particle with the highest TMP\@.
+If no truth particle leads to a TMP greater than 0.75, the track was labelled ``Fake'' as it was likely to have been reconstructed from signals produced by multiple overlapping particles.
+Once the track was associated with a truth particle, it was classified based on the origin.
 The tracks have eight possible classes which are shown in \Cref
 {tab:track_labels}.
 
 Finally, the truth vertex labels are binary, indicating whether a pair of tracks emerged from the same secondary vertex within the jet.
-The label does not depend on the ordering of the pair, and self-pairs are not considered; thus, for a jet with $N$ tracks, there are $N(N-1)/2$ vertex labels.
-The label is set to True if the associated truth particles of each track share an origin within $1~\mm$ of each other.
-If one of the tracks is labelled as ``Fake'' or from a pileup interaction, the pair is always labelled False.
+The label does not depend on the ordering of the pair, and self-pairs were not considered; thus, for a jet with $N$ tracks, there are $N(N-1)/2$ vertex labels.
+The label was set to True if the associated truth particles of each track share an origin within $1~\mm$ of each other.
+If one of the tracks was labelled as ``Fake'' or from a pileup interaction, the pair was always labelled False.
 
 \begin{table}
     \centering
@@ -157,14 +158,14 @@ If one of the tracks is labelled as ``Fake'' or from a pileup interaction, the p
 
 \subsection{Selection and Sampling}
 
-Jets are required to have $\pt > 20~\GeV$ and $|\eta| < 2.5$ and may not overlap with a generator-level lepton from a $W$ or $Z$ decay.
+Jets were required to have $\pt > 20~\GeV$ and $|\eta| < 2.5$ and may not overlap with a generator-level lepton from a $W$ or $Z$ decay.
 From the $Z'$ sample, jets must have $\pt > 250~\GeV$ to avoid simulation artefacts.
 All jets with $\pt < 60~\GeV$ and $|\eta| < 2.4$ must also pass the tight working point of the JVT algorithm in order to minimize contributions from pileup~\cite{JVT}.
 
 As shown in \Cref{fig:jet_pt_eta}, there is a significant difference between the jet $\pt$ and $\eta$ distributions for the three jet flavours and the two simulated datasets.
 This discrepancy would bias the model's training and lead to issues down the line.
-Therefore, to mitigate this, the training dataset is resampled with replacement to ensure that the 2D distribution of jet $\pt$ and $\eta$ is identical for the three jet flavours~\cite{AlexThesis}.
-After resampling the training set contains a total of 120 million jets split equally between the three jet flavours.
+Therefore, to mitigate this, the training dataset was resampled with replacement to ensure that the 2D distribution of jet $\pt$ and $\eta$ is identical for the three jet flavours~\cite{AlexThesis}.
+After resampling, the training set contains a total of 120 million jets split equally between the three jet flavours.
 The composition of the training set is around 70\% $\ttbar$ and 30\% $Z'$ events.
 The distributions of the jet $\pt$ and $\eta$ for the resampled datasets are shown in \Cref{fig:train_jet_pt_eta}.
 During training, 5\% of this was reserved for hold out cross validation.
@@ -183,12 +184,12 @@ No resampling was applied to the test datasets.
 
 \subsection{Input Features}
 
-The inputs to all models presented in this chapter are the same as those used in GN1.
+The inputs to all models presented in this chapter were the same as those used in GN1.
 They include two kinematic jet variables, $\pt$ and $\eta$, and up to 40 tracks associated with the jet.
 Each track is represented by a vector containing 21 features, detailed in \Cref{tab:track_features}.
 Almost all $\ttbar$ jets contain less than 40 tracks, but a non-negligible fraction of $Z'$ jets contain more than 40, as shown in \Cref{fig:track_multiplicity}.
-For these jets, only the 40 tracks with the highest transverse IP significance $s(d_0)$ are retained.
-All features are preprocessed via standardization to have zero mean and unit variance based on the training set statistics.
+For these jets, only the 40 tracks with the highest transverse IP significance $s(d_0)$ were retained.
+All features were preprocessed via standardization to have zero mean and unit variance based on the training set statistics.
 
 \begin{figure}
     \centering
@@ -254,7 +255,7 @@ Thus, one can think of these models as mappings from the graph structure $(\math
 
 While the edges are featureless, all models treat the graph as fully connected, allowing each node to send and receive messages from all others.
 Self-loops are also permitted.
-This fully connected approach was found to be beneficial for performance while not significantly increasing the computational cost, as the maximum cardinality of the graph is limited to 40, a relatively low value compared to other graph-based tasks in machine learning.
+In our early experiments, this fully connected approach was found to be beneficial for performance while not significantly increasing the computational cost as the maximum cardinality of the graph (40) relatively low compared to other graph-based tasks in machine learning.
 
 To compare the information flow within the layers of each of these GNNs, we use the flowcharts in \Cref{fig:gn1_graph}, \Cref{fig:gnpp_graph}, \Cref{fig:gna_graph}, and \Cref{fig:spice_graph}.
 These diagrams share similarities with the illustrations of the GN Block \Cref{fig:gn_block} but explicitly display the tensor operations acting on each attribute.
@@ -268,21 +269,23 @@ The key for each operation is shown in \Cref{fig:key}.
 \end{figure}
 
 \subsection{GN1}
+\label{sec:gn1}
 
-We first describe the specifics of the GN1 model to better highlight the changes made in GN++ and Spice.
-It is worth highlighting that we are comparing to the original GN1 implementation as described in Ref.~\cite{GN1}, as later variants began to adopt more transformer-like features, such as multi-headed attention and multiple projection matrices before the entire shift to Spice/GN2.
+We first describe the specifics of the GN1 model to better highlight the changes made in GN++ and Spice models.
+We describe the original GN1 implementation~\cite{GN1}, which is distinct from later variants~\cite{SamThesis}, that adopt more transformer-like features, partly as a result of the success of Spice.
 
-The model begins with a track initializer, an MLP that inputs the concatenated track and jet features and outputs a node embedding of size 64.
-The embedded node features are then passed through 1 GATv2 layers~\cite{GATv2} to produce a set of updated node features.
-The node features are projected within each layer using a learnable square matrix $\W$, which is used to simultaneously calculate the message sent between each pair as well as the message weight using,
+The model begins with the track initializer, an MLP that individually projects the track features into 64 dimensional node embeddings.
+The initializer also takes the jet kinematics as extra context information.
+These nodes then passed through a series of GATv2 layers~\cite{GATv2}, each updating the features by aggregating information from all other nodes.
+Within each GATv2 layer the there exists a learnable square matrix $\W$, which is used to simultaneously calculate the message sent between each node pair as well as the message weight using,
 \begin{align}
     \vert_{ij} &= \W \x_i, \\
  e_{ij} &= \text{softmax}_i\left(\ba \cdot \relu\left([\W \x_i, \W \x_j]\right)\right).
 \end{align}
 Here, $\vert_{ij}$ is the message sent from node $i$ to node $j$,
-$e_{ij}$ is the weight of that message and $\ba$ is a learnable vector.
+$e_{ij}$ is the aggregation weight of that message and $\ba$ is a learnable vector.
 A softmax is applied to ensure the total weight of all incoming messages to each node sums to one.
-The messages are then aggregated to update the node information across the graph,
+The messages are then summed to update the node information across the graph,
 \begin{equation}
     \x_j' = \relu\left(\sum_{i} e_{ij} \vert_{ij}\right).
 \end{equation}
@@ -303,25 +306,25 @@ A schematic diagram of the GN1 network is shown in \Cref{fig:gn1_graph}.
 Some notable limitations of the GN1 model are tied to the usage of GATv2.
 These layers reuse the same projection matrix $\W$ to calculate the message content and weight.
 These operations could be performed better with specialized layers.
-Most notably missing are any strong node updates after the message passing step as framing this in the context of the GN Block means that the node update $\phi^x$ is simply an elementwise ReLU activation function.
+Notably missing are any strong node updates after the message passing step.
+Framing this in the context of the GN Block means that the node update $\phi^x$ is simply an elementwise ReLU activation function.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.99\textwidth]{figures/flavour_tagging/gn1.pdf}
-    \caption{Diagram of the operations within a GATv2 layer~\cite{GATv2}}
+    \caption{Diagram of the operations within a GATv2 layer~\cite{GATv2} used by GN1.}
     \label{fig:gn1_graph}
 \end{figure}
 
 \subsection{GN++}
-\label{sec:gnpp}
+\label{sec:gnp}
 
 The GN++ model is based on the complete GN Block architecture described in \Cref{sec:gn_block} with the only omission being the lack of a $\rho^{e \to u}$ pooling operation as we found that it was computationally expensive and did not improve performance.
 This model is designed to be a more expressive graph network than GN1.
 While each layer of GN1 operates on a set, GN++ operates on a graph with fully defined nodes, edges, and global attributes.
 We also design GN++ to utilize the standard techniques for training large models.
-This model was built using a custom graph library for PyTorch and was explicitly designed to be modular.
-Thus, each of the operations within the GN Block could be easily deactivated.
-We experimented with several designs.
+This model was built using a modular custom graph library for PyTorch.
+Each of the operations within the GN Block could be easily deactivated allowing us to experiment with several designs.
 Our best-performing model uses persistent edge features, persistent global features, layer normalization applied to the inputs of each learnable sub-layer, residual connections around each update, and multi-headed attention.
 A diagram of the information flow in a single of these layers is shown in \Cref{fig:gnpp_graph}, and pseudocode is shown in \Cref{alg:gnpp}.
 
@@ -354,9 +357,9 @@ A diagram of the information flow in a single of these layers is shown in \Cref{
 
 In a single layer, there are 5 MLPs: 3 to perform the updates $\phi^x$, $\phi^e$, and $\phi^u$, and two to calculate the attention weights for the $\rho^{e \to x}$ and $\rho^{x \to u}$ steps.
 Multi-headed attention is achieved by having multiple outputs for the $\rho^{e \to x}$ and $\rho^{x \to u}$ MLPs, and each is softmaxed separately.
-We fin the best performance with four attention heads.
+We used four attention heads in our experiments.
 All updates are additive residuals, and the weights of the final layer of each update MLP are initialized with zeros.
-All MLPs have a single hidden layer which doubles the embedding dimension, applies the LeaklyReLU activation, and projects back to the original.
+All MLPs have a single hidden layer which doubles the embedding dimension, applies the LeakyReLU activation, and projects back to the original.
 
 We use a basic linear projection for the track initializer instead of a full MLP\@.
 Edges and global information are treated as empty for the first layer, after which they are initialized to have the same dimension as the node features.
@@ -367,8 +370,8 @@ We use 5 graph layers in total, each with half the embedding dimension of GN1, t
 The GN++ model has 780k trainable parameters.
 
 As each of these operations is optional, we can easily deactivate them to investigate their impact on performance.
-The minimal model, which we call GNA, is shown in \Cref{fig:gna_graph}, and it is close to but not exactly the same as GN1.
-This provides us a good baseline to slowly add complexity to the model and investigate the impact of each operation.
+The minimal model, which we call GNA, is shown in \Cref{fig:gna_graph}, and it is close to, but not exactly the same, as GN1.
+This provides a good baseline upon which we can iteratively add complexity.
 
 \begin{figure}[h!]
     \centering
@@ -384,7 +387,7 @@ As a transformer, each layer does not produce or retain edge features, only oper
 
 Comparatively, the layer structure of the TE Block is significantly simpler than the GN Block, only requiring four linear layers and a single MLP\@.
 The information flow diagram is shown in \Cref{fig:spice_graph}.
-We find the best performance using four attention heads.
+We found the best performance using four attention heads.
 Like GN++, the model is equipped with MLPs for strong node updates, which double the hidden dimension of the nodes.
 
 To construct the pooled graph representation $\con$, we use three CA Blocks with four attention heads to send messages from each track onto a single learnable class token~\cite{GoingDeeper}.
@@ -392,7 +395,7 @@ This process allows the model to decide on a jet-by-jet basis what information t
 Like GN1, three separate MLPs perform the graph-, node-, and edge-level tasks.
 These three MLPs and the track initializer are much smaller than the ones used in GN1, which reduces the number of parameters in the model.
 
-To ensure a fair comparison, we ensure that Spice has roughly the same number of trainable parameters as GN1.
+To ensure a fair comparison, Spice has roughly the same number of trainable parameters as GN1.
 Spice's primary hyperparameters are the embedding dimension and the number of TE Blocks which we set to 64 and 7, respectively, resulting in a model with 800k trainable parameters.
 The model was implemented using standard PyTorch operations and is thus conceptually easier to work with than GN++ and GN1.
 
@@ -405,7 +408,7 @@ The model was implemented using standard PyTorch operations and is thus conceptu
 
 \section{Training}
 
-We reuse the same training loss as GN1, involving a weighted sum of three loss terms,
+The same training loss as GN1 was used for all models, involving a weighted sum of three loss terms,
 \begin{equation}
   \mathcal{L} = \mathcal{L}_{\text{graph}} + \alpha \mathcal{L}_{\text{node}} + \beta \mathcal{L}_{\text{edge}}.
 \end{equation}
@@ -416,15 +419,15 @@ These additional loss terms help steer the model to learn jet representations li
 By predicting the true origin of each track and the vertex compatibility of each track-pair the model is actively looking for displaced vertices and thus heavy flavour decays.
 These auxiliary training objectives, viewed as ``stepping stones''~\cite{GN1} on the way to determining the flavour of the jet.
 
-Before averaging across the batch, the auxiliary loss terms are multiplied by a per sample weight.
+Before averaging across the batch, the auxiliary loss terms were multiplied by a per sample weight.
 The node task is weighted by the inverse frequency of each category in \Cref{tab:track_labels} found in the training set to account for class imbalance.
 The weight for each pair of tracks in the edge task is set to two if the track pair is from a $b$- or $c$-hadron decay and one otherwise.
 This reweighting forces the model to focus on heavy flavour vertices, which are more significant for flavour tagging.
 No balancing is required for $\mathcal{L}_{\text{graph}}$ due to the resampling of the training set.
 Averaging over all jets in the batch does mean that jets with more tracks contribute more to the gradients due to more terms in the track and edge loss, but we found this effect to be minimal.
 
-For the main models, we keep the same loss coefficients as GN1, $\alpha = 0.5$ and $\beta = 1.5$.
-We also run ablation studies where $\alpha$ and $\beta$ are set to zero to determine the effect of the auxiliary tasks on the model's flavour tagging performance.
+For the main models, we kept the same loss coefficients as GN1, $\alpha = 0.5$ and $\beta = 1.5$.
+We also ran ablation studies where $\alpha$ and $\beta$ were set to zero to determine the effect of the auxiliary tasks on the model's flavour tagging performance.
 
 The training configuration for all models was as follows.
 The batch size was set to 1024, and the learning rate followed a cyclic schedule, repeating every five epochs.
@@ -436,55 +439,56 @@ Gradient clipping was applied with a maximum norm of 10.
 
 \section{Experiments and Results}
 
-The performance of all models is evaluated separately using the two test datasets, $\ttbar$ and $Z'$, which is populated by jets with $\pt < 250~\GeV$ and $\pt \geq 250~\GeV$, respectively.
-In addition to the loss metrics, the quality of the models is determined by their $b$- and $c$-tagging capabilities.
+The performance of all models was evaluated separately using the two test datasets, $\ttbar$ and $Z'$, which was populated by jets with $20 < \pt < 250~\GeV$ and $\pt \geq 250~\GeV$, respectively.
+In addition to the loss metrics, the quality of the models was determined by their $b$- and $c$-tagging capabilities.
 
-We can derive specific signal discriminants using a combination of the three outputs on the graph-level task.
+Specific signal discriminants were derived using a combination of the three outputs on the graph-level task.
 For example, taking class-1 as the signal class, the discriminant $D_1$ is defined as,
 \begin{equation}
     D_1 = \log\frac{p_1}{f_2 p_2 + (1-f_2)p3},
 \end{equation}
 where $p_1$, $p_2$, and $p_3$ are the three predicted class probabilities, and $f_2$ is an arbitrary parameter that provides a trade-off between rejection rates of the two background classes.
 This process is applied to our models to construct $D_b$ and $D_c$, respectively used for $b$-tagging and $c$-tagging.
-For our models, the free parameters are set to $f_b=0.02$ and $f_c=0.2$, whereas $f_b=0.05$ and $f_c=0.2$ were used for GN1.
+For our models, the free parameters were set to $f_b=0.02$ and $f_c=0.2$, whereas $f_b=0.05$ and $f_c=0.2$ were used for GN1.
 
 With the discriminants defined, the performance of the models is quantified by the rejection rate $r_B$ measured at targetted signal efficiency $\epsilon_S$ for some for a specific background $B$ and signal $S$.
 The background rejection rate is defined as the reciprocal of the background efficiency $r_B = \sfrac{1}{\epsilon_B}$.
 Specific signal efficiencies are labelled as working points (WPs) and are chosen to match the requirements of an analysis.
 The standard WPs for $b$-tagging algorithms in ATLAS are at 60\%, 70\%, 77\%, and 85\%, while the WPs for $c$-tagging are considerably lower, with a WP of 25\% being a common choice.
 For brevity, we label the 70\% WP as the nominal WP for $b$-tagging $\bnom$ and the 25\% WP as the nominal WP for $c$-tagging $\cnom$, as well as $r_b$, $r_c$, and $r_l$ as the rejection rates for $b$-jets, $c$-jets, and light-jets, respectively.
-
+These nominal values are always measured with respect to the \ttbar test set.
+The $Z'$ jets are much harder to classify, for example \bnom corresponds to around 30\% signal efficiency for $Z'$ jets\footnote{This is why the ROC plots for the $Z'$ jets go to a much lower signal efficiency}.
 
 In addition to these specific signal efficiencies, we also plot the receiver-operator characteristic (ROC) curves for the models.
 These plot $r_B$ as a function of $\epsilon_S$, thus providing a complete picture of the model's performance at all possible WPs.
 
-For a fair comparison, we have designed GN++ and Spice to have roughly the same number of trainable parameters as GN1.
+We designed GN++ and Spice to have roughly the same number of trainable parameters as GN1.
 However, an interesting property of these models is how well they scale, both in terms of performance and computational cost.
 We introduce three additional networks: GN++large, Spice-large, and Spice-huge.
 The two new transformers increase the embedding dimension to 128 and 256, corresponding to 1.4M and 4.2M trainable parameters, respectively.
-GN++large also has an embedding dimension of 128 and has 1.6M trainable parameters\footnote{Note that the node update MLPs within each block always double the embedding dimension.}.
+GN++large also has an embedding dimension of 128 and has 1.6M trainable parameters\footnote{Note that the node update MLPs within each block always doubles the embedding dimension.}.
 
 \subsection{Graph Network Grid Search}
 
-We perform a grid search to test whether each of the proposed additions to the GNN design proposed in \Cref{sec:gnnp} are beneficial.
+A grid search was performed to test whether each of the proposed additions to the GNN design proposed in \Cref{sec:gnp} are beneficial.
 These features are persistent edges, persistent global information, PreNorm, residual connections, and multiple attention heads.
 In total, 64 networks were trained in this grid search, covering all combinations.
 The two extremes are the minimal model, GNA, which has all features deactivated and is similar in design to GN1, and the maximal model, GN++, which has all features activated.
 We limit the training to 5 epochs for this section to reduce the computational cost which took approximately 10 hours with each network on a single NVIDIA 3080 GPU\@.
 
-We use the average $\mathcal{L}_{\text{graph}}$ as measured on the test set to capture the overall trends in performance.
+We used the average $\mathcal{L}_{\text{graph}}$ as measured on the test set to capture the overall trends in performance.
 Several methods exist to determine the importance of hyperparameters in neural networks.
 The violin plots in \Cref{fig:violin} illustrate first-order effects on loss. To estimate higher-order effects, we train a random forest to predict the minimum validation $\mathcal{L}_{\text{graph}}$ using the model features.
 We then calculate the drop in the forest's performance after permuting each feature column.
-These changes are normalized, and the results are shown in \Cref{tab:feature_importance}.
+These changes were normalized, and the results are shown in \Cref{tab:feature_importance}.
 
-Notably, all features are beneficial, and the best performance was achieved by the maximal model GN++.
-The most crucial feature is the use of persistent edge information by a wide margin, followed by the node updates using MLPs.
-Interestingly, the residual connections are deemed the least important feature by the random forest, but the violin plots show a clear performance improvement when activated.
+Notably, all features were beneficial, and the best performance was achieved by the maximal model GN++.
+The most crucial feature was the use of persistent edge information by a wide margin, followed by the node updates using MLPs.
+Interestingly, the residual connections were deemed the least important feature by the random forest, but the violin plots show a clear performance improvement when activated.
 On closer inspection, we found that the residual connections were only beneficial when combined with the node MLP updates.
 Otherwise, they led to no change in the loss.
 Residual connections, along with PreNorm, exist to prevent over-smoothing and stabilize the training of deep models.
-However, as we limit ourselves to only five layers to match GN1, the benefits are less pronounced.
+However, as we limit ourselves to only three layers to match GN1, the benefits are less pronounced.
 Persistent global information was not significant, as we are operating on fully connected graphs; therefore, long-range interactions are already captured by the message passing.
 
 \begin{figure}[ht]
@@ -516,10 +520,10 @@ We investigate the feature importance in $b$-tagging on the $\ttbar$ test sample
 For each feature, we compare four models: GNA, GNA with the feature activated, GN++, and GN++ with the feature deactivated.
 The results for the four most important features are shown in \Cref{fig:ablation}.
 The GN++ tagger is the best-performing model for this sample, with around a 25\% increase over GNA in both light and $c$-jet rejection at $\bnom$, though the performance gain drops at higher signal efficiencies.
-Interestingly, the persistent edge information is such a crucial feature that activating only this feature results in a more performant tagger than the one with all others.
+Interestingly, the persistent edge information is such a crucial feature that activating only this feature resulted a higher performance gain in $b$-tagging than activating all other features.
 Node updates using MLPs seemingly require the other features which assist in stabilizing the training.
 
-Our grid search has highlighted the value of specific features in optimizing our GNN design.
+Our grid search highlighted the value of specific features in optimizing our GNN design.
 After many iterations we believe that we have settled on a model with highly expressive layers and that GN++ can be seen as a reasonably optimized model for flavour tagging.
 
 \begin{figure}[ht]
@@ -537,7 +541,7 @@ After many iterations we believe that we have settled on a model with highly exp
 
 \subsection{Comparison to GN1}
 
-Quantitative comparisons between the new networks and GN1 are conducted using the $b$- and $c$-tagging performance on the test $\ttbar$ and $Z'$ datasets.
+Quantitative comparisons between the new networks and GN1 were conducted using the $b$- and $c$-tagging performance on the test $\ttbar$ and $Z'$ datasets.
 The rejection rates at the nominal WPs are summarized in \Cref{tab:comparison} and ROC curves are shown in \Cref{fig:large_rocs}.
 
 \newcommand{\alen}{\hskip 40pt}
@@ -551,23 +555,23 @@ The rejection rates at the nominal WPs are summarized in \Cref{tab:comparison} a
         & \multicolumn{2}{c@{\blen}}{$\bnom$} & \multicolumn{2}{c}{$\cnom$} \\
         & $r_c$ & $r_l$ & $r_b$ & $r_l$ & $r_c$ & $r_l$ & $r_b$ & $r_l$ \\
         \midrule
-        Spice & 38 & 47 & 16 & 27 & 2 & 8 & 12 & 9 \\
-        Spice-large & 54 & 41 & 23 & 38 & 7 & 21 & 20 & \textbf{22} \\
-        Spice-huge & \textbf{63} & \textbf{73} & \textbf{26} & \textbf{50} & \textbf{12} & \textbf{25} & \textbf{27} & \textbf{22} \\
-        GN++ & 34 & 19 & 10 & 22 & 3 & 8 & 18 & 9 \\
-        GN++large & 59 & 46 & 21 & 42 & 6 & 17 & 23 & 21 \\
+        Spice       & 38 & 47 & 16 & 27 & 32 & 23 & 18 &    25 \\
+        Spice-large & 54 & 41 & 23 & 38 & 60 & 52 & 34 & 57 \\
+        Spice-huge  & \textbf{63} & \textbf{73} & \textbf{26} & \textbf{50} & \textbf{71} & \textbf{63} & \textbf{39} & \textbf{66} \\
+        GN++        & 34 & 19 & 10 & 22 & 46 & 22 & 26 & 25 \\
+        GN++large   & 59 & 46 & 21 & 42 & 65 & 41 & 37 & 50 \\
         \bottomrule
     \end{tabular}
     \caption{The percentage improvement over GN1 in the background rejection rates at the nominal $b$-tagging and $c$-tagging working points using the $\ttbar$ and $Z'$ test datasets. The rejection rates are measured for the light-jet background $r_l$, the $c$-jet background $r_c$, and the $b$-jet background $r_b$.}
     \label{tab:comparison}
 \end{table}
 
-We begin by comparing the performance on the $\ttbar$ sample.
-All new GNNs outperform GN1 at all tasks at all efficiencies, with the only exception being $c$-jet rejection at very high levels of $b$-tagging, $\epsilon_b > 92\%$, where all taggers converge.
+On the $\ttbar$ sample, all new GNNs outperform GN1 at all tasks at all efficiencies.
+The only exception to this is at in $c$-jet rejection at very high levels of $b$-tagging, $\epsilon_b > 92\%$, where all taggers converge.
 The smaller networks, GN++ and Spice, outperform GN1 at $\bnom$ for both $b$- and $c$-tagging.
 Spice also matches or exceeds GN++ significantly in separating $b$ and light-jets, which is noteworthy as Spice lacks the feature determined to be the most important in the grid search, namely the persistent edge information.
 It also is composed of significantly simpler layers.
-Given the extended training period, which is ten times longer than the grid search, it is plausible that the transformer efficiently acquires the same critical information, albeit through a simpler architecture.
+Given the extended training period, ten times longer than the grid search, it is plausible that the transformer efficiently acquires the same critical information, albeit through a simpler architecture.
 The larger models extend this performance gain, with Spice-huge offering a 73\% improvement in $r_l$ and 63\% improvement in $r_c$ over GN1 at $\bnom$.
 For $c$-tagging, Spice-huge remains the top performer, achieving a 26\% improvement in $b$-jet rejection and a 50\% improvement in light-jet rejection over GN1 at $\cnom$.
 
@@ -576,8 +580,8 @@ Interestingly, for this sample, the GN++ outperforms the equivalently sized Spic
 Jets in this dataset have roughly an order of magnitude higher $\pt$ than the previous one, and thus, some features in the GN++ architecture are better suited to this data type.
 However, the transformers demonstrate stronger scaling capabilities, with clear improvement with each tier in model size.
 Spice-large is on par with GN++large, and Spice-huge is the top performer.
-It achieves an improvement over GN1 of 25\% in light-jet rejection and 12\% in $b$-jet rejection at $\bnom$.
-In $c$-tagging, Spice-large is able to achieve a 27\% improvement in $b$-jet rejection and 22\% improvement in light-jet rejection at $\cnom$.
+It achieves an improvement over GN1 of 41\% in light-jet rejection and 65\% in $c$-jet rejection at $\bnom$.
+In $c$-tagging, Spice-large is able to achieve a 37\% improvement in $b$-jet rejection and 50\% improvement in light-jet rejection at $\cnom$.
 
 \begin{figure}[ht]
     \centering
@@ -598,7 +602,7 @@ To this end, we utilized the Spice-large model and trained three variants, adjus
 The results, as depicted in \Cref{fig:auxiliary}, indicate that while the auxiliary tasks are not as critical as in GN1, they do confer a marginal performance boost on average.
 This boost is most pronounced for high $\pt$ jets, as evidenced by the $Z'$ sample.
 However, there are specific scenarios where the auxiliary tasks negatively impact the tagging performance.
-For instance, at high signal efficiencies in $c$-tagging, $\epsilon_c \approx 80\%$, on jets with $\pt < 250~\GeV$, the model without the vertex task performs approximately 2\% better than the model with all tasks.
+For instance, at high signal efficiencies in $c$-tagging, $\epsilon_c \approx 80\%$, on jets with $20 < \pt < 250~\GeV$, the model without the vertex task performs approximately 2\% better than the model with all tasks.
 Nevertheless, this improvement is not significant and occurs in a region not typically utilized in analyses.
 
 In conclusion, the auxiliary tasks remain beneficial to the overall performance.
@@ -619,12 +623,14 @@ In conclusion, the auxiliary tasks remain beneficial to the overall performance.
 \subsubsection{Computational Cost to Scaling}
 
 A critical factor in evaluating the practicality of these models is the computational cost associated with running inference.
-As shown in \Cref{tab:inference}, the GPU times are relevant for training the model, highlighting the ease with which these models can be produced. For offline analysis, taggers will be exported via ONNX runtime and run on the CPU\@.
+As shown in \Cref{tab:inference}, the GPU times are relevant for training the model, highlighting the ease with which these models can be produced. For using the tagger in some analysis, they are first exported via ONNX runtime~\cite{onnxruntime} and run on the CPU\@.
+While analyses are performed offline, inference speed is not critical so long that the tagging does not become a bottleneck in the pipeline.
 
 The GN++ models are the slowest on both CPU and GPU, likely due to the inefficient implementation of the graph layers in the custom graph library.
-In contrast, transformer-based models show minimal increases in inference time when running on the GPU, benefiting from the highly parallelized nature of basic matrix multiplications.
-Despite the higher theoretical expressivity of a single GN++ layer compared to a transformer layer, the efficiency of the latter allows it to scale more effectively.
+These models are so slow on the CPU that they become prohibitive for realistic use in physics analyses.
+In contrast, transformer-based models show minimal increases in inference time when running on the GPU, benefiting from the highly parallelized nature of basic matrix multiplications, and are well under the threshold for practical use.
 
+Despite the higher theoretical expressivity of a single GN++ layer compared to a transformer layer, the efficiency of the latter allows it to scale more effectively.
 This efficiency underscores the strength of transformer architecture.
 While advanced graph network designs may offer stronger inductive biases, the simple scalability of transformer models can match or exceed their performance.
 
@@ -659,7 +665,7 @@ This is not a minor feature, as it allows for rapid development and deployment, 
 
 Developed in the Salt~\cite{Salt} framework, Spice was adapted into the new GN2 model, the new recommended flavour tagger, which is actively used by the ATLAS Collaboration.
 
-Several and architectural changes were made transitionin from Spice to GN2.
+Several and architectural changes were made transitioning from Spice to GN2.
 There are now 8 TE Blocks, each with an embedding dimension of 192 and an MLP hidden dimension of 256, resulting in 1.5M trainable parameters.
 Eight attention heads are used and during training dropout~\cite{Dropout} is applied to the attention matrix with a drop probability of 0.1.
 The three class-attention operations were also replaced with a single global attention layer for calculating the pooled graph representation.
@@ -708,7 +714,7 @@ The GN2 model and Salt framework have been incorporated into numerous ongoing wo
 \begin{figure}
     \centering
     \includegraphics[width=0.49\textwidth]{figures/flavour_tagging/fig_10.pdf}
-    \caption{Mass distributions for truth, jets reconstructed using the nominal/conventional calibration as well as the large-R regression model predictions, which use the GN2 model. QCD jets are from multi-jet jet production with the heavy-flavour hadron content determined from quantum chromodynamics. The width of the coloured lines represents the statistical uncertainty. .}
+    \caption{Mass distributions for truth, jets reconstructed using the nominal/conventional calibration as well as the large-R regression model predictions, which use the GN2 model. QCD jets are from multi-jet jet production with the heavy-flavour hadron content determined from quantum chromodynamics. The width of the coloured lines represents the statistical uncertainty. Plot taken from Ref.~\cite{GN2Calib}.}
     \label{fig:gn2calib}
 \end{figure}
 
