@@ -175,8 +175,149 @@ We compared various numerical solvers for this task~\cite{NumericalSolutionStoch
 
 The Euler-Maruyama (EM) method was used to solve the reverse SDE, and the standard Euler solver and fourth-order Runge-Kutta (RK) method~\cite{RungeKutta} were used for the probability-flow ODE.
 Finally, the deterministic DDIM solver~\cite{DDIM}, designed for diffusion generative models was also used.
-Generating higher quality jets requires more integration steps, increasing generation time.
-We focused on quality rather than speed, generating all jets with 200 integration steps using the DDIM and EM solvers.
+Generating higher quality jets requires more integration steps, increasing generation time as each step requires at least one forward pass through the model.
+We focused on quality rather than speed, allowing for 200 forward passes, which corresponds to 50 integration steps for RK and 200 for EM, DDIM, and Euler.
+Equal step sizes were used for all solvers.
+
+
+First we focus on the inclusive generation of jets following the same $\pt^\text{jet}$ and $m_\mathrm{jet}$ distributions seen during training.
+This allows us to compare directly to the non-conditional MPGAN model.%
+\footnote{For fair comparisons we use the trained model provided by Ref.~\cite{MPGAN} and generate an equal number of jets with both \pcjedi and MPGAN and evaluate all metrics consistently for both models using the \texttt{JetNet} library provided with the datasets.}
+For these comparisons we calculate the relative transverse momentum ($\pt^\text{rel}$) of each constituent using the full $\pt$ of the jet.
+% This variable is labelled $\pt^\text{rel}$.
+% Additional kinematic and substructure variables calculated using $\pt^\text{rel}$ in place of $\pt$ are denoted with superscript `rel'.
+
+\begin{figure}[hbpt]
+    \centering
+    \includegraphics[width=.66\linewidth]{figures/gluon_generation/jet_features_rel.pdf}
+    \caption{The relative transverse momentum (left) and invariant mass (right) of gluon jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation (shaded blue).
+    Calculated from the leading 30 \pt constituents using the constituent $p_\mathrm{T}^\mathrm{rel}$ instead of $p_\mathrm{T}$.}
+    \label{fig:kinematics_gluon}
+\end{figure}
+
+\begin{figure}[hbpt]
+    \centering
+    \includegraphics[width=.66\linewidth]{figures/top_generation/jet_features_rel.pdf}
+    \caption{The relative transverse momentum (left) and invariant mass (right) of top jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation (shaded blue).
+    Calculated from the leading 30 \pt constituents using the constituent $p_\mathrm{T}^\mathrm{rel}$ instead of $p_\mathrm{T}$.}
+    \label{fig:kinematics_top}
+\end{figure}
+
+We look at the relative transverse momentum $\pt^{\text{rel}}$ and relative invariant mass $m_\mathrm{jet}^\text{rel}$ of the reconstructed jet.
+These observables are calculated from the vector sum of the 30 (leading in \pt) jet constituents using $\pt^\text{rel}$ in place of $\pt$ per constituent.
+These are shown in \cref{fig:kinematics_gluon,fig:kinematics_top} for gluon jets and top jets,   respectively.
+The value of $\pt^\text{jet, rel}$ is not always exactly 1.0 due to selecting only the leading 30 constituents for each jet.
+However this is the maximum physical value.
+All generative models struggle to capture the hard cut off at 1.0 in $\pt^\text{jet, rel}$, though \pcjedi with the DDIM solver is closest in agreement.
+Both \pcjedi models outperform MPGAN at reconstructing the top jet $\pt^\text{rel}$ distribution.
+All three models perform similarly at reproducing the $m_\mathrm{jet}^{\text{rel}}$ for both top quarks and gluons.
+
+
+It is also important that the individual constituents are accurately modelled.
+In \cref{fig:gluon_const_pt,fig:top_const_pt} we see that the relative transverse momentum of the leading three constituents ordered by \pt are well reproduced by MPGAN and \pcjedi for both gluon and top jets.
+However, both \pcjedi models show disagreements at low values of transverse momentum for gluon jets.
+Here, MPGAN is better able to capture these values.
+The relative $\eta$ and $\phi$ coordinates of the constituents are found to be in good agreement with the MC simulation for all three models.
+
+\begin{figure}[hbpt]
+    \begin{subfigure}{.33\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/gluon_generation/const1_pt.pdf}
+    \end{subfigure}%
+    \begin{subfigure}{.33\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/gluon_generation/const2_pt.pdf}
+    \end{subfigure}%
+    \begin{subfigure}{.33\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/gluon_generation/const3_pt.pdf}
+    \end{subfigure}% \\
+    \caption{Distributions of the leading (left), subleading (middle) and third leading (right) constituent $\pt^\text{rel}$ for the gluon jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation.}
+    \label{fig:gluon_const_pt}
+\end{figure}
+
+\begin{figure}[hbpt]
+    \begin{subfigure}{.33\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/top_generation/const1_pt.pdf}
+    \end{subfigure}%
+    \begin{subfigure}{.33\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/top_generation/const2_pt.pdf}
+    \end{subfigure}%
+    \begin{subfigure}{.33\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/top_generation/const3_pt.pdf}
+    \end{subfigure}% \\
+    \caption{Distributions of the leading (left), subleading (middle) and third leading (right) constituent $\pt^\text{rel}$ for the top jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation.}
+    \label{fig:top_const_pt}
+\end{figure}
+
+Finally, we look at the relative $\tau_{21}$, $\tau_{32}$ and $D_{2}$ substructure observables in \cref{fig:substructure_gluon,fig:substructure_top}.
+Both \pcjedi and MPGAN are able to capture the $D_2$ distributions, with MPGAN visually showing better agreement.
+However all three models struggle to capture both $\tau_{21}$ and $\tau_{32}$ for gluon jets.
+This is even more apparent for top jets, which have a bi-modal structure in all three observables.
+
+\begin{figure}[hbpt]
+    \centering
+    \includegraphics[width=1.\linewidth]{figures/gluon_generation/jet_substructure_rel.pdf}
+    \caption{Relative substructure distributions $\tau_{21}^{\text{rel}}$ (left), $\tau_{32}^{\text{rel}}$ (middle) and $D_{2}^{\text{rel}}$ (right) for gluon jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation.}
+    \label{fig:substructure_gluon}
+\end{figure}
+
+\begin{figure}[hbpt]
+    \centering
+    \includegraphics[width=1.\linewidth]{figures/top_generation/jet_substructure_rel.pdf}
+    \caption{Relative substructure distributions $\tau_{21}^{\text{rel}}$ (left), $\tau_{32}^{\text{rel}}$ (middle) and $D_{2}^{\text{rel}}$ (right) for top jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation.}
+    \label{fig:substructure_top}
+\end{figure}
+
+The performance is compared quantitatively in \cref{tab:kansal_results} for the metrics introduced in Ref.~\cite{MPGAN} and \cref{tab:substructure_metrics} for the additional substructure distributions in \cref{fig:substructure_gluon,fig:substructure_top}.
+For each metric we establish an ideal limit by comparing the training and test sets, which corresponds to the natural variation in the MC samples.
+Following the procedure defined by Ref.~\cite{MPGAN} uncertainties for the Wasserstein based metrics are derived using bootstrap sampling, however we increase the number of bootstrapped batches from 5 to 40 to reduce the run to run variance.
+The FPND metric requires the entire test set and does not use bootsrapping so we do not quote an uncertainty.
+
+\pcjedi beats the current methods for several metrics and is competitive across several others for both gluon and top jet generation.
+For top generation \pcjedi has a notably lower FPND and $\mathrm{W_1^{P}}$ scores than MPGAN yet performs worse in $\mathrm{W_1^{M}}$ and $\mathrm{W_1^{EFP}}$.
+The metrics \textbf{Cov} and \textbf{MMD} are essentially saturated by all models, as they are in agreement with the upper limit defined by the natural variation in the MC samples.
+Some of the values seem to be in tension with visual inspection.
+Most notably, $\mathrm{W_1^{P}}$ for gluon jets suggests \pcjedi with the EM solver outperforms MPGAN, despite the observed underestimation at low values of $\pt^{\text{rel}}$ for the three leading constituent.
+This shows the importance of studying a wide range of distributions, and highlights a potential limitation in using aggregated $\mathrm{W_1}$ distances.
+It may also suggest that a metric more sensitive to the behaviour in tails of distributions could be beneficial, for example classifier-based weight approaches~\cite{Das:2023ktd}.
+
+Capturing the correlations between jet substructure observables and the jet kinematics is also a key measure of performance.
+Cuts on $\tau_{32}$ and $D_{2}$ are applied to distinguish top jets from gluon or quark jets in simple cut-based analyses~\cite{ATLAS:2018wis,CMS:2020poo}, with cut values are often derived as a function of the jet mass.
+Similarly $\tau_{21}$ is important in $W$-jet identification.
+\Cref{fig:gluon_correlations,fig:top_correlations} show the distributions of these observables alongside the two-dimensional marginals for \pcjedi with the EM solver and MPGAN.
+For gluon jets, \pcjedi captures the correlations between features better than MPGAN.
+For top jets, both MPGAN and \pcjedi capture the bi-modal structure of the top jets with MPGAN showing slightly better agreement.
+
+\begin{figure}[hbpt]
+    \begin{subfigure}{0.5\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/gluon_generation/subspread_em_200_rel.pdf}
+    \end{subfigure}%
+    \begin{subfigure}{0.5\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/gluon_generation/subspread_mpgan_rel.pdf}
+    \end{subfigure}%//
+    \caption{Mass and relative substructure distributions of the generated gluon jets using the EM solver for \pcjedi, and MPGAN. The diagonal consists of the marginals of the distributions. The off-diagonal elements are the joint distributions of the variables.}
+    \label{fig:gluon_correlations}
+\end{figure}
+
+\begin{figure}[hbpt]
+    \begin{subfigure}{0.5\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/top_generation/subspread_em_200_rel.pdf}
+    \end{subfigure}%
+    \begin{subfigure}{0.5\textwidth}
+        \centering
+        \includegraphics[width=1.\linewidth]{figures/top_generation/subspread_mpgan_rel.pdf}
+    \end{subfigure}%
+    \caption{Mass and relative substructure distributions of the generated top jets using the EM solver for \pcjedi, and MPGAN. The diagonal consists of the marginals of the distributions. The off-diagonal elements are the joint distributions of the variables.}
+    \label{fig:top_correlations}
+\end{figure}
+
 
 
 % \subsection{PC-Droid}
