@@ -101,11 +101,11 @@ Around 600k events are used to train the model and an additional 100k events are
 \subsubsection{Monte Carlo Generation}
 
 All events are generated from proton-proton collisions at a center-of-mass energy of $\sqrt{s} = 13~\TeV$.
-Hard interactions are simulated using MadGraph5 3.1.0~\cite{MadGraph}, with decays of top quarks and $W$~bosons modelled with MadSpin~\cite{MadSpin}.
+Hard interactions are simulated using \madgraph 3.1.0~\cite{MadGraph}, with decays of top quarks and $W$~bosons modelled with MadSpin~\cite{MadSpin}.
 The mass of the top quark is set to $m_t = 173~\GeV$.
-Event generation is interfaced to \textsc{Pythia 8.243}~\cite{Pythia8} to model parton shower and hadronisation.
+Event generation is interfaced to \pythia 8.243~\cite{Pythia8} to model parton shower and hadronisation.
 All steps use the \textsc{NNPDF2.3LO} PDF set~\cite{PDF2.3} with $\alpha_S(m_Z) = 0.130$, as provided by the LHAPDF~\cite{LHAPDF6PartonDensity} framework.
-The detector response is simulated using \textsc{Delphes 3.4.2}~\cite{Delphes} with a parametrization that mimics the response of the ATLAS detector.
+The detector response is simulated using \delphes 3.4.2~\cite{Delphes} with a parametrization that mimics the response of the ATLAS detector.
 Jets are reconstructed using energy-flow objects and the anti-$k_t$ algorithm~\cite{AntiKt} with a radius parameter of $R = 0.4$ using FastJet~\cite{FastJet}.
 Jet $b$-tagging at $\bnom$ is used to identify jets originating from $b$-quarks.
 
@@ -122,7 +122,7 @@ The full set of observed features is described in Table~\ref{tab:inputs}.
 The target for the flow is the neutrino three-momentum vector defined by $(p_x^\nu, p_y^\nu, \eta^\nu )$.
 The coordinate system used to represent the momentum of each physics object, was optimized as part of a hyperparameter scan.
 We found that using $\eta$ instead of $p_z$ and the logarithm of the energy $\log E^j$ yielded the best performance.
-We use standard normalization techniques to scale the inputs and targets to zero mean and unit variance.
+We used standard normalization techniques to scale the inputs and targets to zero mean and unit variance.
 
 \begin{table}[ht]
     \caption{The observable inputs used for the event feature extractor.}
@@ -395,7 +395,7 @@ Additional jets arise from ISR and FSR.
 All events are simulated in proton-proton collisions at a centre-of-mass energy of \mbox{$\sqrt{s}=13$~TeV}.
 Two different samples are generated, each using a different generator for the hard interactions in the matrix element.
 In the nominal sample, simulation setting match exactly the description in \Cref{sec:data}.
-In the alternative sample, both the hard interactions and parton shower are simulated with Pythia8~(v8.307) with the Monash tuned set of parameters~\cite{Monash} at leading order accuracy.
+In the alternative sample, both the hard interactions and parton shower are simulated with \pythia 8.307 with the Monash tuned set of parameters~\cite{Monash} at leading order accuracy.
 The same PDF set is used as for the nominal sample.
 Detector response, reconstruction, and jet tagging matches the configurations from the the single neutrino case.
 Truth association of the lepton to the parent top quark is performed assuming there is no charge misidentification, and the true neutrino momenta are taken directly from simulation.

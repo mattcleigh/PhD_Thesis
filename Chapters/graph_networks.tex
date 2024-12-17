@@ -637,7 +637,7 @@ However, a CA block provides a more expressive pooling operation, even when the 
 This is known as class-attention~\cite{GoingDeeper}, and is utilized in vision transformers for image classification.
 These models typically have several TE layers for feature extraction, followed by a few CA layers to repeatedly pool the features into a single global attribute which is used for classification.
 
-Global information can be redistributed to augment the message passing step by including them as inputs in the FFN layer~\cite{PCJeDiDiffusionParticle}.
+Global information can be redistributed to augment the message passing step by including them as inputs in the FFN layer~\cite{PCJedi}.
 More effectively, they can be used to perform adaptive normalization~\cite{FiLMVisualReasoning} and residual gating for each sub-block, a technique used in many state-of-the-art generative models~\cite{SD3, DIT, flux2024github}.
 This is shown for a TE block in \Cref{fig:adaptive_gating} and can be written for a single sub-block $f$ as,
 \begin{equation}

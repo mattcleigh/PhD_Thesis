@@ -64,17 +64,17 @@ The branching fractions of the $Z'$ boson are shown in \Cref{tab:zprime_branchin
 \subsection{Monte Carlo Generation}
 
 Simulated proton-proton collisions initiate both datasets at a centre-of-mass energy of $\sqrt{s} = 13~\TeV$.
-Hard-scatter events for the $\ttbar$ sample were generated at next-to-leading order using \textsc{PowhegBox v2}~\cite{Powheg1, Powheg2, Powheg3}.
-These events were then interfaced with \textsc{Pythia 8.230}~\cite{Pythia8} using the \textsc{A14} tune~\cite{A14} to perform parton showering and hadronization.
+Hard-scatter events for the $\ttbar$ sample were generated at next-to-leading order using \powheg v2~\cite{Powheg1, Powheg2, Powheg3}.
+These events were then interfaced with \pythia 8.230~\cite{Pythia8} using the \textsc{A14} tune~\cite{A14} to perform parton showering and hadronization.
 For the parton distribution functions, the \textsc{NNPDF3.0NNLO}~\cite{PDF3.0} set was used for matrix element calculations, while the \textsc{NNPDF2.3LO}~\cite{PDF2.3} set was used for showering.
 The cut-off scale parameter for the first-gluon-emission $h_{\text{damp}}$ was set to 1.5 times the top quark mass of $m_t = 172.5~\GeV$.
-The $Z'$ sample was generated and showered using \textsc{Pythia 8.212} with the \textsc{A14} tune and the \textsc{NNPDF2.3LO} set of parton distribution functions.
+The $Z'$ sample was generated and showered using \pythia 8.212 with the \textsc{A14} tune and the \textsc{NNPDF2.3LO} set of parton distribution functions.
 The flat mass distribution of the $Z'$ boson was achieved by applying a per-event weight to broaden the natural decay width of the $Z'$ boson.
 
 Decays of $b$- and $c$-hadrons were simulated using the \textsc{EvtGen v1.6.0} package \cite{EvtGen}.
-The detector response was performed using the \textsc{Geant4} simulation package~\cite{Geant4} with the ATLAS simulation setup~\cite{ATLASSim}.
+The detector response was performed using the \geant simulation package~\cite{Geant4} with the ATLAS simulation setup~\cite{ATLASSim}.
 Interactions with heavy flavour hadrons and the detector material were not simulated but accounted for in correction factors and systematic uncertainties.
-Pileup was modelled by overlaying extra minimum bias events using the \textsc{Pythia 8.160} generator with the \textsc{A3} tune~\cite{A3} and the \textsc{NNPDF2.3LO} parton distribution functions.
+Pileup was modelled by overlaying extra minimum bias events using the \pythia 8.160 generator with the \textsc{A3} tune~\cite{A3} and the \textsc{NNPDF2.3LO} parton distribution functions.
 These signals were combined with the hard-scatter signals during the digitization step.
 In-time pileup was modelled using an average of 40 interactions per bunch crossing, while out-of-time pileup was modelled using bunch crossings before and after the primary interaction.
 
@@ -123,7 +123,7 @@ The considered particles in order of decreasing priority were, $b$-hadrons, $c$-
 If no such particles were found, the jet was labelled as a light-jet.
 We discard $\tau$-jets for this study.
 
-The labels for the track origin were derived by matching the reconstructed track hits to the simulated hits a particle made during the \textsc{Geant4} simulation.
+The labels for the track origin were derived by matching the reconstructed track hits to the simulated hits a particle made during the \geant simulation.
 This matching criterion was performed using the~\textit{truth-matching probability} (TMP)~\cite{PerformanceATLASTrack}, this is a ratio of the matched hits to the total number of hits in the track with added factors to account for the varying hit efficiencies of the pixel detector, SCT, and TRT\@.
 Each track was associated with the truth particle with the highest TMP\@.
 If no truth particle leads to a TMP greater than 0.75, the track was labelled ``Fake'' as it was likely to have been reconstructed from signals produced by multiple overlapping particles.

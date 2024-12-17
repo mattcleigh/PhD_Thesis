@@ -373,10 +373,7 @@ Since no single framework has emerged as the standard, we will not attempt to un
 However, this chapter uses the term ``diffusion model'' as an umbrella term to describe all of these models, and we chose to focus on two frameworks that are used directly in the projects of this thesis, namely score-based models~\cite{ScoreBasedGenerativeModeling} and flow matching models~\cite{BuildingNormalizingFlows, FlowMatchingGenerative, FlowStraightFast}.
 
 \subsection{Score-Based Generative Models}
-\newcommand{\score}{\nabla_{\x_t} \log p(\x_t)}
-\newcommand{\cscore}{\nabla_{\x_t} \log p(\x_t|\x_0)}
-\newcommand{\unitime}{\mathcal{U}(0, T)}
-\newcommand{\timeone}{\mathcal{U}(0, 1)}
+\label{sec:score_based}
 
 Score-based generative modelling~\cite{ScoreMatching, ScoreBasedGenerativeModeling} is a framework that envelops many diffusion models such as DDPM~\cite{DDPM}.
 The forward-process involves progressively applying Gaussian perturbations to a data sample in the continuous such that it can be modelled as an SDE,
@@ -405,7 +402,7 @@ as this ensures that time-dependant marginal of the distribution follows $p_0 = 
 Using the transition kernel defined in \Cref{eq:gaussian_kernel}, one is able to sample from the forward-process at any arbitrary time $t$ using the reparametrization trick,
 \begin{equation}
     \label{eq:reparametrization}
-    \x_t = s(t)\x_0 + \sigma(t) \e \quad \text{where} \quad \e \sim \normal \quad \text{and} \quad \x_0 \sim p_0(\x).
+    \x_t = s(t)\x_0 + \sigma(t) \z \quad \text{where} \quad \z \sim \normal \quad \text{and} \quad \x_0 \sim p_0(\x).
 \end{equation}
 
 Remarkably, the SDE in \Cref{eq:sde} has an exact inverse~\cite{ReversetimeDiffusionEquation} which can be used to define the reverse-process,
@@ -447,7 +444,7 @@ This replacement is useful because the conditional score function does have a tr
         &= -\nabla_{\x_t} \log \left( \mathcal{N}(\x_t; s(t)\x_0, \sigma(t)^2 \mathbb{I}) \right) \\
         &= -\nabla_{\x_t} \frac{\left(\x_t - s(t)\x_0\right)^2}{2\sigma(t)^2} \\
         &= \frac{s(t)\x_0 - \x_t}{\sigma(t)^2} \\
-        &= \frac{s(t)\x_0 - s(t)\x_0 - \sigma(t)\e}{\sigma(t)^2} \\
+        &= \frac{s(t)\x_0 - s(t)\x_0 - \sigma(t)\z}{\sigma(t)^2} \\
         &= - \frac{\e}{\sigma(t)},
     \end{aligned}
 \end{equation}
@@ -465,7 +462,7 @@ yielding the final loss function,
     \mathbb{E}_{\x_0 \sim \mathcal{D}}
     \mathbb{E}_{\e \sim \normal}
     \frac{\gamma(t)}{\sigma(t)^2}
-    \left|\left|\e_\theta(\x_t, t) - \e\right|\right|^2.
+    \left|\left|\z_\theta(\x_t, t) - \z\right|\right|^2.
 \end{equation}
 Here, $\gamma(t) > 0$ is introduced as a reweighting factor to balance the loss across the time domain.
 Note that by setting $\gamma(t) = \sigma(t)^2$ the loss is uniformly weighted and this often corresponds to good perceptual quality of the generated samples~\cite{VariationalPerspectiveDiffusionBased, VariationalDiffusionModels, ImprovedDenoisingDiffusion}.
@@ -592,17 +589,17 @@ We briefly summarize the main differences in the hyperparameters used in each fr
 
 In SM-TI, the diffusion schedule is chosen to be a cosine and sine function such that the total power of $\x_t$, assuming that the training set was standardized, is constant across the schedule.
 The network predicts the noise added to the data with the training objective
-$\mathbb{E}_{\x, \z, t} \lambda(t) \left|\left| \e_\theta(\x_t, t) - \z\right|\right|^2$.
+$\mathbb{E}_{\x, \z, t} \lambda(t) \left|\left| \z_\theta(\x_t, t) - \z\right|\right|^2$.
 This is then used to approximate the score function, which is used in either the reverse SDE or the probability flow ODE to generate samples.
 
 In EDM, the diffusion schedule is constructed to simplify the form of the probability flow ODE as much as possible.
 Noise is added at a linearly increasing rate to a signal that is kept constant, $\x_t = \x_0 + t\z$.
 This results in an ODE with straighter trajectories, which is beneficial for the numerical integration during sampling as it reduces the truncation errors.
 The time domain extends to $t_\text{max}$, which also determines the latent distribution's variance and is typically set to be $t_\text{max} = 80$.
-The objective is to predict the data itself, with the loss $\mathbb{E}_{\x, \z, t} \lambda(t) \left|\left| f_\theta(\x_t, t) - \x\right|\right|^2$.
+The objective is to predict the data itself, with the loss $\mathbb{E}_{\x, \e, t} \lambda(t) \left|\left| \x_\theta(\x_t, t) - \x\right|\right|^2$.
 The actual network is preconditioned such that
 \begin{equation}
-    f_\theta = c_\text{skip}(t) \x_t + c_\text{out}(t)F_\theta(c_\text{in}(t)\x_t, c_\text{noise}(t)),
+    \x_\theta = c_\text{skip}(t) \x_t + c_\text{out}(t)F_\theta(c_\text{in}(t)\x_t, c_\text{noise}(t)),
 \end{equation}
 where $F_\theta$ is the neural network and $(c_\text{skip}, c_\text{in}, c_\text{out}, c_\text{noise})$ are scaling factors.
 These factors are manually selected such that the training objective and the network's inputs have unit variance across all values of $t \in [0, t_\text{max}]$.
@@ -632,7 +629,7 @@ The bottom row of \Cref{fig:cm_samples} has the model interpolating from the dou
             ut = self.mlp(xt, self.cos_enc(t))         # Predict velocity
             return (ut - (x0 - x1)).square().mean()    # MSE loss
     \end{minted}
-    \caption{A simple implementation of the CFM framework in PyTorch. The model is trained to predict the velocity field $u_t(\x_t)$ that interpolates between the noise $\z$ and the data $\x$ at time $t$.}
+    \caption{A simple implementation of the CFM framework in PyTorch. The model is trained to predict the velocity field $u_t(\x_t)$ that interpolates between noise $\x_1$ and data $\x_0$ at time $t$.}
     \label{code:cfm}
 \end{figure}
 
@@ -656,7 +653,7 @@ This includes models such as Stable Diffusion 3~\cite{SD3} and Flux~\cite{flux20
     signal rate $s(t)$ & $\cos(\frac{t\pi}{2})$ & $1$ & $1 - t$ \\
     noise rate $\sigma(t)$ & $\sin(\frac{t\pi}{2})$ & $t$ & $t$ \\
     latent distribution & $\normal$ & $\mathcal{N}(0, t_\text{max}^2\mathbb{I})$ & $\normal$ \\
-    training target & noise - $\z$ & data - $\x$ & velocity - $(\x - \z)$ \\
+    training target & noise - $\e$ & data - $\x$ & velocity - $(\x - \e)$ \\
     $\frac{\diff \x_t}{\diff t}$ & $- \frac{\pi}{2}\tan(\frac{\pi t}{2})(\x_t - \score)$ & $- t \score$ & $u_t(\x_t)$ \\
     sampling & SDE or ODE & SDE or ODE & ODE \\
     \bottomrule
@@ -695,7 +692,7 @@ This discrepancy results in a few considerations for training.
 Using conditional paths as a proxy training target results in unbiased updates with high variance.
 While diffusion models are not at risk of collapsing like GANs, gradient updates are highly stochasic, and convergence is slow.
 Almost all diffusion models are trained with two copies of the network: an online-network and an offline-network.
-The online-network is updated using standard gradient descent, while the offline network is updated using the exponential moving average of the online network.
+The online-network is updated using standard gradient descent, while the offline network is updated using the exponential moving average (EMA) of the online network.
 The offline-network is always used for sampling.
 This common trick could be applied to any deep learning task~\cite{Adam}, but it is ubiquitous in diffusion models.
 
@@ -735,6 +732,7 @@ Since the process requires removing noise from the data, any additional error te
 Diffusion models have been described as applying iterative refinements~\cite{ImageSuperResolutionIterative} to the data, and the multiple steps might allow the model to self-correct.
 
 \subsubsection{Time Encoding}
+\label{sec:time_encoding}
 
 In all models, the network needs to take in time information.
 One can do this by simply concatenating the time index to the input, but it is more beneficial to perform positional encoding beforehand.
