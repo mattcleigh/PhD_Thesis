@@ -17,39 +17,41 @@ The primary issue was identifying a suitable permutation-invariant loss term for
 As diffusion models started to gain prominence, a realization was made that these models do not require permutation invariant losses as the training objective for diffusion models is denoising rather than generation.
 This task is already permutation equivariant and thus could be achieved even using MSE, leading to the development of the first diffusion model for generating particle-type data.
 
-This chapter summarizes a collection of work done to develop models for the conditional generation point cloud data, including particle physics jets~\cite{PCJedi, EpicJedi, PCDroid} and full events~\cite{PIPPIN}.
+This chapter summarizes a collection of work done to develop models for the conditional generation of set data, including particle physics jets~\cite{PCJedi, EpicJedi, PCDroid} and full events~\cite{PIPPIN}.
 It also covers the use of these models for template-based anomaly detection~\cite{Drapes, RadOT}.
 
 \section{\pcjedi}
 
-An effective initial task for developing a generative model for collider data is generating individual particle physics jets.
+A practical initial task for developing a generative model for collider data is generating individual particle physics jets.
 These collimated showers of hadrons produce electrically charged and neutral particles within a cone originating from the interaction point.
-Jet formation involves transitioning from perturbative QCD to a collection of colour-singlet hadrons, leptons, and photons.
+Jet formation involves transitioning from colour-charged partons, explainable via perturbative QCD, to a collection of colour-singlet hadrons, leptons, and photons interacting with the detector material.
 While both regimes are well understood, the transition between them is not and continues to be a focal point of ongoing research.
 
-Parton showers are typically constructed using a simple Markovian algorithm that stochastically transitions an $n$-parton state to an $(n+1)$-parton state.
-This process is performed sequentially with dedicated generators such as \pythia~\cite{Pythia8}, \sherpa~\cite{Sherpa}, and \herwig~\cite{Herwig}.
-These interactions with detector material are usually performed using \geant~\cite{Geant4}.
-The high multiplicity of particles, the stochastic nature of showers, and their subsequent interaction with detector material make jets computationally expensive to simulate.
-Fast parametric simulation tools such as \delphes~\cite{Delphes} are used to replace the computational expensive \geant in situations where computational resources are limited and the incurring a loss of detail is acceptable.
+Parton showers are iteratively constructed using a simple Markovian algorithm that stochastically transitions an $n$-parton state to an $(n+1)$-parton state.
+Eventually, these are mapped to colour-singlet hadrons in a process called hadronization.
+These final state particles are also called the jet constituents or the particle cloud.
+This chain of events is simulated using dedicated generators such as \pythia~\cite{Pythia8}, \sherpa~\cite{Sherpa}, and \herwig~\cite{Herwig}.
+This is typically followed by interactions with detector material performed using \geant~\cite{Geant4}.
+The high multiplicity of particles, the stochastic nature of showers, and the complex detector response make jets computationally expensive to simulate.
 
-At the LHC, quarks can be produced in the decays of particles such as $W/Z$~bosons, or top quarks through their decay into a $W$~boson and a $b$-quark.
-For the majority of energy scales the two or three quarks from these decays produce jets which can be individually resolved in the detector.
-However, as the momenta of the intermediate particles increase, the decay products themselves start to collimate resulting in a single large-radius jet in the detector (the so-called boosted regime).
-These objects are colloquially referred to as \textit{fat jets}.
-The vast majority of jets, however, are initiated by partons which are not the decay products of other massive particles (QCD background).
+Fast parametric simulation tools already exist, such as \delphes~\cite{Delphes}, which replaces the computationally expensive \geant in situations where computational resources are limited and the incurring a loss of detail is acceptable.
+Therefore, it is not a stretch to use a deep generative model for specific tasks in the simulation pipeline.
+Alternatively, the model could jump straight to simulating the detector response from the initial parton kinematics.
 
-Our first attempt to create a diffusion model for the these jets was called \pcjedi~\cite{PCJedi}\footnote{Code for this project is publicly available~\cite{PCJediCode}}.
+Our first attempt was to develop a model to conditionally generate the particle cloud, bypassing the showering, fragmentation, and hadronization steps.
+We developed this model for large-radius jets, which have complex substructure and are used in many analyses at the LHC.
+As we were performing a set generation task, we required the model to be based on a GNN.
+Our first model for this task was called \pcjedi~\cite{PCJedi} (Particle Cloud Jet Diffusion)\footnote{Code for this project is publicly available~\cite{PCJediCode}}.
 
 \subsection{Diffusion Schedule}
 
 \pcjedi was developed using the score matching diffusion framework from~\textcite{ScoreBasedGenerativeModeling} which is covered in \Cref{sec:score_based}.
 We chose to use SM-TI schedule with hyperparameters $\sigma_\text{max}<1$ and $\sigma_\text{min}>0$, giving the following expressions for the signal and noise levels,
 \begin{align}
-  \lambda_a & = \arccos(\sigma_\text{max}), \\
-  \lambda_b & = \arccos(\sigma_\text{min}), \\
-  s(t) & = \cos\bigl(\lambda_a + t(\lambda_b - \lambda_a)\bigr), \\
-  \sigma(t) & = \sin\bigl(\lambda_a + t(\lambda_b - \lambda_a)\bigr).
+    \lambda_a & = \arccos(\sigma_\text{max}),                           \\
+    \lambda_b & = \arccos(\sigma_\text{min}),                           \\
+    s(t)      & = \cos\bigl(\lambda_a + t(\lambda_b - \lambda_a)\bigr), \\
+    \sigma(t) & = \sin\bigl(\lambda_a + t(\lambda_b - \lambda_a)\bigr).
 \end{align}
 Following the derivation in \Cref{sec:score_based}, this results in the reverse SDE of the form,
 \begin{equation}
@@ -71,7 +73,7 @@ and solving this equation yields
 \end{equation}
 
 This task was framed using the standard SM objective, where a neural network is trained to predict the noise that was used to corrupt some data sample from \Cref{eq:noise_loss}.
-The is extended for conditional generation based on context variable $\con$ and a hybrid loss term to give the training objective,
+This is extended for conditional generation based on context variable $\con$ and a hybrid loss term to give the training objective,
 \begin{equation}
     \label{eq:training_objective}
     \mathcal{L}(\theta) =
@@ -89,252 +91,366 @@ We use hyperparameter $\alpha$ to that controls the relative weight of these two
 \label{sec:jetgen_data}
 
 We used the open dataset JetNet30~\cite{MPGAN} in these experiments.
-To construct this dataset, proton-proton collision events were simulated with a centre of mass energy $13~\TeV$ at leading order using \madgraph~\cite{MadGraph} and the \textsc{NNPDF2.3LO}~\cite{PDF2.3} set of parton distribution functions.
+Proton-proton collision events were simulated with a centre of mass energy $13~\TeV$ at leading order using \madgraph~\cite{MadGraph} and the \textsc{NNPDF2.3LO}~\cite{PDF2.3} set of parton distribution functions.
 The transverse momenta of the partons and bosons were generated with $\pt \approx 1~\TeV$.
 Showering was performed using \pythia 8.212~\cite{Pythia8} with the Monash tune~\cite{Monash}.
 Jets were clustered using the anti-$k_T$ algorithm~\cite{AntiKt} with a distance parameter $R=0.8$ using \fastjet~\cite{FastJet} and were required to have reconstructed $0.8 < \pt < 1.6~\TeV$.
 No detector simulation was performed.
-Five classes of jets were simulated based on the initiating particle: top quark, $W$~boson, $Z$~boson, gluon, and light quark.
-For each class, around 170k jets were produced with 50k of these reserved for evaluation.
-For \pcjedi we only used the gluon and top quark datasets.
+Five classes of jets were simulated based on the initiating particle: $q$ - light quark; $g$ - gluon; $t$ - top quark; $W$ - $W$ boson; $Z$ - $Z$ bosons.
+Around 170k jets were produced for each class, with 50k reserved for evaluation; however, for \pcjedi, we only used the gluon and top quark datasets.
 
-Each jet is characterized by a set of its constituents, often called the particle cloud.
-These are the individual hadrons, leptons, and photons that were reconstructed and associated with the jet.
-Only the leading 30 constituents in \pt were retained, and each constituent is effectively massless and is described solely by its momentum.
+Jets were described in the dataset by their net kinematics, such as \mjet and \ptjet, as well as a list of the leading 30 constituents in \pt.
+No constituent identification is provided, and each is effectively massless, thereby described solely by their three momenta.
+Limiting the particle cloud to only 30 constituents meant the saved jet kinematics were not the same as net kinematics of the truncated particle cloud, which we identify as \mpc and \ptpc.
+This distinction is important when evaluating the model.
 
 \subsubsection{Input and Conditional Features}
 
-The task of the model was to generate the properties of the particle cloud given requested jet properties, specifically the net transverse momentum $\ptjet$ and invariant mass $\mjet$.
-This conditional task is seen as a first step in developing a surrogate forward model for fast simulation.
+The task of the model was to generate the properties of the particle cloud given requested cloud properties, specifically the net transverse momentum $\ptpc$ and invariant mass $\mpc$.
+Ideally, we would use the parton kinematics as the context variable, but this information was not available in the dataset.
+Using these conditional variables provided a reasonable starting point to test the method.
+Unconditional generation could always be performed by marginalizing over the conditional variables.
+As this was a low dimensional vector, we were confident that it could be approximated with a simpler model, such as a NF.
 
-Constituents are represented by the three kinematic variables $\left(\Delta\eta, \Delta\phi, \log(\pt + 1)\right)$.
+Constituents were represented by the three kinematic variables $\left(\Delta\eta, \Delta\phi, \log(\pt + 1)\right)$.
 The $\Delta\eta$ and $\Delta\phi$ are the differences in pseudorapidity and azimuthal angle between the constituent and the jet axis, and $\pt$ is the transverse momentum of the constituent.
-We found that the log transformation of \pt ensured that the input distribution did not possess long tails, and this helped the generation of low-momentum constituents.
+We found that the log transformation of \pt ensured that the input distribution did not possess long tails, which were difficult to work with, and this helped the generation of low-momentum constituents.
 We used standard normalization techniques to scale the inputs and targets to zero mean and unit variance.
-
-The model receives three inputs.
-First is the set of noise-augmented constituents $\x_t$.
-To construct these inputs, we sample a set of noise vectors $\z$ from a standard normal distribution matching the size of the constituent set.
-This is added to the constituent kinematics with the signal and noise levels determined by the diffusion time parameter $t$.
-The diffusion time parameter is itself sampled from a uniform distribution $\mathcal{U}(0, 1)$, and also passed to the model as an input.
-Finally, the conditional jet variables $\con = (\ptjet, \mjet)$ are also provided as inputs.
-The targets for the model is simply the set of noise vectors $\z$.
-
-% \subsection{Evaluation Metrics}
-% \label{sec:jetgen_eval}
-
-% To evaluate the performance of the generative models in this section, we used distributional differences of specific observables between the generated and true jets.
-
-% Included in this evaluation are the distributions of the generated constituent momentum values
-% as well as several high level observables that are calculated from the particle cloud, these high level observables include the jet kinematics, and various substructure observables introduced in \Cref{sec:jet_substructure}.
-
-% Beyond the observables in Ref.~\cite{MPGAN}, we analyze the jet $N$-subjettiness ratios $\tau_{32}$ and $\tau_{21}$, and the energy correlation function ratio $D_2$, which are crucial for identifying top jets and are strongly correlated with jet mass and transverse momentum. We study the two-dimensional marginals of these distributions and the invariant mass to assess the underlying correlations.
-
-% To compare with MPGAN-generated jets, we calculate observables using the relative $\pt$ of constituents, defined as $\pt/p_\mathrm{T}^{\text{jet}}$ per constituent, denoted with the superscript `rel’. This rescaling tests the same underlying physics. For $N$-subjettiness ratios, the scale effects cancel out.
-
-% We quantify distributional distances between MC and generated jets using the averaged Wasserstein-1 distance metric $\mathrm{W}_1$. Specifically, $\mathrm{W}1^M$ measures the distance between distributions of constituents' relative mass $m{j}^\text{rel}$, $\mathrm{W}_1^P$ the average distance between distributions of constituents' three momentum $(\Delta\eta, \Delta\phi, \pt^\text{rel})$, and $\mathrm{W}_1^{EFP}$ the average $\mathrm{W}_1$ using the first five EFPs. The distances for $N$-subjettiness ratios and $D_2$ are denoted $\mathrm{W}1^{\tau{32}}$, $\mathrm{W}1^{\tau{21}}$, and $\mathrm{W}_1^{D_2}$.
-
-% Additionally, we compute the Fréchet ParticleNet distance (FPND)~\cite{MPGAN}, comparing the mean and standard deviation of the penultimate layer of the ParticleNet model for MC and generated jets~\cite{MPGAN, ParticleNet}. We also evaluate coverage (Cov) and minimum matching distance (MMD) metrics as described in Ref.~\cite{MPGAN}.
 
 \subsection{Model Architecture}
 
 A schematic overview of the \pcjedi model is shown in \Cref{fig:pcjedi}.
-The inputs to the model includes the noisy set of jet constituents.
-The training objective is to predict the noise vector added to each constituent, and is thus inherently permutation equivariant.
-Therefore, so long as the model itself is permutation equivariant, we are able to use a basic loss for training.
-An implicit conditional feature is therefore the number of constituents in the jet, which is built into the input data.
+The model received three inputs.
+First is the set of noise-augmented constituents $\x_t = s(t) \x_0 + \sigma(t) \z$.
+Therefore, the number of constituents in the jet, which is built into the input data, is an implicit conditional feature.
+To construct these inputs, we sampled a set of noise vectors $\z$ from a standard normal distribution matching the size of the constituent set.
+The noise set is added to the constituent kinematics with the signal and noise levels determined by the diffusion time parameter $t$.
+During training, the diffusion time parameter is sampled from a uniform distribution $\mathcal{U}(0, 1)$ and passed to the model.
+Finally, the jet variables $\con = (\ptjet, \mjet)$ are also provided as conditional inputs.
+The training objective was to predict the noise vector added to each constituent, an inherently permutation equivariant task.
+Therefore, as long as the model itself is permutation equivariant, we can use a basic loss for training.
 
-Our model comprised of four TE Blocks, each utilizing multi-headed self-attention.
-We used blocks based architecture of ~\textcite{Normformer}.
-An initial MLP embedded the three-dimensional noisy particle cloud into a larger space of 128 dimensions to enable expressive self-attention, while a MLP reshaped the output tokens back to the original dimension.
-All MLPs in the model, including those within the TE Block, used the SiLU activation function, had a single hidden layer with 256 units followed by dropout with $p=0.1$ and layer normalization.
-The diffusion time parameter was encoded using a CosEnc layer, described in \Cref{sec:time_encoding}, after which it was concatenated to the other conditional inputs $\ptjet$ and $\mjet$.
-These combined context variables were concatenated to the input of every MLP in the model.
+Our model comprised four TE Blocks, each utilizing multi-headed self-attention and the residual and normalization configuration described by \textcite{Normformer}.
+An initial MLP embedded the three-dimensional noisy particle cloud into a larger space of 128 dimensions to enable expressive self-attention.
+Another MLP reshaped the output tokens back to the original dimension.
+The diffusion time parameter was encoded using a CosEnc layer, described in \Cref{sec:time_encoding}, after which it was concatenated to the other conditional inputs.
+This combined context tensor was concatenated to the input of every MLP in the model, including those within the TE Blocks.
+All MLPs had a single hidden layer with 256 units, a SiLU activation function, dropout ($p=0.1$), and layer normalization.
 
-Fixed normalization layers using values derived from the entire training set ensured that the data distribution used in the diffusion process had zero mean and unit variance.
-For the training objective, we found that using Huber loss instead of the Frobenius norm results in faster training and better generation quality.
-We performed a scan over hyperparameters $\alpha$, $\sigma_\text{max}$, and $\sigma_\text{min}$, and found the best generative performance with $\alpha=10^{-3}$, $\sigma_\text{max}=0.999$, and $\sigma_\text{min}=0.02$.
-
-We trained separate networks for generating the top quark and gluon jets in the dataset.
+We found that using Huber-loss\cite{SmoothL1} instead of the Frobenius norm for the training objective resulted in faster training and better generation quality.
+We trained separate networks to generate the dataset's top quark and gluon jets.
 The Adam optimizer was used with default settings and a batch size of 256.
-The learning rate ramped up linearly from 0 to $5 \times 10^{-4}$ over the first 10k training iterations.
-Training ran for 100k iterations.
+The learning rate ramped linearly from 0 to $5 \times 10^{-4}$ over the first 10k training iterations.
+The training ran for 100k iterations.
 The network saved for evaluation was an exponential moving average (EMA) of the network with a decay rate of 0.999.
+We performed a scan over the diffusion schedule hyperparameters and found the best performance with $\alpha=10^{-3}$, $\sigma_\text{max}=0.999$, and $\sigma_\text{min}=0.02$.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\textwidth]{Figures/jet_generation/pcjedi.pdf}
+    \includegraphics[width=0.65\textwidth]{Figures/jet_generation/pcjedi.pdf}
     \caption{The \pcjedi model architecture configured for training.}
     \label{fig:pcjedi}
 \end{figure}
 
-\subsection{Results}
+\subsubsection{Integration Solvers}
 
-To generate jets with \pcjedi, numerical integration is required to solve the reverse SDE or the probability flow ODE.
+As with all diffusion models, to generate samples with \pcjedi, numerical integration is required to solve the reverse SDE or the probability flow ODE.
+This complicates evaluation of the model, as sample quality can vary wildly depending on the solver used, and the number of integration steps taken.
 We compared various numerical solvers for this task~\cite{NumericalSolutionStochastic}.
-
-The Euler-Maruyama (EM) method was used to solve the reverse SDE, and the standard Euler solver and fourth-order Runge-Kutta (RK) method~\cite{RungeKutta} were used for the probability-flow ODE.
-Finally, the deterministic DDIM solver~\cite{DDIM}, designed for diffusion generative models was also used.
-Generating higher quality jets requires more integration steps, increasing generation time as each step requires at least one forward pass through the model.
-We focused on quality rather than speed, allowing for 200 forward passes, which corresponds to 50 integration steps for RK and 200 for EM, DDIM, and Euler.
+The Euler-Maruyama (EM) method was used to solve the reverse SDE, DDIM sampler~\cite{DDIM} was used for the probability-flow ODE.
+We also experimented with the standard Euler solver and fourth-order Runge-Kutta methods but found negligible differences compared to DDIM.
+Generating higher-quality jets requires more integration steps, which increases generation time as each step requires at least one forward pass through the model.
+We focused on quality rather than speed, allowing 200 integration steps for each jet.
 Equal step sizes were used for all solvers.
 
+\subsection{Results}
 
-First we focus on the inclusive generation of jets following the same $\pt^\text{jet}$ and $m_\mathrm{jet}$ distributions seen during training.
-This allows us to compare directly to the non-conditional MPGAN model.%
-\footnote{For fair comparisons we use the trained model provided by Ref.~\cite{MPGAN} and generate an equal number of jets with both \pcjedi and MPGAN and evaluate all metrics consistently for both models using the \texttt{JetNet} library provided with the datasets.}
-For these comparisons we calculate the relative transverse momentum ($\pt^\text{rel}$) of each constituent using the full $\pt$ of the jet.
-% This variable is labelled $\pt^\text{rel}$.
-% Additional kinematic and substructure variables calculated using $\pt^\text{rel}$ in place of $\pt$ are denoted with superscript `rel'.
+As a benchmark for performance, we used MPGAN~\cite{MPGAN}, a GAN trained on the same dataset.
+MPGAN generates the particle cloud with attributes $(\Delta\eta, \Delta\phi, \pt^\text{rel})$, where $\pt^\text{rel} = \pt / \ptjet$.
+Thus, we transformed the outputs of \pcjedi to this format for comparison.
+For evaluation, we generated 50k jets per class using MPGAN and \pcjedi using the different solvers.
+
+Qualitative performance was assessed by visual inspection of the distributions of the generated jets compared to the JetNet30 test set.
+For the distributions, we used the relative particle cloud kinematics, $\mpcrel$ and $\ptpcrel$, which were calculated using $\pt^\text{rel}$ for each constituent.
+These distributions are shown in \Cref{fig:kinematics_gluon, fig:kinematics_top} gluon and top jets.
+Total $\ptpcrel$ is not always 1.0 due to the top 30 constituents' selection, though this is the maximum physical value.
+All generative models struggle to capture the hard cut-off at 1.0 in but \pcjedi with DDIM solver shows the closest agreement.
+Both \pcjedi models outperform MPGAN in reconstructing the top jet $\pt$ distribution, with similar performance in reproducing $\mpcrel$ for both jet types.
+The bi-modal structure observed in top jet $\mpcrel$ arises from a phenomenon in boosted top jet reconstruction where the stable particles from the $b$-quark decay are not contained within the radius of the jet.
+These top jets are referred to as \emph{uncontained} top jets, and they exhibit a 2-pronged structure and masses close to the mass of the $W$~boson.
 
 \begin{figure}[hbpt]
     \centering
-    \includegraphics[width=.66\linewidth]{figures/gluon_generation/jet_features_rel.pdf}
-    \caption{The relative transverse momentum (left) and invariant mass (right) of gluon jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation (shaded blue).
-    Calculated from the leading 30 \pt constituents using the constituent $p_\mathrm{T}^\mathrm{rel}$ instead of $p_\mathrm{T}$.}
+    \includegraphics[width=.75\linewidth]{Figures/jet_generation/jedi/gluon/jet_features_rel.pdf}
+    \caption{The relative transverse momentum (left) and invariant mass (right) of gluon jets generated with MPGAN and \pcjedi using the DDIM and EM solvers compared to the Pythia simulation. Calculated from the leading 30 \pt constituents using $\pt^\text{rel}$ instead of $\pt$.}
     \label{fig:kinematics_gluon}
 \end{figure}
 
 \begin{figure}[hbpt]
     \centering
-    \includegraphics[width=.66\linewidth]{figures/top_generation/jet_features_rel.pdf}
-    \caption{The relative transverse momentum (left) and invariant mass (right) of top jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation (shaded blue).
-    Calculated from the leading 30 \pt constituents using the constituent $p_\mathrm{T}^\mathrm{rel}$ instead of $p_\mathrm{T}$.}
+    \includegraphics[width=.75\linewidth]{Figures/jet_generation/jedi/top/jet_features_rel.pdf}
+    \caption{The relative transverse momentum (left) and invariant mass (right) of top jets generated with MPGAN and \pcjedi using the DDIM and EM solvers compared to the Pythia simulation. Calculated from the leading 30 \pt constituents using $\pt^\text{rel}$ instead of $\pt$.}
     \label{fig:kinematics_top}
 \end{figure}
 
-We look at the relative transverse momentum $\pt^{\text{rel}}$ and relative invariant mass $m_\mathrm{jet}^\text{rel}$ of the reconstructed jet.
-These observables are calculated from the vector sum of the 30 (leading in \pt) jet constituents using $\pt^\text{rel}$ in place of $\pt$ per constituent.
-These are shown in \cref{fig:kinematics_gluon,fig:kinematics_top} for gluon jets and top jets,   respectively.
-The value of $\pt^\text{jet, rel}$ is not always exactly 1.0 due to selecting only the leading 30 constituents for each jet.
-However this is the maximum physical value.
-All generative models struggle to capture the hard cut off at 1.0 in $\pt^\text{jet, rel}$, though \pcjedi with the DDIM solver is closest in agreement.
-Both \pcjedi models outperform MPGAN at reconstructing the top jet $\pt^\text{rel}$ distribution.
-All three models perform similarly at reproducing the $m_\mathrm{jet}^{\text{rel}}$ for both top quarks and gluons.
-
-
-It is also important that the individual constituents are accurately modelled.
-In \cref{fig:gluon_const_pt,fig:top_const_pt} we see that the relative transverse momentum of the leading three constituents ordered by \pt are well reproduced by MPGAN and \pcjedi for both gluon and top jets.
-However, both \pcjedi models show disagreements at low values of transverse momentum for gluon jets.
-Here, MPGAN is better able to capture these values.
-The relative $\eta$ and $\phi$ coordinates of the constituents are found to be in good agreement with the MC simulation for all three models.
-
-\begin{figure}[hbpt]
-    \begin{subfigure}{.33\textwidth}
-        \centering
-        \includegraphics[width=1.\linewidth]{figures/gluon_generation/const1_pt.pdf}
-    \end{subfigure}%
-    \begin{subfigure}{.33\textwidth}
-        \centering
-        \includegraphics[width=1.\linewidth]{figures/gluon_generation/const2_pt.pdf}
-    \end{subfigure}%
-    \begin{subfigure}{.33\textwidth}
-        \centering
-        \includegraphics[width=1.\linewidth]{figures/gluon_generation/const3_pt.pdf}
-    \end{subfigure}% \\
-    \caption{Distributions of the leading (left), subleading (middle) and third leading (right) constituent $\pt^\text{rel}$ for the gluon jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation.}
-    \label{fig:gluon_const_pt}
-\end{figure}
-
-\begin{figure}[hbpt]
-    \begin{subfigure}{.33\textwidth}
-        \centering
-        \includegraphics[width=1.\linewidth]{figures/top_generation/const1_pt.pdf}
-    \end{subfigure}%
-    \begin{subfigure}{.33\textwidth}
-        \centering
-        \includegraphics[width=1.\linewidth]{figures/top_generation/const2_pt.pdf}
-    \end{subfigure}%
-    \begin{subfigure}{.33\textwidth}
-        \centering
-        \includegraphics[width=1.\linewidth]{figures/top_generation/const3_pt.pdf}
-    \end{subfigure}% \\
-    \caption{Distributions of the leading (left), subleading (middle) and third leading (right) constituent $\pt^\text{rel}$ for the top jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation.}
-    \label{fig:top_const_pt}
-\end{figure}
-
-Finally, we look at the relative $\tau_{21}$, $\tau_{32}$ and $D_{2}$ substructure observables in \cref{fig:substructure_gluon,fig:substructure_top}.
-Both \pcjedi and MPGAN are able to capture the $D_2$ distributions, with MPGAN visually showing better agreement.
-However all three models struggle to capture both $\tau_{21}$ and $\tau_{32}$ for gluon jets.
-This is even more apparent for top jets, which have a bi-modal structure in all three observables.
+Crucial to the study of large-radius jets are the substructure variables $\tau_{21}$, $\tau_{32}$, and $D_2$ as described in \Cref{sec:jet_substructure}\footnote{These variables are already normalized by the jet's total $\pt$, thus relative versions are unnecessary.}.
+The subjettiness ratios $\tau_{21}$, $\tau_{32}$ in particular are essential for distinguishing top jets from gluon or quark jets.
+Calculated for the generated particle cloud and compared to Pythia simulations, these variables are illustrated in \Cref{fig:substructure_gluon, fig:substructure_top}.
+Both \pcjedi and MPGAN models accurately captured the $\text{D}_2$ distributions.
+However, all models struggled with $\tau_{21}$ and $\tau_{32}$ especially for top jets, which exhibits a bi-modal structure due to the uncontained $b$-quark decay.
 
 \begin{figure}[hbpt]
     \centering
-    \includegraphics[width=1.\linewidth]{figures/gluon_generation/jet_substructure_rel.pdf}
-    \caption{Relative substructure distributions $\tau_{21}^{\text{rel}}$ (left), $\tau_{32}^{\text{rel}}$ (middle) and $D_{2}^{\text{rel}}$ (right) for gluon jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation.}
+    \includegraphics[width=1.\linewidth]{Figures/jet_generation/jedi/gluon/jet_substructure_rel.pdf}
+    \caption{Substructure variables of gluon jets generated with MPGAN and \pcjedi using the DDIM and EM solvers compared to the Pythia.}
     \label{fig:substructure_gluon}
 \end{figure}
 
 \begin{figure}[hbpt]
     \centering
-    \includegraphics[width=1.\linewidth]{figures/top_generation/jet_substructure_rel.pdf}
-    \caption{Relative substructure distributions $\tau_{21}^{\text{rel}}$ (left), $\tau_{32}^{\text{rel}}$ (middle) and $D_{2}^{\text{rel}}$ (right) for top jets generated with MPGAN (orange) and \pcjedi (DDIM solver, green; EM solver, red) compared to the MC simulation.}
+    \includegraphics[width=1.\linewidth]{Figures/jet_generation/jedi/gluon/jet_substructure_rel.pdf}
+    \caption{Substructure variables of top jets generated with MPGAN and \pcjedi using the DDIM and EM solvers compared to the Pythia simulation.}
     \label{fig:substructure_top}
 \end{figure}
 
-The performance is compared quantitatively in \cref{tab:kansal_results} for the metrics introduced in Ref.~\cite{MPGAN} and \cref{tab:substructure_metrics} for the additional substructure distributions in \cref{fig:substructure_gluon,fig:substructure_top}.
-For each metric we establish an ideal limit by comparing the training and test sets, which corresponds to the natural variation in the MC samples.
-Following the procedure defined by Ref.~\cite{MPGAN} uncertainties for the Wasserstein based metrics are derived using bootstrap sampling, however we increase the number of bootstrapped batches from 5 to 40 to reduce the run to run variance.
-The FPND metric requires the entire test set and does not use bootsrapping so we do not quote an uncertainty.
+Quantitative metrics were derived following the methodology used in \textcite{MPGAN} whereby the Wasserstein-1 distance was calculated between the generated and Pythia jets, creating a $\text{W}_1$ score for each observable.
+Uncertainties for these scores were derived using bootstrap sampling.
+In addition to the distributions shown, we also calculated the $\text{W}_1$ score using the average of the first five Energy Flow Polynomials (EFPs)~\cite{EFP}, as these variables too are sensitive to the jet substructure.
+Additionally, we computed the Fréchet ParticleNet distance (FPND), which compares the mean and standard deviation of the penultimate layer of the ParticleNet model for the Pythia and generated jets~\cite{MPGAN, ParticleNet}.
+Lower limits for these values were calculated by comparing 50k jets from the training set to the test set, which captures the natrual variation in the data.
+This allows us to compare the various methods quantitatively in \Cref{tab:kansal_results}.
+Based on these value, no one model is clearly superior.
+\pcjedi with the EM sampler obtains the superior FPND score, but suffers greatly in the EFP distributions for top jets.
+MPGAN outperforms \pcjedi in the $\Dtwo$ scores for gluon jets but not for top jets.
+On average, it seems that the EM sampler is worse than the DDIM sampler, at least for the selected 200 integration steps, but the differences are not significant.
+One crucial observation is how poorly all models perform on the subjetiness ratios with the ratio to Pythia for top jets, ranging from around 5 to 10 times higher than the MC-MC comparison.
+This clearly indicates that the current methods are not sufficient for modelling the substructure of the large radius jets.
 
-\pcjedi beats the current methods for several metrics and is competitive across several others for both gluon and top jet generation.
-For top generation \pcjedi has a notably lower FPND and $\mathrm{W_1^{P}}$ scores than MPGAN yet performs worse in $\mathrm{W_1^{M}}$ and $\mathrm{W_1^{EFP}}$.
-The metrics \textbf{Cov} and \textbf{MMD} are essentially saturated by all models, as they are in agreement with the upper limit defined by the natural variation in the MC samples.
-Some of the values seem to be in tension with visual inspection.
-Most notably, $\mathrm{W_1^{P}}$ for gluon jets suggests \pcjedi with the EM solver outperforms MPGAN, despite the observed underestimation at low values of $\pt^{\text{rel}}$ for the three leading constituent.
-This shows the importance of studying a wide range of distributions, and highlights a potential limitation in using aggregated $\mathrm{W_1}$ distances.
-It may also suggest that a metric more sensitive to the behaviour in tails of distributions could be beneficial, for example classifier-based weight approaches~\cite{Das:2023ktd}.
+\begin{table}[hbpt]
+    \centering
+    \caption{Quantative comparison of the \pcjedi and MPGAN models for generating gluon and top jets.}
+    \label{tab:combined_results}
+    \renewcommand{\arraystretch}{1.5}
+    \resizebox{\textwidth}{!}{
+        \input{Figures/jet_generation/jedi/table.tex}
+    }
+\end{table}
 
-Capturing the correlations between jet substructure observables and the jet kinematics is also a key measure of performance.
-Cuts on $\tau_{32}$ and $D_{2}$ are applied to distinguish top jets from gluon or quark jets in simple cut-based analyses~\cite{ATLAS:2018wis,CMS:2020poo}, with cut values are often derived as a function of the jet mass.
-Similarly $\tau_{21}$ is important in $W$-jet identification.
-\Cref{fig:gluon_correlations,fig:top_correlations} show the distributions of these observables alongside the two-dimensional marginals for \pcjedi with the EM solver and MPGAN.
-For gluon jets, \pcjedi captures the correlations between features better than MPGAN.
-For top jets, both MPGAN and \pcjedi capture the bi-modal structure of the top jets with MPGAN showing slightly better agreement.
+\subsection{Discussion}
 
-\begin{figure}[hbpt]
-    \begin{subfigure}{0.5\textwidth}
-        \centering
-        \includegraphics[width=1.\linewidth]{figures/gluon_generation/subspread_em_200_rel.pdf}
-    \end{subfigure}%
-    \begin{subfigure}{0.5\textwidth}
-        \centering
-        \includegraphics[width=1.\linewidth]{figures/gluon_generation/subspread_mpgan_rel.pdf}
-    \end{subfigure}%//
-    \caption{Mass and relative substructure distributions of the generated gluon jets using the EM solver for \pcjedi, and MPGAN. The diagonal consists of the marginals of the distributions. The off-diagonal elements are the joint distributions of the variables.}
-    \label{fig:gluon_correlations}
+\pcjedi was the first model to generate particle clouds using a diffusion model, and while the results were promising, they were not state-of-the-art.
+However, proving that the method could work was a significant step forward.
+Furthermore, the time required to generate samples with diffusion models is another drawback, as it requires multiple forward passes compared to a single pass for a GAN.
+The following steps in this research would be to improve the model's performance and speed.
+
+\section{\pcdroid}
+
+This section details the advancements made with \pcdroid, a successor to \pcjedi~\cite{PCDroid}.
+The \pcdroid model exhibits marked improvements in speed and generation.
+Leveraging an updated framework for diffusion models~\cite{ElucidatingDesignSpace}, enhanced diffusion sampling algorithms, and a novel transformer model, \pcdroid better balances performance and generation time.
+Additionally, we explored using consistency distillation~\cite{ConsistencyModels} to even further reduce generation time.
+\pcdroid achieves state-of-the-art performance on the benchmarks discussed in the previous section, notably surpassing both \pcjedi and MPGAN.
+We also included much more elaborate timing studies to compare the various models against performing the showering using \pythia.
+The code repository used in this work is publicly available~\cite{PCDroidCode}.
+
+\subsection{Improved Diffusion Framework}
+
+One of the main advancements in \pcdroid is the revised diffusion paradigm and configuration.
+\pcdroid adheres to the EDM noise scheduler and network preconditioning as outlined by \textcite{ElucidatingDesignSpace}, discussed in \Cref{sec:diffusion_frameworks}.
+This approach introduces several key modifications.
+
+Firstly, the signal and noise rates are defined as $\gamma(t)=1$ and $\sigma(t)=t$.
+This adjustment simplifies the forward SDE to
+\begin{equation}
+    \diff \x_t = \sqrt{2t} \diff \w_t,
+\end{equation}
+with the corresponding ordinary differential equation ODE similarly reducing to,
+\begin{equation}
+    \diff x_t = - t \score \diff t.
+\end{equation}
+As a result, the ODE solutions exhibit straighter trajectories, reducing truncation errors during generation compared to the previous variance-preserving method.
+The primary advantage of this change is the ability to execute the reverse diffusion process in fewer steps.
+
+Secondly, diffusion times are sampled during training specifically to target regions of the diffusion process where the model can gain the most information.
+These diffusion times are used to scale the noise added to the input data.
+Note that the diffusion time $t$ and noise rate $\sigma(t)$ can be used interchangeably, with $t$ extending beyond the range of 0 to 1, instead falling in the range $t = \sigma(t) \in [0, 80]$.
+When $t$ is low, the magnitude of the artificial noise introduced into the samples is indistinguishable from the inherent stochasticity of the data.
+Conversely, at high values of $t$, the input sample is almost entirely corrupted by noise, and the model can at most return the mean of the data distribution.
+Log-normal sampling of the diffusion times, ${\log(t)\sim\mathcal{N}\left(-1.2, 1.2\right)}$, preferentially targets intermediate values where the model can learn the most.
+This specific sampling distribution~\cite{ElucidatingDesignSpace} was observed to be advantageous for our tasks.
+
+Thirdly, sophisticated skip and scaling connections are integrated into the network architecture.
+The variables $c_\mathrm{in}(t)$, $c_\mathrm{out}(t)$, and $c_\mathrm{skip}(t)$ are all parameterized by $t$ and are combined for the denoised estimate as follows:
+\begin{equation}
+    x_\theta(\x, \cond, t) = c_\mathrm{out} f_\theta(c_\mathrm{in}\x, \cond, t) + c_\mathrm{skip}\x,
+\end{equation}
+where $f_\theta$ represents the raw prediction from the neural network.
+Note that unlike \pcjedi, the target for the network is the true data sample $\x_0$ rather than the noise $\z$.
+The skip connection permits $\x_t$ to bypass the network at low $t$, as the input is inherently closer to the target.
+Due to the variance not being preserved during the diffusion process, these  scaling functions maintain the unit variance of the raw inputs and targets
+for $f_\theta$.
+
+We reuse the same dataset, JetNet30, as outlined in \Cref{sec:jetgen_data} for some experiments in this section.
+However, most of the studies are performed using the extended JetNet150 dataset, which encompasses the same jets but with up to 150 constituents within the particle cloud.
+This expanded dataset poses new challenges for the generative task, necessitating more intricate models and increased computational resources to manage the larger set size effectively.
+Furthermore, we used all five jet types in JetNet150, rather than just the gluon and top jets.
+
+\subsection{Model Architecture}
+
+The general \pcdroid architecture and the training process is shown in \cref{fig:droid_arch_train}.
+
+In addition to the preconditioning which comes from the EDM framework, the model has an additional MLP compared to \pcjedi which processes the conditional input before sending it to each sublayer.
+This is primarily because the number of context variables increased to also include the jet azimuthal angle ($\phi$), the number of constituents (which was previously only implicitly included in the input set size), and the jet type (PID).
+This last feature is significant because, whereas \pcjedi and MPGAN required separate models for each jet type, \pcdroid can generate all five jet types with a single conditional network.
+Furthermore, the conditioning features represent the full jet kinematics, rather than just the net kinematics of the particle cloud.
+This makes the generation a more challenging task, as it would have to learn the effects of truncating the particle cloud.
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figures/jet_generation/pcdroid.pdf}
+    \caption{The \pcdroid model architecture configured for training.}
+    \label{fig:droid_arch_train}
 \end{figure}
 
-\begin{figure}[hbpt]
-    \begin{subfigure}{0.5\textwidth}
-        \centering
-        \includegraphics[width=1.\linewidth]{figures/top_generation/subspread_em_200_rel.pdf}
-    \end{subfigure}%
-    \begin{subfigure}{0.5\textwidth}
-        \centering
-        \includegraphics[width=1.\linewidth]{figures/top_generation/subspread_mpgan_rel.pdf}
-    \end{subfigure}%
-    \caption{Mass and relative substructure distributions of the generated top jets using the EM solver for \pcjedi, and MPGAN. The diagonal consists of the marginals of the distributions. The off-diagonal elements are the joint distributions of the variables.}
-    \label{fig:top_correlations}
+In \pcjedi, only TE Blocks with self-attention were studied, which, despite their high expressiveness, are computationally expensive.
+The number of operations scales quadratically with the number of constituents $N_{const}$, i.e., $\mathcal{O}(N_{const}^2)$.
+Given that diffusion models necessitate multiple network passes during generation, self-attention becomes a suboptimal choice for fast generation.
+While this computational demand is manageable for models with 30 constituents, it becomes significantly impactful when scaling to 150 constituents.
+Consequently, alongside the TE based model, we introduce the cross-attention encoder (CAE), which serves as a more efficient and memory-conserving permutation-equivariant network.
+
+A schematic overview of the CAE Block is illustrated in \Cref{fig:cae_network}.
+In a CAE Block, the input particle cloud updates a set of global tokens via multi-headed cross-attention, with the number of global tokens $N_{global}$ serving as a hyperparameter.
+These tokens are then refined through a residual MLP and redistributed back to the point cloud using another cross-attention layer and residual MLP.
+The full CAE is constructed by sequentially stacking multiple CAE Blocks, with the initial set of global tokens being fully learnable.
+For $N_{global}=1$, the distribution attention operation employs a sigmoid function instead of softmax.
+The CAE's attention operations scale with $\mathcal{O}(N_{const} \times N_{global})$.
+The first attention operation effectively pools information from the point cloud into the global tokens. The second attention operation is inverted, and information from the updated global token are distributed back to the point cloud.
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/jet_generation/CAEB.pdf}
+    \caption{A single cross-attention encoder block updating both an input point cloud $x$ and global tokens $g$, using layer-norm (LN), multi-headed attention (MHA). Contextual information $c$ is injected into the network by concatenating to the inputs of the MLPs.}
+    \label{fig:cae_network}
 \end{figure}
 
+To allow direct comparisons with \pcjedi, the optimizer, learning rate, scheduler, and the majority of hyperparameters remain unchanged.
+The only notable adjustments, based on a minor hyperparameter scan, include reducing the number of encoder layers from four to three and using MSE loss for training.
+For models with 150 constituents, the token dimension and the width of the MLP layers were doubled.
+We trained two additional models utilizing CAE Blocks with $N_{global}=1$ and 16, on the 150 constituent dataset, employing the same training configuration, dimensions, and number of layers as the baseline model.
+
+\subsubsection{Integration Solvers}
+
+Another key development has been in the choice of integration solvers used during inference.
+Several state-of-the-art algorithms have been studied and \pcdroid was designed to be compatible with the popular \textsc{K-Diffusion} library~\cite{KDiffusion}.
+The most promising solvers include a fourth order linear multistep method (LMS)~\cite{ODEBook}, DPM-Solver-2~\cite{DPMSolverFastODE}, DPM-Solver++~\cite{DPMSolverFastSolver}, and DPM-Solver-2M~\cite{DPMSolverFastSolver}, and ancestral variants of these.
+Furthermore, we experimented with non-uniform step sizes during generation, and found that systematically taking larger steps at the beginning of the denoising process and smaller steps towards the end improved the quality of the generated samples.
+
+\subsection{Consistency Distillation}
+
+Additionally, this work investigated the process of consistency distillation (CD) \cite{ConsistencyModels}, wherein a teacher network trains a student network to solve the reverse diffusion process in fewer steps, and in some cases enabling \textit{one-shot} generation.
+
+The teacher network is a standard pre-trained diffusion model which together with a sampling method, defines a method to trace paths along the learned probability flow ODE.
+During distillation, the weights of the teacher network are frozen, and a student network is trained to map all points sampled along a same ODE trajectory a common target.
+To prevent the student model from collapsing into a constant function, a boundary condition is enforced such that the student must become an identity map as the diffusion time approaches zero.
+The same skip connections used in the \pcdroid model are employed to enforce this.
+This boundary condition ensures the global minimum of the training loss was achieved only when the student network mapped each point of the ODE trajectory to its endpoint.
+
+Initially, the student model is initialized with the same parameter values as the teacher model.
+During training, the diffusion time is sampled, the input is corrupted using the same schedule as before, and then the teacher model is used to take a single step along the ODE.
+These two adjacent points on the ODE are each passed through the student network, and the student is trained to minimize the mean squared distance between its two outputs.
+To stabilize training, the student network was duplicated into an online and target network, a practice common in deep reinforcement learning \cite{PlayingAtariDeep, ContinuousControlDeep, ImplicitQuantileNetworks}.
+Gradients propagated only through the online network, which always processed the ODE sample with the larger $t$.
+After each iteration, the target network was synced with the student network using an EMA of the parameters.
+
+Although both are distillation methods, CD differs from progressive distillation models (PD) \cite{ProgressiveDistillationFast}.
+In progressive distillation, new models are iteratively trained to predict the amount of noise removed in $N$ steps of the previous model.
+This iterative process reduces the overall number of steps required with each new model, thereby resulting in faster generation times.
+Unlike CD, PD does not require information about the ODE trajectories, only the total amount of noise removed after $N$ steps.
+
+\subsection{Unconditional Generation}
+
+\pcdroid is trained as a conditional generative model, with the jet kinematics $(\pt, \eta, m)$, the number of constituents ($N_{const}$), and the PID used as conditions.
+We can marginalize the conditional variables using a second generative model to allow for unconditional generation.
+As this is a low-dimensional vector, we trained NFs for this task.
+This approach is preferable to explicitly unconditional models as it logically segments the learning process.
+
+Standard use cases would still demand control over the jet type, so
+one flow (Flow-$\p$) is trained to learn the probability density $p(\pt, \eta, m, N_{const} |\textrm{PID})$.
+A second flow (Flow-$N$) is trained to learn the probability density $ p(N_{const}|\pt, \eta, m, \textrm{PID}) $.
+This second flow demonstrates how \pcdroid can be used as a surrogate fast simulator, especially when the parton type and kinematics are known, but the number of particles in the final jet is not.
+As the transformer denoises all input tokens, the number of constituents is always required at generation time.
+This number is correlated to many jet properties, necessitating a normalizing flow rather than simply sampling from a Poisson distribution.
+
+Both flows are trained with a maximum log-likelihood objective and consist of five transformation layers using rational quadratic splines~\cite{NeuralSplineFlows}.
+Coupling layers are used in Flow-$\p$, while none are needed for the one-dimensional transformation Flow-$N$.
+For both flows, a dequantization step simplifies the learning of the $N_{const}$ distribution; at inference time, the generated value is rounded to the nearest integer.
+The Adam optimizer~\cite{Adam} with default settings and a cosine learning rate is used.
+Given the relatively simple nature of these distributions, near-perfect performance is achieved using only four layers and 100k learnable parameters.
+
+\subsection{Results}
+
+\subsubsection{JetNet30}
+
+We compared the \pcdroid, \pcjedi, and MPGAN models on the JetNet30 dataset using the same distributions and metrics as before.
+This study utilized \pcdroid samples generated under the fully conditional regime.
+Performance comparison revealed minimal differences between jets conditioned on the training set kinematics and those conditioned on the flow outputs.
+
+We test a wide variety of integration solvers in the generation stage for \pcjedi.
+We studied the trade-off between the quality of generated jets and the number of neural function evaluations (NFE) to determine the optimal solver and step size.
+The comparison focused on the FPND, $\mathrm{W}_1^M$, and $\mathrm{W}1^{\tau{32}}$ metrics, given the latter's difficulty in previous studies.
+For \pcjedi we used the results using the Euler-Maruyama sampler at 200 NFE.
+From \cref{fig:metrics_vs_steps-30}, we observe most solvers saturating around 100 NFE.
+We generated samples with \pcdroid using Heun and HeunSDE methods~\cite{ElucidatingDesignSpace}, DPM2~\cite{DPMSolverFastODE}, DPM2 with ancestral sampling (DPM2A), DPM++2M~\cite{DPMSolverFastSolver}, and LMS~\cite{ODEBook}
+Although no method was clearly superior, the LMS solver generally performed best across most metrics, and was thus used at 100 NFE for all \pcdroid results in the following sections.
+Additionally, \pcdroid outperformed MPGAN with as few as 20 steps for most solvers.
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.32\linewidth]{Figures/jet_generation/droid/30/metrics_vs_steps/t/t_fpnd.pdf}
+    \includegraphics[width=0.32\linewidth]{Figures/jet_generation/droid/30/metrics_vs_steps/t/t_w1_tau_32.pdf}
+    \includegraphics[width=0.32\linewidth]{Figures/jet_generation/droid/30/metrics_vs_steps/t/t_w1m.pdf}
+    \caption{Performance as measured by FPND (left), W$_1^{\tau_{32}}$ (middle), and W$_1^\mathrm{M}$ (right) as a function of the NFE used during generation for the \pcdroid model for top jets with up to 30 constituents.}
+    \label{fig:metrics_vs_steps-30}
+\end{figure}
+
+Effectively modelling the kinematics of individual constituents is essential for jet generation.
+\Cref{fig:const-pt_dist-30} illustrates the \pt distributions of the leading, fifth leading, and twentieth leading constituents of the generated top and gluon jets, as represented by \pcdroid and \pcjedi.
+\pcdroid shows better alignment with Pythia compared to \pcjedi across all constituents, especially in the distribution tails.
+
+\begin{figure*}[htpb]
+    \centering
+    \includegraphics[width=0.99\linewidth]{Figures/jet_generation/droid/30/csts/t/100/t_leading_constituents.pdf} \\
+    \includegraphics[width=0.99\linewidth]{Figures/jet_generation/droid/30/csts/g/100/g_leading_constituents.pdf}
+    \caption{Comparison of \pt distributions of the leading, fifth leading, and twentieth leading constituents of the generated top and gluon jets with up to 30 constituents.}
+    \label{fig:const-pt_dist-30}
+\end{figure*}
+
+Next, we examine the substructure variable distributions of the generated jets and their correlations, essential for jet tagging.
+We focus on top jets due to their complex substructure, which has proven challenging to model.
+\Cref{fig:hlvs-30} shows that \pcdroid significantly improves $\tau_{32}$ modelling compared to \pcjedi and aligns excellently with Pythia simulations for all other substructure variables.
+\begin{figure*}[htpb]
+    \centering
+    \includegraphics[width=0.49\linewidth]{Figures/jet_generation/droid/30/hlvs/t/100/hlv_corr_PC-Droid.pdf}
+    \includegraphics[width=0.49\linewidth]{Figures/jet_generation/droid/30/hlvs/t/100/hlv_corr_PC-Jedi.pdf}
+    \caption{
+        Mass and substructure distributions of the generated top jets with up to 30 constituents.
+        The diagonal consists of the marginals of the distributions and the off-diagonal elements contain the joint distributions.
+    }
+    \label{fig:hlvs-30}
+\end{figure*}
+
+The generation performance is summarized in~\cref{tab:30_table} for gluon and top jets.
+The $\mathrm{W_1^P}$ score describes the average Wasserstein-1 distance between the marginal distributions of the generated and Pythia constituent kinematics.
+Particularly in FPND, \pcdroid surpasses all other methods in all metrics, reaching the intra MC-MC comparison limits in the subjettiness ratios for gluons and $\mathrm{W_1^{D_2}}$ for both jet types.
+
+\begin{table*}[tp]
+    \centering
+    \caption{Comparison of generative models on top and gluons with up to 30 constituents. Lower is better.}
+    \label{tab:30_table}
+    \resizebox{\textwidth}{!}{%
+        \input{Figures/jet_generation/droid/30/metrics30.tex}
+    }
+\end{table*}
 
 
-% \subsection{PC-Droid}
-
-% \subsection{Epic Jedi}
-
-% For conditional generation, the combined mass and transverse momentum of the point cloud $(\pt^\text{jet}, m_\mathrm{jet})$ are provided during training and generation, calculated from the four-momentum vectors of the selected jet constituents. Since this dataset only includes a subset of the original jet constituents, the true transverse momentum and invariant mass of jets with more than 30 constituents exceed $\pt^\text{jet}$ and $m_\mathrm{jet}$.\footnote{For fast surrogate model applications, the $p_{\mathrm{T}}$ and $m_\mathrm{jet}$ calculated from all constituents would be used, unrestricted to 30 constituents.} For fair comparison with MPGAN, we use the same training and test splits as in Ref.~\cite{MPGAN}.
-
-% \section{Method}
-
-% This work focuses on two models for conditionally generating fat jets: PC-Jedi~\cite{PCJedi} and PC-Droid~\cite{PCDroid}.
-% \pcjedi was developed initially using the diffusion framework from~\textcite{ScoreBasedGenerativeModeling}, whereas PC-Droid was developed using the framework from \textcite{ElucidatingDesignSpace}.
-% Both were conditional models which would generation the point cloud of jet constituents based on the high level jet kinematics, but for each type of
-
-% \section{PC-Droid}
-
-% \section{Anomaly Detection}
-
-% \subsection{Conclusion}
 

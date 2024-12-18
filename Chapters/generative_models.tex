@@ -38,7 +38,7 @@ VAEs were introduced in 2013~\cite{AutoEncodingVariationalBayes} and quickly bec
 A VAE is an example of a latent variable model.
 Here, one introduces a random latent variable $\Z \in \mathcal{Z}$ which one marginalizes over to obtain the distribution of the data,
 \begin{equation}
- p_\X(\x) = \int p_{\X,\Z}(\x, \z)\diff\z = \int p_\X(\x|\z)p_\Z(\z)\diff\z.
+    p_\X(\x) = \int p_{\X,\Z}(\x, \z)\diff\z = \int p_\X(\x|\z)p_\Z(\z)\diff\z.
 \end{equation}
 The latent space usually covers all real values, $\mathcal{Z} = \mathbb{R}^d$, and the prior $p_\Z(\z)$ is taken to be a simple distribution, such as a diagonal Gaussian $\normal$.
 A simple distribution is one that is easy to sample from and the density is easy to calculate.
@@ -46,7 +46,7 @@ Practically, we would like to avoid imposing what information is stored in the l
 
 The standard choice for modelling the likelihood is to use a parametrized Gaussian with constant variance,
 \begin{equation}
- p_\X(\x|\z) \approx p_{\theta}(\x|\z) = \mathcal{N}(\x; G_{\theta}(\z), \sigma^2 I),
+    p_\X(\x|\z) \approx p_{\theta}(\x|\z) = \mathcal{N}(\x; G_{\theta}(\z), \sigma^2 I),
 \end{equation}
 where $G_{\theta}$ is a neural network called the decoder.
 VAEs introduce an additional parametrized distribution to approximate the posterior which is also taken to be Gaussian with a diagonal covariance matrix,
@@ -56,7 +56,7 @@ VAEs introduce an additional parametrized distribution to approximate the poster
 Here the estimation of the mean and variance of the approximate posterior is done by a neural network called the encoder and gradients are backpropagated through the stochastic latent variable using the reparametrization trick~\cite{AutoEncodingVariationalBayes}.
 
 One can not train this model by simply maximizing the likelihood of the data, as this is intractable.
-However, this form sets up a mapping between the data space to the latent space and back again, and one can train the model by maximizing the evidence lower bound (ELBO).
+However, this form sets up a mapping between the data space to the latent space and back again, and one can train the model by maximizing the evidence lower bound.
 Practically, this involves minimizing two terms, the reconstruction loss and the KL-divergence between the approximate posterior and the prior,
 \begin{equation}
     \mathcal{L}(\theta, \phi) = \mathbb{E}_{\z \sim q_{\phi}(\z|\x)}[||\x - G_{\theta}(\z)||^2] - \beta D_{KL}(q_{\phi}(\z|\x) || p_\Z(\z)),
@@ -92,8 +92,8 @@ This game has many variations for defining the specifics and loss terms.
 The most widely used is the original non-saturating GAN~\cite{GenerativeAdversarialNetworks}.
 This loss requires two passes through each network, one to update the discriminator and one to update the generator.
 \begin{align}
-    \mathcal{L}_{\text{D}}(\phi) &= -\mathbb{E}_{\x \sim \mathcal{D}}[\log D_{\phi}(\x)] - \mathbb{E}_{\z \sim p_\Z(\z)}\log(1 - D_{\phi}(G_{\theta}(\z))], \\
-    \mathcal{L}_{\text{G}}(\theta) &= -\mathbb{E}_{\z \sim p_\Z(\z)}[\log D_{\phi}(G_{\theta}(\z))].
+    \mathcal{L}_{\text{D}}(\phi)   & = -\mathbb{E}_{\x \sim \mathcal{D}}[\log D_{\phi}(\x)] - \mathbb{E}_{\z \sim p_\Z(\z)}\log(1 - D_{\phi}(G_{\theta}(\z))], \\
+    \mathcal{L}_{\text{G}}(\theta) & = -\mathbb{E}_{\z \sim p_\Z(\z)}[\log D_{\phi}(G_{\theta}(\z))].
 \end{align}
 Other variants that use different loss derivations exist, such as the Wasserstein GAN~\cite{WGAN1} and the Geometric GAN~\cite{GeometricGAN}.
 There is plenty of literature on which variants are best suited for different tasks and which converge to the desired Nash equilibrium~\cite{WhichTrainingMethods}.
@@ -144,9 +144,9 @@ NFs are typically trained via a maximum log-likelihood approach, or more specifi
     \label{eq:nf_loss}
     \begin{aligned}
         \mathcal{L}(\theta)
-        \frach &= \mathbb{E}_{\x \sim \mathcal{D}}[-\log p_{\theta}(\x)] \\
-        \frach &= \mathbb{E}_{\x \sim \mathcal{D}}\left[-\log p_{\Z}(f_{\theta}(\x)) - \log \left|\det D f_{\theta}(\x) \right|\right] \\
-        \frach &= \mathbb{E}_{\x \sim \mathcal{D}}\left[-\log p_{\Z}(f_{\theta}(\x)) - \sum_{i=1}^L \log \left|\det D f_i(\x_i) \right|\right].
+        \frach & = \mathbb{E}_{\x \sim \mathcal{D}}[-\log p_{\theta}(\x)]                                                                        \\
+        \frach & = \mathbb{E}_{\x \sim \mathcal{D}}\left[-\log p_{\Z}(f_{\theta}(\x)) - \log \left|\det D f_{\theta}(\x) \right|\right]          \\
+        \frach & = \mathbb{E}_{\x \sim \mathcal{D}}\left[-\log p_{\Z}(f_{\theta}(\x)) - \sum_{i=1}^L \log \left|\det D f_i(\x_i) \right|\right].
     \end{aligned}
 \end{equation}
 Note that due to the Jacobian's composition property, the log determinant term is a sum of the log determinants of the individual layers, leading to essentially independent contributions per layer in the final loss.
@@ -167,7 +167,7 @@ As NFs describe continuous morphs of data if the latent distribution is connecte
 This causes issues when attempting to model data with disconnected support.
 Discrete data needs to be \textit{dequantized} before being fed into the flow to prevent singularities from occurring during training, a notable feature in image modelling where pixel values tend to be quantized to 8-bit integers~\cite{FlowImprovingFlowBased}.
 
-These types of networks have succesfully applied to collider physics, with notable applications including event generation~\cite{EventGen}, template construction~\cite{ANODE, CATHODE, CURTAINs}, unfolding~\cite{PartonsAndBack}, and detector simulation~\cite{CaloFlow, CaloFlow2}.
+These types of networks have successfully applied to collider physics, with notable applications including event generation~\cite{EventGen}, template construction~\cite{ANODE, CATHODE, CURTAINs}, unfolding~\cite{PartonsAndBack}, and detector simulation~\cite{CaloFlow, CaloFlow2}.
 
 \subsection{Flow Layers}
 
@@ -195,16 +195,16 @@ The most popular choices are the LU-Factorisation and, for images, a $1\times1$-
     \caption{Complexity of using different forms of linear flows.}
     \label{tab:linear_flows}
     \begin{tabular}{ccc}
-    \toprule
-    \textbf{Type} & \textbf{Inverse} & \textbf{Determinant} \\
-    \midrule
-    Full & $\bigO(d^3)$ & $\bigO(d^3)$ \\
-    Diagonal & $\bigO(d)$ & $\bigO(d)$ \\
-    Triangular & $\bigO(d^2)$ & $\bigO(d)$ \\
-    Block (c) Diagonal & $\bigO(c^3d)$ & $\bigO(c^3d)$ \\
-    LU Factorized & $\bigO(d^2)$ & $\bigO(d)$ \\
-    1x1 Convolution & $\bigO(c^3 + c^2d)$ & $\bigO(c^3)$ \\
-    \bottomrule
+        \toprule
+        \textbf{Type}      & \textbf{Inverse}    & \textbf{Determinant} \\
+        \midrule
+        Full               & $\bigO(d^3)$        & $\bigO(d^3)$         \\
+        Diagonal           & $\bigO(d)$          & $\bigO(d)$           \\
+        Triangular         & $\bigO(d^2)$        & $\bigO(d)$           \\
+        Block (c) Diagonal & $\bigO(c^3d)$       & $\bigO(c^3d)$        \\
+        LU Factorized      & $\bigO(d^2)$        & $\bigO(d)$           \\
+        1x1 Convolution    & $\bigO(c^3 + c^2d)$ & $\bigO(c^3)$         \\
+        \bottomrule
     \end{tabular}
 \end{table}
 
@@ -222,7 +222,7 @@ As shown in \Cref{fig:coupling_flow}, this layer is entirely reversible so long 
 Additionally, the Jacobian of the transformation is a block matrix given by,
 \begin{equation}
     D f(\x) = \begin{pmatrix}
-        \mathbb{I} & 0 \\
+        \mathbb{I}                                         & 0                                                  \\
         \frac{\partial h(\x_B; \phi(\x_A))}{\partial \x_A} & \frac{\partial h(\x_B; \phi(\x_A))}{\partial \x_B}
     \end{pmatrix}.
 \end{equation}
@@ -251,7 +251,7 @@ The learned densities are shown in \Cref{fig:density}.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.95\textwidth]{Figures/generative_models/samples.pdf}
-    \caption{The transformation of gaussian samples into a double-moon distribution (top) and a four-box distribution (bottom) using a flow with 4 coupling layers. Each coupling layer can only transform one dimension of the data.}
+    \caption{The transformation of Gaussian samples into a double-moon distribution (top) and a four-box distribution (bottom) using a flow with 4 coupling layers. Each coupling layer can only transform one dimension of the data.}
     \label{fig:samples}
 \end{figure}
 
@@ -317,7 +317,7 @@ The velocity field $u_t$ is said to be the \textit{probability flow} ODE~\cite{S
 The induced log-likelihood of the pushforward is given by,
 \begin{equation}
     \label{eq:cnf_loglikelihood}
-        \log p_t(\x_t)
+    \log p_t(\x_t)
     = \log p_0(\x_0) - \int_0^t Tr\left(D u_s(\x_s)\right)\diff s
     = \log p_0(\x_0) - \int_0^t (\nabla \cdot u_s)(\x_s) \diff s,
 \end{equation}
@@ -340,7 +340,7 @@ With fewer steps, truncation errors during generation can lead to a loss of samp
 CNFs are highly expressive models but are slow to train.
 The loss requires calculating the divergence of the vector field, which is slow to compute in many libraries\footnote{Libraries with advanced automatic differentiation, like JAX\cite{JAX}, can alleviate this issue to a degree}.
 Some practical models for low dimensions utilise the Hutchinson trace estimator~\cite{FFJORD},  approximating the trace of the Jacobian with a single Monte Carlo sample.
-Even with these optimisations, a single training iteration still requires a full numerical integration of the ODE and subsequent backpropagation through each step, making CNFs impractical for high-dimensional data.
+Even with these optimizations, a single training iteration still requires a full numerical integration of the ODE and subsequent backpropagation through each step, making CNFs impractical for high-dimensional data.
 
 
 \section{Diffusion Models}
@@ -441,18 +441,18 @@ This replacement is useful because the conditional score function does have a tr
     \begin{aligned}
         \label{eq:conditional_score}
         \cscore
-        &= -\nabla_{\x_t} \log \left( \mathcal{N}(\x_t; s(t)\x_0, \sigma(t)^2 \mathbb{I}) \right) \\
-        &= -\nabla_{\x_t} \frac{\left(\x_t - s(t)\x_0\right)^2}{2\sigma(t)^2} \\
-        &= \frac{s(t)\x_0 - \x_t}{\sigma(t)^2} \\
-        &= \frac{s(t)\x_0 - s(t)\x_0 - \sigma(t)\z}{\sigma(t)^2} \\
-        &= - \frac{\e}{\sigma(t)},
+         & = -\nabla_{\x_t} \log \left( \mathcal{N}(\x_t; s(t)\x_0, \sigma(t)^2 \mathbb{I}) \right) \\
+         & = -\nabla_{\x_t} \frac{\left(\x_t - s(t)\x_0\right)^2}{2\sigma(t)^2}                     \\
+         & = \frac{s(t)\x_0 - \x_t}{\sigma(t)^2}                                                    \\
+         & = \frac{s(t)\x_0 - s(t)\x_0 - \sigma(t)\z}{\sigma(t)^2}                                  \\
+         & = - \frac{\z}{\sigma(t)},
     \end{aligned}
 \end{equation}
 where we have also applied the reparametrization trick from \Cref{eq:reparametrization}.
 It is convenient to precondition the network output as,
 \begin{equation}
     \label{eq:precondition}
-    S_\theta(\x_t, t) = - \frac{\epsilon_\theta(\x_t, t)}{\sigma(t)},
+    S_\theta(\x_t, t) = - \frac{z_\theta(\x_t, t)}{\sigma(t)},
 \end{equation}
 yielding the final loss function,
 \begin{equation}
@@ -460,9 +460,9 @@ yielding the final loss function,
     \mathcal{L}_{DSM}(\theta) =
     \mathbb{E}_{t \sim \unitime}
     \mathbb{E}_{\x_0 \sim \mathcal{D}}
-    \mathbb{E}_{\e \sim \normal}
+    \mathbb{E}_{\z \sim \normal}
     \frac{\gamma(t)}{\sigma(t)^2}
-    \left|\left|\z_\theta(\x_t, t) - \z\right|\right|^2.
+    \left|\left|z_\theta(\x_t, t) - \z\right|\right|^2.
 \end{equation}
 Here, $\gamma(t) > 0$ is introduced as a reweighting factor to balance the loss across the time domain.
 Note that by setting $\gamma(t) = \sigma(t)^2$ the loss is uniformly weighted and this often corresponds to good perceptual quality of the generated samples~\cite{VariationalPerspectiveDiffusionBased, VariationalDiffusionModels, ImprovedDenoisingDiffusion}.
@@ -515,18 +515,18 @@ The conditional vector field $u_t(\x_t | \x_1)$ can be used to express the margi
 This is proven by,
 \begin{equation}
     \begin{aligned}
-    \frac{\partial p_t(\x_t)}{\partial t}
-    &= \frac{\partial}{\partial t} \int p_{t1}(\x_t | \x_1) p_1(\x_1) \diff \x_1 \\
-    &= \int \frac{\partial}{\partial t} p_{t1}(\x_t | \x_1) p_1(\x_1) \diff \x_1 \\
-    &= - \int \left(\nabla \cdot (u_t(\x_t | \x_1) p_{t1}(\x_t | \x_1))\right) p_1(\x_1) \diff \x_1 \\
-    &= - \nabla \cdot \left(\int u_t(\x_t | \x_1) p_{t1}(\x_t | \x_1) p_1(\x_1) \diff \x_1\right) \\
-    &= - \nabla \cdot \left(\int u_t(\x_t | \x_1) \frac{p_{t1}(\x_t | \x_1) p_1(\x_1)}{p_t(\x_t)} p_t(\x_t) \diff \x_1\right) \\
-    &= - \nabla \cdot \left(\left(\int u_t(\x_t | \x_1) \frac{p_{t1}(\x_t | \x_1) p_1(\x_1)}{p_t(\x_t)} \diff \x_1\right) p_t(\x_t) \right) \\
-    &= - \nabla \cdot \left(u_t(\x_t) p_t(\x_t)\right),
+        \frac{\partial p_t(\x_t)}{\partial t}
+         & = \frac{\partial}{\partial t} \int p_{t1}(\x_t | \x_1) p_1(\x_1) \diff \x_1                                                            \\
+         & = \int \frac{\partial}{\partial t} p_{t1}(\x_t | \x_1) p_1(\x_1) \diff \x_1                                                            \\
+         & = - \int \left(\nabla \cdot (u_t(\x_t | \x_1) p_{t1}(\x_t | \x_1))\right) p_1(\x_1) \diff \x_1                                         \\
+         & = - \nabla \cdot \left(\int u_t(\x_t | \x_1) p_{t1}(\x_t | \x_1) p_1(\x_1) \diff \x_1\right)                                           \\
+         & = - \nabla \cdot \left(\int u_t(\x_t | \x_1) \frac{p_{t1}(\x_t | \x_1) p_1(\x_1)}{p_t(\x_t)} p_t(\x_t) \diff \x_1\right)               \\
+         & = - \nabla \cdot \left(\left(\int u_t(\x_t | \x_1) \frac{p_{t1}(\x_t | \x_1) p_1(\x_1)}{p_t(\x_t)} \diff \x_1\right) p_t(\x_t) \right) \\
+         & = - \nabla \cdot \left(u_t(\x_t) p_t(\x_t)\right),
     \end{aligned}
 \end{equation}
 which is the continuity equation for the marginal density $p_t(\x_t)$.
-With this relations we can apply the same trick we did for score-matching, in that the flow matching (FM) loss,
+With these relations we can apply the same trick we did for score-matching, in that the flow matching (FM) loss,
 \begin{equation}
     \label{eq:fm_loss}
     \mathcal{L}_{FM}(\theta) =
@@ -582,6 +582,7 @@ Specifics in this process depend on the choice of framework, the network archite
 Over the past four years, some best practices have emerged for training and sampling from diffusion models, such as using slow moving offline networks, targeted time sampling, time encoding, and more advanced ODE solvers.
 
 \subsubsection{Diffusion Frameworks}
+\label{sec:diffusion_frameworks}
 
 Three diffusion frameworks are used in the various projects within this thesis.
 The first uses the SM objective by~\textcite{GenerativeModelingEstimating} with trigonometric interpolations~\cite{StochasticInterpolants, ImprovedDenoisingDiffusion}, which we refer to as SM-TI, the second follows the work by~\textcite{ElucidatingDesignSpace} often referred to as EDM diffusion, and the third is the CFM framework by~\textcite{FlowMatchingGenerative, FlowStraightFast, BuildingNormalizingFlows}.
@@ -589,19 +590,19 @@ We briefly summarize the main differences in the hyperparameters used in each fr
 
 In SM-TI, the diffusion schedule is chosen to be a cosine and sine function such that the total power of $\x_t$, assuming that the training set was standardized, is constant across the schedule.
 The network predicts the noise added to the data with the training objective
-$\mathbb{E}_{\x, \z, t} \lambda(t) \left|\left| \z_\theta(\x_t, t) - \z\right|\right|^2$.
+$\mathbb{E}_{\x, \z, t} \lambda(t) \left|\left| z_\theta(\x_t, t) - \z\right|\right|^2$.
 This is then used to approximate the score function, which is used in either the reverse SDE or the probability flow ODE to generate samples.
 
 In EDM, the diffusion schedule is constructed to simplify the form of the probability flow ODE as much as possible.
 Noise is added at a linearly increasing rate to a signal that is kept constant, $\x_t = \x_0 + t\z$.
 This results in an ODE with straighter trajectories, which is beneficial for the numerical integration during sampling as it reduces the truncation errors.
 The time domain extends to $t_\text{max}$, which also determines the latent distribution's variance and is typically set to be $t_\text{max} = 80$.
-The objective is to predict the data itself, with the loss $\mathbb{E}_{\x, \e, t} \lambda(t) \left|\left| \x_\theta(\x_t, t) - \x\right|\right|^2$.
+The objective is to predict the data itself, with the loss $\mathbb{E}_{\x, \z, t} \lambda(t) \left|\left| x_\theta(\x_t, t) - \x\right|\right|^2$.
 The actual network is preconditioned such that
 \begin{equation}
-    \x_\theta = c_\text{skip}(t) \x_t + c_\text{out}(t)F_\theta(c_\text{in}(t)\x_t, c_\text{noise}(t)),
+    x_\theta = c_\text{skip}(t) \x_t + c_\text{out}(t)f_\theta(c_\text{in}(t)\x_t, c_\text{noise}(t)),
 \end{equation}
-where $F_\theta$ is the neural network and $(c_\text{skip}, c_\text{in}, c_\text{out}, c_\text{noise})$ are scaling factors.
+where $f_\theta$ is the neural network and $(c_\text{skip}, c_\text{in}, c_\text{out}, c_\text{noise})$ are scaling factors.
 These factors are manually selected such that the training objective and the network's inputs have unit variance across all values of $t \in [0, t_\text{max}]$.
 One can take steps towards the estimated data sample during integration with any ODE.
 While this loss was derived without the need for an SDE, the authors of EDM also showed that using a stochastic sampler can improve the quality of the generated samples if enough integration steps are taken.
@@ -638,34 +639,34 @@ Research on this topic is ongoing, and the community has yet to reach a consensu
 However, the CFM framework with the linear interpolation diffusion schedule is now used by the majority of commercial diffusion models for text-to-image synthesis.
 This includes models such as Stable Diffusion 3~\cite{SD3} and Flux~\cite{flux2024github}, indicating a practical preference for this framework.
 
-{
-\renewcommand{\arraystretch}{1.5}
-\begin{table}[h!]
-    \centering
-    \caption{Hyperparameters used in the different diffusion frameworks.}
-    \label{tab:diffusion_frameworks}
-    \resizebox{\textwidth}{!}{
-    \begin{tabular}{cccc}
-    \toprule
-    & \textbf{SM-TI} & \textbf{EDM} & \textbf{CFM} \\
-    \midrule
-    time index $t$ & $t \in [0, 1]$ & $t \in [0, t_{max}]$ & $t \in [0, 1]$ \\
-    signal rate $s(t)$ & $\cos(\frac{t\pi}{2})$ & $1$ & $1 - t$ \\
-    noise rate $\sigma(t)$ & $\sin(\frac{t\pi}{2})$ & $t$ & $t$ \\
-    latent distribution & $\normal$ & $\mathcal{N}(0, t_\text{max}^2\mathbb{I})$ & $\normal$ \\
-    training target & noise - $\e$ & data - $\x$ & velocity - $(\x - \e)$ \\
-    $\frac{\diff \x_t}{\diff t}$ & $- \frac{\pi}{2}\tan(\frac{\pi t}{2})(\x_t - \score)$ & $- t \score$ & $u_t(\x_t)$ \\
-    sampling & SDE or ODE & SDE or ODE & ODE \\
-    \bottomrule
-    \end{tabular}
+    {
+        \renewcommand{\arraystretch}{1.5}
+        \begin{table}[h!]
+            \centering
+            \caption{Hyperparameters used in the different diffusion frameworks.}
+            \label{tab:diffusion_frameworks}
+            \resizebox{\textwidth}{!}{
+                \begin{tabular}{cccc}
+                    \toprule
+                                                 & \textbf{SM-TI}                                        & \textbf{EDM}                               & \textbf{CFM}           \\
+                    \midrule
+                    time index $t$               & $t \in [0, 1]$                                        & $t \in [0, t_{max}]$                       & $t \in [0, 1]$         \\
+                    signal rate $s(t)$           & $\cos(\frac{t\pi}{2})$                                & $1$                                        & $1 - t$                \\
+                    noise rate $\sigma(t)$       & $\sin(\frac{t\pi}{2})$                                & $t$                                        & $t$                    \\
+                    latent distribution          & $\normal$                                             & $\mathcal{N}(0, t_\text{max}^2\mathbb{I})$ & $\normal$              \\
+                    training target              & noise - $\z$                                          & data - $\x$                                & velocity - $(\x - \z)$ \\
+                    $\frac{\diff \x_t}{\diff t}$ & $- \frac{\pi}{2}\tan(\frac{\pi t}{2})(\x_t - \score)$ & $- t \score$                               & $u_t(\x_t)$            \\
+                    sampling                     & SDE or ODE                                            & SDE or ODE                                 & ODE                    \\
+                    \bottomrule
+                \end{tabular}
+            }
+        \end{table}
     }
-\end{table}
-}
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.99\textwidth]{Figures/generative_models/cm_samples.pdf}
-    \caption{The transformation of gaussian samples into a double-moon distribution (top) and a four-box distribution (middle), and the interpolation between the two (bottom). The model was trained using the CNF framework generated with Heun's method~\cite{heun} for 64 steps. Each column shows the samples at a different time index $t$, the black lines trace back to the samples in the previous column. The rightmost column shows the full paths traced by each sample from the base distribution.}
+    \caption{The transformation of Gaussian samples into a double-moon distribution (top) and a four-box distribution (middle), and the interpolation between the two (bottom). The model was trained using the CNF framework generated with Heun's method~\cite{heun} for 64 steps. Each column shows the samples at a different time index $t$, the black lines trace back to the samples in the previous column. The rightmost column shows the full paths traced by each sample from the base distribution.}
     \label{fig:cm_samples}
 \end{figure}
 
@@ -690,7 +691,7 @@ This discrepancy results in a few considerations for training.
 \end{figure}
 
 Using conditional paths as a proxy training target results in unbiased updates with high variance.
-While diffusion models are not at risk of collapsing like GANs, gradient updates are highly stochasic, and convergence is slow.
+While diffusion models are not at risk of collapsing like GANs, gradient updates are highly stochastic, and convergence is slow.
 Almost all diffusion models are trained with two copies of the network: an online-network and an offline-network.
 The online-network is updated using standard gradient descent, while the offline network is updated using the exponential moving average (EMA) of the online network.
 The offline-network is always used for sampling.
@@ -698,12 +699,12 @@ This common trick could be applied to any deep learning task~\cite{Adam}, but it
 
 Note that predicting the marginal velocity for CFM is significantly harder in the middle of the schedule than at the endpoints.
 This is because the optimal prediction for the marginal velocity at $t=0$ is a vector pointing towards the mean of $p_1$, and the optimal prediction at $t=1$ points towards the mean of $p_0$.
-Similarly, at $t=t_0$ in EDM, $f_\theta$ should be the identity function, and at $ t=t_\text{max}$, the ideal denoiser returns the mean of the training set.
+Similarly, at $t=t_0$ in EDM, $f_\theta$ should be the identity function, and at $t=t_\text{max}$, the ideal denoiser returns the mean of the training set.
 Therefore, it is common to use non-uniform sampling for the time index during training to target the time steps where the most information can be gained.
 These are typically based on empirical results and are not derived from the theory.
 For EDM, $\log(t) \sim \mathcal{N}(-1.2, 1.2)$ was chosen after a hyperparameter search and for CFM it was found that logit-normal sampling,
 \begin{equation}
- t \sim \frac{1}{\sqrt{2\pi}}\frac{1}{t(1-t)}\exp\left(-\frac{(\text{logit}(t))^2}{2}\right),
+    t \sim \frac{1}{\sqrt{2\pi}}\frac{1}{t(1-t)}\exp\left(-\frac{(\text{logit}(t))^2}{2}\right),
 \end{equation}
 where $\text{logit}(t) = \log\left(\frac{t}{1-t}\right)$, was the most effective~\cite{SD3}.
 
@@ -747,7 +748,7 @@ For parameters $t_\text{min}$, $t_\text{max}$, and $d$ the CosEnc layer is given
     \begin{bmatrix}
         \cos\left(e^0 t'\right) \\
         \cos\left(e^1 t'\right) \\
-        \vdots \\
+        \vdots                  \\
         \cos\left(e^{d-1} t'\right)
     \end{bmatrix}, \quad \text{where} \quad t' = \pi \frac{t - t_\text{min}}{t_\text{max} - t_\text{min}}. \\
 \end{equation}
@@ -759,8 +760,8 @@ Other conditioning information $\con$ can easily be added to the network, such a
 This works for all frameworks and requires including the context information with the network inputs, the exact form depending on the model's architecture.
 Interestingly enough, one does not even have to train a conditional model to perform conditional generation due to the relation,
 \begin{equation}
-  \label{eq:conditional_generation}
-  \nabla_{\x_t} \cdot \log p(\x_t | \con) = \nabla_{\x_t} \cdot \log p(\x_t) + \nabla_{\x_t} \cdot \log p(\con | \x_t).
+    \label{eq:conditional_generation}
+    \nabla_{\x_t} \cdot \log p(\x_t | \con) = \nabla_{\x_t} \cdot \log p(\x_t) + \nabla_{\x_t} \cdot \log p(\con | \x_t).
 \end{equation}
 Thus, one only needs a second time-dependent classifier for the conditioning information.
 Gradients with respect to this model can be used to modify the update rule for the ODE or the velocity field to perform conditional generation.
