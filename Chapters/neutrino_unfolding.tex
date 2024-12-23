@@ -78,10 +78,10 @@ For this process, the standard approach~\cite{Quad1, Quad2, Quad4, Quad5} to est
     \label{eq:quadratic}
     p_z^\nu = \frac{-b \pm \sqrt{b^2-4ac}}{2a}, \quad \text{where} \quad
     \begin{aligned}
-        \alpha &= m_W^2 - m_\ell^2+2(p_x^\ell p_x^\nu+p_y^\ell p_y^\nu) \\
-        a &= (p_z^\ell)^2 - (E^\ell)^2, \\
-        b &= \alpha p_z^\ell, \\
-        c &= \frac{\alpha^2}{4}-(E^\ell)^2(\pt^\nu)^2.
+        \alpha & = m_W^2 - m_\ell^2+2(p_x^\ell p_x^\nu+p_y^\ell p_y^\nu) \\
+        a      & = (p_z^\ell)^2 - (E^\ell)^2,                            \\
+        b      & = \alpha p_z^\ell,                                      \\
+        c      & = \frac{\alpha^2}{4}-(E^\ell)^2(\pt^\nu)^2.
     \end{aligned}
 \end{equation}
 Here $(p_x^\ell, p_y^\ell, p_z^\ell, E^\ell)$ is the lepton's four-momenta with mass $m_\ell$, and $\pt^\nu$ is the transverse momentum of the neutrino, estimated by $|\ptmiss|$.
@@ -129,16 +129,16 @@ We used standard normalization techniques to scale the inputs and targets to zer
     \label{tab:inputs}
     \centering
     \begin{tabular}{r c l}
-    \toprule
-    Category & Variables & Description\\
-    \midrule
-    $\ptmiss$ & $p_x^\text{miss}$, $p_y^\text{miss}$ & Missing transverse momentum 2-vector \\ [2ex]
-    \multirow{2}{*}{Lepton} & $p_x^{\ell}$, $p_y^{\ell}$, $\eta^\ell$, $\log E^\ell$ & Lepton momentum 4-vector \\
-    & $\ell^{flav}$ &  Whether lepton is an electron or muon \\ [2ex]
-    \multirow{2}{*}{Jets} & $p_x^{j}$, $p_y^j$, $\eta^j$,  $\log E^j$ & Jet momentum 4-vector \\
-    & $isB$ &  Whether jet passes $b$-tagging criteria \\ [2ex]
-    Misc & $N_{\text{jets}}$, $N_{\text{bjets}}$ & Jet and $b$-jet multiplicities in the event\\
-    \bottomrule
+        \toprule
+        Category                & Variables                                              & Description                                 \\
+        \midrule
+        $\ptmiss$               & $p_x^\text{miss}$, $p_y^\text{miss}$                   & Missing transverse momentum 2-vector        \\ [2ex]
+        \multirow{2}{*}{Lepton} & $p_x^{\ell}$, $p_y^{\ell}$, $\eta^\ell$, $\log E^\ell$ & Lepton momentum 4-vector                    \\
+                                & $\ell^{flav}$                                          & Whether lepton is an electron or muon       \\ [2ex]
+        \multirow{2}{*}{Jets}   & $p_x^{j}$, $p_y^j$, $\eta^j$,  $\log E^j$              & Jet momentum 4-vector                       \\
+                                & $isB$                                                  & Whether jet passes $b$-tagging criteria     \\ [2ex]
+        Misc                    & $N_{\text{jets}}$, $N_{\text{bjets}}$                  & Jet and $b$-jet multiplicities in the event \\
+        \bottomrule
     \end{tabular}
 \end{table}
 
@@ -154,10 +154,10 @@ The latent distribution was chosen to be $\mathcal{N}(0, I)$.
 \begin{figure}[ht]
     \centering
     \adjustbox{valign=c}{
-    \includegraphics[width=0.49\textwidth]{Figures/neutrino_unfolding/nuflow.pdf}
+        \includegraphics[width=0.49\textwidth]{Figures/neutrino_unfolding/nuflow.pdf}
     }
     \adjustbox{valign=c}{
-    \includegraphics[width=0.3\textwidth]{Figures/neutrino_unfolding/deepset.pdf}
+        \includegraphics[width=0.3\textwidth]{Figures/neutrino_unfolding/deepset.pdf}
     }
     \caption{The architecture of the \vflows model for the single neutrino case (left), and the attention weighted deep set used in the feature extractor (right).}
     \label{fig:flow}
@@ -166,7 +166,7 @@ The latent distribution was chosen to be $\mathcal{N}(0, I)$.
 The model was constructed using the nflows library~\cite{nflows} and trained using the standard negative log-likelihood loss function.
 A cosine annealing scheduler adjusted the learning rate from zero to $5\times 10^{-4}$ every two epochs.
 Gradient clipping with a max-norm of 5 ensured stable convergence.
-For cross-validation, $10\%$ of the training data was reserved as a holdout set, and early stopping was applied using a 30-epoch patience parameter.
+For cross-validation, $10\%$ of the training data was reserved as a holdout set, and early-stopping was applied using a 30-epoch patience parameter.
 We used the Adam optimizer~\cite{Adam} with default parameters and a 256 batch size.
 The training was done on an NVIDIA 2080-Ti GPU, with the NF taking around 4 hours to converge.
 
@@ -201,9 +201,9 @@ The increased uncertainty in the likelihood plot of \vflows highlights its abili
         \includegraphics[width=\textwidth]{Figures/neutrino_unfolding/eta_5.pdf}
         \caption{} \label{fig:inf_good}
     \end{subfigure}
-        \begin{subfigure}{0.32\textwidth}
+    \begin{subfigure}{0.32\textwidth}
         \includegraphics[width=\textwidth]{Figures/neutrino_unfolding/eta_9.pdf}
-    \caption{} \label{fig:inf_ambig}
+        \caption{} \label{fig:inf_ambig}
     \end{subfigure}
     \begin{subfigure}{0.32\textwidth}
         \includegraphics[width=\textwidth]{Figures/neutrino_unfolding/eta_12.pdf}
@@ -273,9 +273,9 @@ The distribution closest to truth is \vsample.
         \includegraphics[width=\textwidth]{Figures/neutrino_unfolding/lnu_mass.pdf}
         \caption{} \label{fig:lv_mass}
     \end{subfigure}
-        \begin{subfigure}{0.40\textwidth}
+    \begin{subfigure}{0.40\textwidth}
         \includegraphics[width=\textwidth]{Figures/neutrino_unfolding/blnu_mass.pdf}
-    \caption{} \label{fig:blv_mass}
+        \caption{} \label{fig:blv_mass}
     \end{subfigure}
     \caption{Distributions of the invariant mass of the $\ell\nu$ \subref{fig:lv_mass} and $b\ell\nu$ \subref{fig:blv_mass} systems using different neutrino reconstruction methods. All methods use reconstructed variables for the lepton and jet kinematics.}
     \label{fig:real_assoc_masses}
@@ -312,21 +312,21 @@ Enhancing jet-parton matching efficiency benefits \ttbar event measurements, and
 
 \begin{table}[h]
     \caption{The fraction of events for which the $\chi^2$ method identified the correct $b_{lep}$ jet using the various neutrino estimation methods. The results are binned by the number of reconstructed jets in the event. Events must first pass a selection requirement where the partons were reconstructed as jets, so a correct permutation was at least possible.
-    This selection did not change the ranking of the methods.}
+        This selection did not change the ranking of the methods.}
     \label{tab:blep_4sig}
     \centering
     \begin{tabular}{l r r r r r r}
-    \toprule
-    & \multicolumn{6}{c}{Number of Jets In Event} \\
-    Neutrino Type & 4 & 5 & 6 & 7 & 8 & 9 \\
-    \midrule
-    Truth Neutrino & 0.864 & 0.753 & 0.686 & 0.641 & 0.611 & 0.587 \\
-    \midrule
-    $\ptmiss$ and $m_W$ Constraint & 0.790 & 0.576 & 0.476 & 0.398 & 0.366 & 0.286 \\
-    \vff & 0.754 & 0.533 & 0.410 & 0.353 & 0.300 & 0.302 \\
-    \vsample & 0.803 & 0.624 & 0.515 & 0.457 & 0.391 & 0.357 \\
-    \vmode & $\mathbf{0.813}$ & $\mathbf{0.664}$ & $\mathbf{0.575}$ & $\mathbf{0.508}$ & $\mathbf{0.481}$ & $\mathbf{0.405}$ \\
-    \bottomrule
+        \toprule
+                                       & \multicolumn{6}{c}{Number of Jets In Event}                                                                                                \\
+        Neutrino Type                  & 4                                           & 5                & 6                & 7                & 8                & 9                \\
+        \midrule
+        Truth Neutrino                 & 0.864                                       & 0.753            & 0.686            & 0.641            & 0.611            & 0.587            \\
+        \midrule
+        $\ptmiss$ and $m_W$ Constraint & 0.790                                       & 0.576            & 0.476            & 0.398            & 0.366            & 0.286            \\
+        \vff                           & 0.754                                       & 0.533            & 0.410            & 0.353            & 0.300            & 0.302            \\
+        \vsample                       & 0.803                                       & 0.624            & 0.515            & 0.457            & 0.391            & 0.357            \\
+        \vmode                         & $\mathbf{0.813}$                            & $\mathbf{0.664}$ & $\mathbf{0.575}$ & $\mathbf{0.508}$ & $\mathbf{0.481}$ & $\mathbf{0.405}$ \\
+        \bottomrule
     \end{tabular}
 \end{table}
 
@@ -447,11 +447,11 @@ A significant drawback of \vweight, leading to the preference for \ellipse despi
     \label{tab:inf_times}
     \begin{tabular}{c c c}
         \toprule
-        Resource & Batch size & Time/event [ms]\\
+        Resource             & Batch size & Time/event [ms] \\
         \midrule
-        CPU & 1 & 71.4\\
-        \multirow{2}{*}{GPU} & 1 & 33.3\\
-         & 1000 & 0.03\\
+        CPU                  & 1          & 71.4            \\
+        \multirow{2}{*}{GPU} & 1          & 33.3            \\
+                             & 1000       & 0.03            \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -529,17 +529,17 @@ We do not make measurements of the cross-section in this work but instead focus 
     \caption{Kinematic observables of the reconstructed \ttbar system studied for an unfolding analysis in dilepton events and their bin edges.}
     \label{tab:diff_observables}
     \resizebox{\textwidth}{!}{
-    \begin{tabular}{clll}
-        \toprule
-        Observable & Description & Bin edges\\
-        \midrule
-        \mttbar & Invariant mass of \ttbar system & [0, 400, 500, 800, inf] & GeV\\
-        \dphill & Separation in $\phi$ between the two leptons & [0.0, 0.25, 0.5, 0.75, 1.0] & rad/$\pi$\\
-        \pttop & Transverse momentum of the top quark & [0, 75, 125, 175, inf] & GeV\\
-        \pttt & Transverse momentum of the \ttbar system & [0, 70, 140, 200, inf] & $\GeV$\\
-        \ytt & Rapidity of the \ttbar system & [-inf, -1.0, 0.0, 1.0, inf]& \\
-        \bottomrule
-    \end{tabular}
+        \begin{tabular}{clll}
+            \toprule
+            Observable & Description                                  & Bin edges                               \\
+            \midrule
+            \mttbar    & Invariant mass of \ttbar system              & [0, 400, 500, 800, inf]     & GeV       \\
+            \dphill    & Separation in $\phi$ between the two leptons & [0.0, 0.25, 0.5, 0.75, 1.0] & rad/$\pi$ \\
+            \pttop     & Transverse momentum of the top quark         & [0, 75, 125, 175, inf]      & GeV       \\
+            \pttt      & Transverse momentum of the \ttbar system     & [0, 70, 140, 200, inf]      & $\GeV$    \\
+            \ytt       & Rapidity of the \ttbar system                & [-inf, -1.0, 0.0, 1.0, inf] &           \\
+            \bottomrule
+        \end{tabular}
     }
 \end{table}
 
@@ -557,7 +557,7 @@ Uncertainties in the four double differential distributions are typically 1.5 to
     \includegraphics[width=0.32\textwidth]{Figures/neutrino_unfolding/unfolding/unfold_lep_delphi_nu_weighting.pdf}
     \includegraphics[width=0.32\textwidth]{Figures/neutrino_unfolding/unfolding/unfold_lep_delphi_nu_ellipse.pdf}
     \caption{Binned response matrices for the double differential measurement of \mttbar and \dphill when using each of the three methods for neutrino reconstruction. The binning is symmetric for both the parton and detector level observables, however the \mttbar bins are labelled on the $x$-axis with the \dphill bins labelled on the $y$-axis.
-    The trace fraction is calculated for each method for a simple quantitative comparison and is 0.73 when using \vtruth.}
+        The trace fraction is calculated for each method for a simple quantitative comparison and is 0.73 when using \vtruth.}
     \label{fig:unfold_dphill}
 \end{figure*}
 
@@ -566,7 +566,7 @@ Uncertainties in the four double differential distributions are typically 1.5 to
     \includegraphics[width=0.32\textwidth]{Figures/neutrino_unfolding/unfolding/unfold_top_pt_nu_weighting.pdf}
     \includegraphics[width=0.32\textwidth]{Figures/neutrino_unfolding/unfolding/unfold_top_pt_nu_ellipse.pdf}
     \caption{Binned response matrices for the double differential measurement of \mttbar and \pttop when using each of the three methods for neutrino reconstruction. The binning is symmetric for both the parton and detector level observables, however the \mttbar bins are labelled on the $x$-axis with the \pttop bins labelled on the $y$-axis.
-    The trace fraction is calculated for each method for a simple quantitative comparison and is 0.62 when using \vtruth.}
+        The trace fraction is calculated for each method for a simple quantitative comparison and is 0.62 when using \vtruth.}
     \label{fig:unfold_pttop}
 \end{figure*}
 
@@ -577,7 +577,7 @@ Uncertainties in the four double differential distributions are typically 1.5 to
     \includegraphics[width=0.48\textwidth]{Figures/neutrino_unfolding/unfolding/unfold_error_top_pt_7.pdf}
     \includegraphics[width=0.48\textwidth]{Figures/neutrino_unfolding/unfolding/unfold_error_ttbar_rapidity_7.pdf}
     \caption{The relative statistical uncertainty in each unfolded bin of the two-dimensional distributions for \mttbar and \dphill (top left), \pttop (top right), \pttt (bottom left), and \ytt (bottom right).
-    Comparing the three reconstruction methods with respect to \vtruth (upper pad), and the relative improvement of \vflows with respect to \vweight and \ellipse (lower pad).}
+        Comparing the three reconstruction methods with respect to \vtruth (upper pad), and the relative improvement of \vflows with respect to \vweight and \ellipse (lower pad).}
     \label{fig:stat_gain_unfold_all}
 \end{figure*}
 
@@ -600,7 +600,7 @@ However, most of these changes are minor and the method still outperforms \vweig
     \caption{
         The invariant masses of the reconstructed \Wboson, top quark, and \ttbar system when using \vvflows trained on the nominal or alternative sample, in comparison to the two baseline approaches and \vtruth (shaded grey).
     }
-\label{fig:pythiattbar}
+    \label{fig:pythiattbar}
 \end{figure}
 
 \begin{table}[thp]

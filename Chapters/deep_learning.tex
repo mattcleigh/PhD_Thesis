@@ -1,5 +1,5 @@
 \chapter{Deep Learning Basics}
-\label{chap:deep_learning}
+\label{ch:deep_learning}
 
 Deep learning has revolutionized the field of collider physics, and the performance gain observed in many algorithms used in the ATLAS experiment has substantial.
 One of the most successful stories has been deep learning based algorithms for flavour tagging, covered in \Cref{sec:flavor_tagging}.
@@ -85,10 +85,10 @@ A minimal working example of an MLP is a series of affine transformations\footno
 The depth of the MLP is the number of intermediate representations in the computational graph between the input and output.
 A minimal MLP with two hidden layers can be written as
 \begin{align}
-    \ba_0 &= \x, \\
-    \ba_1 &= \sigma_0(\W_0 \ba_0 + \bias_0), \\
-    \ba_2 &= \sigma_1(\W_1 \ba_1 + \bias_1), \\
-    \ba_3 &= \sigma_2(\W_2 \ba_2 + \bias_2) = \hat{\y},
+    \ba_0 & = \x,                                        \\
+    \ba_1 & = \sigma_0(\W_0 \ba_0 + \bias_0),            \\
+    \ba_2 & = \sigma_1(\W_1 \ba_1 + \bias_1),            \\
+    \ba_3 & = \sigma_2(\W_2 \ba_2 + \bias_2) = \hat{\y},
 \end{align}
 where $\x$ is the input, $\hat{\y}$ is the output, and $\ba_i$ are the intermediate representations (or activations) of the network.
 The parameters of this network are is the full set of weights and biases from each layer, $\theta = \{W_0, \bias_0, W_1, \bias_1, W_2, \bias_2\}$.
@@ -132,17 +132,17 @@ Both the $B$ and the $\eta$ are hyperparameters of the training algorithm.
     \caption{Basic training pseudocode for minibatch stochastic gradient descent.}
     \label{alg:gradient_descent}
     \begin{algorithmic}[1]
-    \State \textbf{Input:} Training set $\mathcal{D}$, batch size $B$, learning rate $\eta$, stopping criterion
-    \State Initialize parameters $\theta$
-    \Repeat \Comment{Each loop is an \textit{epoch}}
+        \State \textbf{Input:} Training set $\mathcal{D}$, batch size $B$, learning rate $\eta$, stopping criterion
+        \State Initialize parameters $\theta$
+        \Repeat \Comment{Each loop is an \textit{epoch}}
         \State Shuffle the dataset $\mathcal{D}$
         \State Partition $\mathcal{D}$ into batches of size $B$
         \For{each batch $b$ in $\mathcal{D}$}
-            \State Calculate the loss $\mathcal{L}_b(\theta)$ for the batch $b$
-            \State Compute the gradient $\nabla_\theta \mathcal{L}(\theta, b)$
-            \State Update parameters: $\theta \gets \theta - \eta \nabla_\theta \mathcal{L}(\theta, b)$
+        \State Calculate the loss $\mathcal{L}_b(\theta)$ for the batch $b$
+        \State Compute the gradient $\nabla_\theta \mathcal{L}(\theta, b)$
+        \State Update parameters: $\theta \gets \theta - \eta \nabla_\theta \mathcal{L}(\theta, b)$
         \EndFor
-    \Until{stopping criterion is met}
+        \Until{stopping criterion is met}
     \end{algorithmic}
 \end{algorithm}
 
@@ -166,20 +166,20 @@ Another common method is the use of adaptive learning rates, where the per param
 It introduces two hyperparameters $\beta_1$ and $\beta_2$ which control the exponential decay rates of the moving averages.
 
 \begin{algorithm}
-\caption{The Adam optimizer, where $\mathcal{L}(\theta, b)$ is the loss calculated over a mini-batch, $\eta$, $\beta_1$, $\beta_2$ are hyperparameters, $t$ is the current iteration and $\epsilon$ is a small constant to prevent division by zero.}
-\label{alg:adam}
-\begin{algorithmic}[1]
-\State $\mathbf{m} \gets 0$ \Comment{Initialize first moment vector}
-\State $\mathbf{s} \gets 0$ \Comment{Initialize second moment vector}
-\For{each mini-batch $b$}
-    \State $\mathbf{g} \gets \nabla_\theta \mathcal{L}(\theta, b)$ \Comment{Compute gradients}
-    \State $\mathbf{m} \gets \beta_1 \mathbf{m} + (1 - \beta_1) \mathbf{g}$ \Comment{Update biased first moment estimate}
-    \State $\mathbf{s} \gets \beta_2 \mathbf{s} + (1 - \beta_2) \mathbf{g} \otimes \mathbf{g}$ \Comment{Update biased second moment estimate}
-    \State $\hat{\mathbf{m}} \gets \frac{\mathbf{m}}{1 - \beta_1^t}$ \Comment{Correct bias in first moment}
-    \State $\hat{\mathbf{s}} \gets \frac{\mathbf{s}}{1 - \beta_2^t}$ \Comment{Correct bias in second moment}
-    \State $\theta \gets \theta - \eta \frac{\hat{\mathbf{m}}}{\sqrt{\hat{\mathbf{s}} + \epsilon}}$ \Comment{Update parameters}
-\EndFor
-\end{algorithmic}
+    \caption{The Adam optimizer, where $\mathcal{L}(\theta, b)$ is the loss calculated over a mini-batch, $\eta$, $\beta_1$, $\beta_2$ are hyperparameters, $t$ is the current iteration and $\epsilon$ is a small constant to prevent division by zero.}
+    \label{alg:adam}
+    \begin{algorithmic}[1]
+        \State $\mathbf{m} \gets 0$ \Comment{Initialize first moment vector}
+        \State $\mathbf{s} \gets 0$ \Comment{Initialize second moment vector}
+        \For{each mini-batch $b$}
+        \State $\mathbf{g} \gets \nabla_\theta \mathcal{L}(\theta, b)$ \Comment{Compute gradients}
+        \State $\mathbf{m} \gets \beta_1 \mathbf{m} + (1 - \beta_1) \mathbf{g}$ \Comment{Update biased first moment estimate}
+        \State $\mathbf{s} \gets \beta_2 \mathbf{s} + (1 - \beta_2) \mathbf{g} \otimes \mathbf{g}$ \Comment{Update biased second moment estimate}
+        \State $\hat{\mathbf{m}} \gets \frac{\mathbf{m}}{1 - \beta_1^t}$ \Comment{Correct bias in first moment}
+        \State $\hat{\mathbf{s}} \gets \frac{\mathbf{s}}{1 - \beta_2^t}$ \Comment{Correct bias in second moment}
+        \State $\theta \gets \theta - \eta \frac{\hat{\mathbf{m}}}{\sqrt{\hat{\mathbf{s}} + \epsilon}}$ \Comment{Update parameters}
+        \EndFor
+    \end{algorithmic}
 \end{algorithm}
 
 \subsection{Normalization}
