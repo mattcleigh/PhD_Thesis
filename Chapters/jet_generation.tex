@@ -101,7 +101,7 @@ Hyperparameter $\alpha$ allows the introduction of a small amount of likelihood 
 The open dataset JetNet30~\cite{MPGAN} forms the foundation for these experiments.
 Five jet classes are simulated based on the initiating particle: light quark ($q$), gluon ($g$), top quark ($t$), $W$ boson ($W$), and $Z$ boson ($Z$).
 Approximately 170,000 jets are generated for each class, with 50,000 reserved for model evaluation only.
-However, for this section, we focus exclusively on the gluon and top quark jets.
+However, for this section, only the gluon and top quark jets are used.
 
 Proton-proton collision events are simulated with a centre of mass energy $13~\TeV$ at leading order using \madgraph~\cite{MadGraph} and the \textsc{NNPDF2.3LO}~\cite{PDF2.3} set of parton distribution functions.
 The transverse momenta of the partons and bosons are generated with $\pt \approx 1~\TeV$.
@@ -111,7 +111,7 @@ Jets are clustered using the anti-$k_T$ algorithm~\cite{AntiKt} with a distance 
 
 Jets in the dataset are described by their net kinematics, such as \mjet and \ptjet, and by a set of its leading 30 constituents in \pt.
 No constituent identification is provided, and each is effectively massless, described solely by their three momenta.
-Limiting the particle cloud to only 30 constituents means that the saved jet kinematics are not the same as the net kinematics of the truncated particle cloud, which we identify as \mpc and \ptpc.
+Limiting the particle cloud to only 30 constituents means that the saved jet kinematics are not the same as the net kinematics of the truncated particle cloud, which are labelled as \mpc and \ptpc.
 This distinction is crucial when evaluating the model.
 
 \subsubsection{Input and Conditional Features}
@@ -175,18 +175,20 @@ For these initial studies the focus was on quality rather than speed, so 200 int
 
 \subsection{Results}
 
-As a benchmark for performance, MPGAN~\cite{MPGAN}, a GAN trained on the same dataset, is used.
-MPGAN generates the particle cloud with attributes $(\Delta\eta, \Delta\phi, \pt^\text{rel})$, where $\pt^\text{rel} = \pt / \ptjet$. Therefore, the outputs of \pcjedi are transformed to this format for comparison.
+Generated jets are compared to the JetNet30 test set using a variety of metrics
+As an additional benchmark for performance, MPGAN~\cite{MPGAN}, a GAN trained on the same dataset, is used.
+MPGAN generates the particle cloud with attributes $(\Delta\eta, \Delta\phi, \pt^\text{rel})$, where $\pt^\text{rel} = \pt / \ptjet$.
+Therefore, the outputs of \pcjedi are transformed to this format for comparison.
 For evaluation, 50,000 jets per class are generated using MPGAN and \pcjedi with the different solvers.
 
-Qualitative performance was assessed by visual inspection of the distributions of the generated jets compared to the JetNet30 test set.
-For the distributions, we used the relative particle cloud kinematics, $\mpcrel$ and $\ptpcrel$, which were calculated using $\pt^\text{rel}$ for each constituent.
-These distributions are shown in \Cref{fig:kinematics_gluon,fig:kinematics_top} for gluon and top jets.
-Total $\ptpcrel$ is not always 1.0 due to the top 30 constituents' selection, though this is the maximum physical value.
-All generative models struggle to capture the hard cut-off at 1.0 in but \pcjedi with DDIM solver shows the closest agreement.
-Both \pcjedi models outperform MPGAN in reconstructing the top jet $\pt$ distribution, with similar performance in reproducing $\mpcrel$ for both jet types.
-The bi-modal structure observed in top jet $\mpcrel$ arises from a phenomenon in boosted top jet reconstruction where the stable particles from the $b$-quark decay are not contained within the radius of the jet.
-These top jets are referred to as \emph{uncontained} top jets, and they exhibit a 2-pronged structure and masses close to the mass of the $W$~boson.
+Qualitative performance is assessed by visually inspecting the relative kinematics derived from the generated jets, using $\pt^\text{rel}$ for each constituent.
+The overall $\ptpcrel$ and $\mpcrel$ for gluon and top jets are presented in \Cref{fig:kinematics_gluon,fig:kinematics_top}.
+Total $\ptpcrel\leq1.0$ due to the trimming of the jet to only the top 30 constituents.
+All models struggle to capture the hard cut-off at 1.0, but \pcjedi with DDIM solver shows the closest agreement.
+Both \pcjedi methods outperform MPGAN in reconstructing the top jet $\ptpcrel$ distribution, with similar performance in reproducing $\mpcrel$ for all models.
+
+The bi-modal structure observed in top jet $\mpcrel$ arises from a phenomenon in fat jet reconstruction where one of the main parton showers is not contained within the jet radius.
+In the case of top jets, stable particles from the $b$-quark decay are sometimes \textit{uncontained}, leading to a jet with a two-pronged structure and masses close to the $W$ boson's mass.
 
 \begin{figure}[hbpt]
     \centering
@@ -202,11 +204,12 @@ These top jets are referred to as \emph{uncontained} top jets, and they exhibit 
     \label{fig:kinematics_top}
 \end{figure}
 
-Crucial to the study of large-radius jets are the substructure variables $\tau_{21}$, $\tau_{32}$, and $\Dtwo$ as described in \Cref{sec:jet_substructure}\footnote{These variables are already normalized by the jet's total $\pt$, thus relative versions are unnecessary.}.
-The subjettiness ratios $\tau_{21}$, $\tau_{32}$ in particular are essential for distinguishing top jets from gluon or quark jets.
+Crucial to the study of large-radius jets are the substructure variables $\tau_{21}$, $\tau_{32}$, and $\Dtwo$, described in \Cref{sec:jet_substructure}\footnote{These variables are already normalized by the jet's total $\pt$, thus relative versions are unnecessary.}.
+The subjettiness ratios $\tau_{21}$, $\tau_{32}$ in particular are often used to distinguish the mostly tree-pronged top jets from the one-pronged gluon jets.
+
 Calculated for the generated particle cloud and compared to \pythia simulations, these variables are illustrated in \Cref{fig:substructure_gluon,fig:substructure_top}.
-Both \pcjedi and MPGAN models accurately captured the $\text{D}_2$ distributions.
-However, all models struggled with $\tau_{21}$ and $\tau_{32}$ especially for top jets, which exhibits a bi-modal structure due to the uncontained $b$-quark decay.
+Both \pcjedi and MPGAN models accurately capture the $\text{D}_2$ distributions.
+However, all models struggle considerably with $\tau_{21}$ and $\tau_{32}$ especially for top jets, which exhibits a bi-modal structure due to the uncontained $b$-quark decay.
 
 \begin{figure}[hbpt]
     \centering
@@ -217,27 +220,31 @@ However, all models struggled with $\tau_{21}$ and $\tau_{32}$ especially for to
 
 \begin{figure}[hbpt]
     \centering
-    \includegraphics[width=1.\textwidth]{Figures/jet_generation/jedi/gluon/jet_substructure_rel.pdf}
+    \includegraphics[width=1.\textwidth]{Figures/jet_generation/jedi/top/jet_substructure_rel.pdf}
     \caption{Substructure variables of top jets generated with MPGAN and \pcjedi using the DDIM and EM solvers compared to the \pythia simulation.}
     \label{fig:substructure_top}
 \end{figure}
 
-Quantitative metrics were derived following the methodology used in \textcite{MPGAN} whereby the Wasserstein-1 distance was calculated between the generated and \pythia jets, creating a $\text{W}_1$ score for each observable.
-Uncertainties for these scores were derived using bootstrap sampling.
-In addition to the distributions shown, we also calculated the $\text{W}_1$ score using the average of the first five Energy Flow Polynomials (EFPs)~\cite{EFP}, as these variables too are sensitive to the jet substructure.
-Additionally, we computed the Fréchet ParticleNet distance (FPND), which compares the mean and standard deviation of the penultimate layer of the ParticleNet model for the \pythia and generated jets~\cite{MPGAN, ParticleNet}.
-Lower limits for these values were calculated by comparing 50k jets from the training set to the test set, which captures the natrual variation in the data.
-This allows us to compare the various methods quantitatively in \Cref{tab:combined_results}.
-Based on these value, no one model is clearly superior.
-\pcjedi with the EM sampler obtains the superior FPND score, but suffers greatly in the EFP distributions for top jets.
+Quantitative metrics are derived following the methodology used in \textcite{MPGAN} whereby the Wasserstein-1 distance is calculated between the generated and \pythia jets.
+This creates a $\text{W}_1^X$ score for each observable $X$.
+Uncertainties for these scores are derived using bootstrap sampling.
+In addition to the distributions shown, a $\text{W}_1$ score is calculated using the average of the first five Energy Flow Polynomials (EFPs)~\cite{EFP}.
+
+The Fréchet ParticleNet distance (FPND) is also calculated for each jet type.
+This metric calculates the Fréchet distance between the generated and \pythia jets using the activations of the penultimate layer of the ParticleNet model~\cite{MPGAN, ParticleNet}.
+
+Lower limits for all metrics are calculated by comparing 50k jets from the training set to the test set, which captures the natural variation in the data.
+All methods are compared quantitatively in \Cref{tab:combined_results}.
+Based on these values, no one model is clearly superior.
+\pcjedi with the EM sampler obtains the lower FPND score, but suffers greatly in the EFP distributions for top jets.
 MPGAN outperforms \pcjedi in the $\Dtwo$ scores for gluon jets but not for top jets.
 On average, it seems that the EM sampler is worse than the DDIM sampler, at least for the selected 200 integration steps, but the differences are not significant.
-One crucial observation is how poorly all models perform on the subjetiness ratios with the ratio to \pythia for top jets, ranging from around 5 to 10 times higher than the MC-MC comparison.
-This clearly indicates that the current methods are not sufficient for modelling the substructure of the large radius jets.
+One crucial observation is how poorly all models perform on the subjettiness ratios with the values for top jets ranging from around 5 to 10 times higher than the \pythia baseline.
+This clearly indicates that the current methods are not sufficient for modelling the substructure of top jets.
 
 \begin{table}[tp]
     \centering
-    \caption{Quantative comparison of the \pcjedi and MPGAN models for generating gluon and top jets.}
+    \caption{Quantitive comparison of the \pcjedi and MPGAN models for generating gluon and top jets.}
     \label{tab:combined_results}
     \renewcommand{\arraystretch}{1.5}
     \resizebox{\textwidth}{!}{%
