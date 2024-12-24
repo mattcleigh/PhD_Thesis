@@ -10,21 +10,20 @@ One of the early objectives of this thesis was to develop a generative model spe
 Unlike the data used in computer vision, it is inherently point-like, and unlike the data used in language modelling, it is unordered and continuous.
 These characteristics make physics data well suited to graphical representations, hence the success of graph networks in jet tagging, as discussed in \Cref{ch:spice}.
 Set generation methods, typically benchmarked on the ShapeNet dataset~\cite{ShapeNet}, provided a natural starting point for this work.
-
 Initial efforts began with developing a graph-based VAE~\cite{SetVAE}, using a graph network decoder to transform pure noise into a reconstructed point cloud conditioned on the latent space.
 While this approach worked on ShapeNet, it failed to generate high-quality samples of particle physics data.
 The primary issue was identifying a suitable permutation-invariant loss term for the set reconstruction.
 Various attempts were made, including modifications to Sinkhorn~\cite{Sinkhorn}, Chamfer, and optimal transport losses, as well as physically motivated metrics specific to collider data~\cite{MetricSpaceCollider}, all yielding suboptimal results.
-
 Other research groups explored graph networks trained as GANs~\cite{MPGAN, EPICGAN}, achieving some success while encountering the typical drawbacks of GANs, detailed in \Cref{ch:generative_models}.
 
 During this time, diffusion models started to gain prominence.
-The diffusion generation task is similar to what was attempted with the VAE.
+The diffusion generation task is similar to what was attempted with the VAE\@.
 However, as the training objective is denoising rather than full generation, it is already permutation equivariant.
 Therefore, it could be achieved using any standard loss function.
 
 This chapter summarizes a collection of work to develop models for the conditional generation of set data, including particle physics jets~\cite{PCJedi, EpicJedi, PCDroid} and full events~\cite{PIPPIN}.
 It also covers the use of these models for template-based anomaly detection~\cite{Drapes, RadOT}.
+Additional figures and tables for this section can be found in \Cref{app:jet_generation}.
 
 \section{\pcjedi}
 
@@ -65,7 +64,7 @@ The limits of the diffusion schedule are defined by hyperparameters $\sigma_\tex
 Following the derivation in \Cref{sec:score_based}, this results in the reverse SDE of the form,
 \begin{equation}
     \label{eq:jedi_reverse_vp_sde}
-    \diff\x_t = f(t) \left[ \x_t + 2 \score \right] \diff t + \sqrt{2 f(t)} \diff \bar\w_t,
+    \diff\x_t = f(t) \left[ \x_t + 2 \score \right] \diff t + \sqrt{2 |f(t)|} \diff \bar\w_t,
 \end{equation}
 and the probability flow ODE,
 \begin{equation}
@@ -118,7 +117,7 @@ This distinction is crucial when evaluating the model.
 
 The task for PC-Jedi is to generate the low-level properties of the particle cloud, the individual constituents, given requested high-level properties, specifically the net transverse momentum $\ptpc$ and invariant mass $\mpc$.
 Unconditional generation can be achieved by first sampling the high-level properties.
-Given that this is a two-dimensional vector, it is feasible to approximate it with a simpler model, such as a normalizing flow (NF).
+Given that this is a two-dimensional vector, it is feasible to approximate it with a simpler model, such as a normalizing flow.
 Ideally, parton kinematics would serve as the context variable to emulate a forward simulation setting; however, this information is not available in the dataset.
 
 Constituents are represented by the three kinematic variables $\left(\Delta\eta, \Delta\phi, \log(\pt + 1)\right)$.
@@ -139,21 +138,20 @@ The noise set is added to the constituent kinematics with the signal and noise l
 During training, the diffusion time parameter is sampled from a uniform distribution $\mathcal{U}(0, 1)$ and passed to the model.
 Finally, the jet variables $\con = (\ptjet, \mjet)$ are also provided as conditional inputs.
 
-The model comprises four TE Blocks following the \textit{Normformer} architecture~\cite{Normformer}.
+The model comprises four transformer encoder (TE) blocks following the \textit{Normformer} architecture~\cite{Normformer}.
 An initial MLP embeds the three-dimensional noisy particle cloud into a larger space of 128 dimensions to enable expressive self-attention.
 Another MLP reshapes the output nodes back to the original three-dimensions.
 The diffusion time parameter is encoded using a CosEnc layer, described in \Cref{sec:time_encoding}, after which it is concatenated with the other conditional inputs.
 This combined context tensor is concatenated with the input of every MLP in the model, including those within the TE Blocks.
 All MLPs have a single hidden layer with 256 units, a SiLU activation function, dropout ($p=0.1$), and layer normalization.
 
-Using Huber-loss\cite{SmoothL1} instead of the Frobenius norm for the training objective results in faster training and better generation quality.
-
 Separate networks are trained to generate the dataset's top quark and gluon jets.
 The Adam optimizer~\cite{Adam} is used with default settings and a batch size of 256.
-The learning rate ramps linearly from 0 to $5 \times 10^{-4}$ over the first 10,000 training iterations.
-The training runs for 100,000 iterations.
+The learning rate ramps linearly from 0 to $5 \times 10^{-4}$ over the first 10k training iterations, where it remains constant for a total of 100k iterations.
 The network saved for evaluation is an exponential moving average of the network with a decay rate of 0.999.
+
 A scan over the diffusion schedule hyperparameters is performed, and the best performance is found with $\alpha=10^{-3}$, $\sigma_\text{max}=0.999$, and $\sigma_\text{min}=0.02$.
+Using Huber-loss\cite{SmoothL1} instead of the Frobenius norm for the training objective results in faster training and better generation quality.
 
 \begin{figure}
     \centering
@@ -164,7 +162,7 @@ A scan over the diffusion schedule hyperparameters is performed, and the best pe
 
 \subsubsection{Integration Solvers}
 
-As with all diffusion models, to generate samples with \pcjedi, numerical integration is required to solve the reverse SDE or the probability flow ODE.
+As with all diffusion models, to generate samples with \pcjedi, numerical integration is required to solve the reverse SDE or the probability flow ODE\@.
 This complicates evaluation of the model, as sample quality can vary wildly depending on the solver used, and the number of integration steps taken.
 Various numerical solvers for this task~\cite{NumericalSolutionStochastic} are compared.
 The Euler-Maruyama (EM) method is used to solve the reverse SDE, and the DDIM sampler~\cite{DDIM} fourth-order Runge-Kutta and Euler methods are used for the probability flow ODE.
@@ -237,7 +235,7 @@ Lower limits for all metrics are calculated by comparing 50k jets from the train
 All methods are compared quantitatively in \Cref{tab:combined_results}.
 Based on these values, no one model is clearly superior.
 \pcjedi with the EM sampler obtains the lower FPND score, but suffers greatly in the EFP distributions for top jets.
-MPGAN outperforms \pcjedi in the $\Dtwo$ scores for gluon jets but not for top jets.
+MPGAN outperforms \pcjedi in the $\Dtwo$ scores for gluon jets, but not for top jets.
 On average, it seems that the EM sampler is worse than the DDIM sampler, at least for the selected 200 integration steps, but the differences are not significant.
 One crucial observation is how poorly all models perform on the subjettiness ratios with the values for top jets ranging from around 5 to 10 times higher than the \pythia baseline.
 This clearly indicates that the current methods are not sufficient for modelling the substructure of top jets.
@@ -254,27 +252,27 @@ This clearly indicates that the current methods are not sufficient for modelling
 
 \subsection{Conclusion}
 
-\pcjedi was the first model to generate particle clouds using a diffusion model, and while the results were promising, they were not state-of-the-art.
-However, proving that the method could work was a significant step forward.
-However, the time required to generate samples with diffusion models is a significant drawback, as it requires multiple forward passes compared to a single pass for a GAN\@.
-The subsequent steps in this research would be to improve the model's performance and speed.
+\pcjedi is the first model to generate particle clouds using a diffusion model, and while the results are promising, they are not state-of-the-art.
+Demonstrating the feasibility of this method constitutes a significant step forward.
+However, the inability to capture the complex substructure of fat jets remains a notable limitation.
+The time required for sample generation is another significant drawback, as diffusion models necessitate multiple forward passes compared to a single pass for GANs.
+Additional effort is required to enhance both the performance and speed of the model.
 
 \FloatBarrier
 
 \section{\pcdroid}
 
-This section details the advancements made with \pcdroid, a successor to \pcjedi~\cite{PCDroid}.
+This section details the development of \pcdroid~\cite{PCDroid}\footnote{The code repository used in this work is publicly available~\cite{PCDroidCode}}, a successor to \pcjedi.
 The \pcdroid model exhibits marked improvements in speed and generation.
 Leveraging an updated framework for diffusion models~\cite{ElucidatingDesignSpace}, enhanced diffusion sampling algorithms, and a novel transformer model, \pcdroid better balances performance and generation time.
-Additionally, we explored using consistency distillation~\cite{ConsistencyModels} to even further reduce generation time.
-\pcdroid achieves state-of-the-art performance on the benchmarks discussed in the previous section, notably surpassing both \pcjedi and MPGAN.
-We also included much more elaborate timing studies to compare the various models against performing the showering using \pythia.
-The code repository used in this work is publicly available~\cite{PCDroidCode}.
+Additionally, consistency distillation~\cite{ConsistencyModels} is explored to further reduce generation time.
+\pcdroid achieves state-of-the-art performance on the benchmarks discussed in the previous section, significantly surpassing both \pcjedi and MPGAN.
+More comprehensive timing studies are presented with compare the various models against \pythia.
 
 \subsection{Improved Diffusion Framework}
 
 One of the main advancements in \pcdroid is the revised diffusion paradigm and configuration.
-\pcdroid adheres to the EDM noise scheduler and network preconditioning as outlined by \textcite{ElucidatingDesignSpace}, discussed in \Cref{sec:diffusion_frameworks}.
+\pcdroid adheres to the EDM noise scheduler and network preconditioning as outlined by \textcite{ElucidatingDesignSpace} and discussed in \Cref{sec:diffusion_frameworks}.
 This approach introduces several key modifications.
 
 Firstly, the signal and noise rates are defined as $\gamma(t)=1$ and $\sigma(t)=t$.
@@ -291,37 +289,38 @@ The primary advantage of this change is the ability to execute the reverse diffu
 
 Secondly, diffusion times are sampled during training specifically to target regions of the diffusion process where the model can gain the most information.
 These diffusion times are used to scale the noise added to the input data.
-Note that the diffusion time $t$ and noise rate $\sigma(t)$ can be used interchangeably, with $t$ extending beyond the range of 0 to 1, instead falling in the range $t = \sigma(t) \in [0, 80]$.
+Note that the diffusion time $t$ and noise rate $\sigma(t)$ can be used interchangeably.
+They are now defined in the range $t = \sigma(t) \in [0, 80]$.
 When $t$ is low, the magnitude of the artificial noise introduced into the samples is indistinguishable from the inherent stochasticity of the data.
-Conversely, at high values of $t$, the input sample is almost entirely corrupted by noise, and the model can at most return the mean of the data distribution.
+Conversely, at high values of $t$, the input sample is almost entirely corrupted by noise, and the model can not be expected to recover any meaningful information.
 Log-normal sampling of the diffusion times, ${\log(t)\sim\mathcal{N}\left(-1.2, 1.2\right)}$, preferentially targets intermediate values where the model can learn the most.
-This specific sampling distribution~\cite{ElucidatingDesignSpace} was observed to be advantageous for our tasks.
 
-Thirdly, sophisticated skip and scaling connections are integrated into the network architecture.
+Thirdly, skip and scaling connections are integrated into the network architecture.
 The variables $c_\mathrm{in}(t)$, $c_\mathrm{out}(t)$, and $c_\mathrm{skip}(t)$ are all parameterized by $t$ and are combined for the denoised estimate as follows:
 \begin{equation}
     x_\theta(\x, \cond, t) = c_\mathrm{out} f_\theta(c_\mathrm{in}\x, \cond, t) + c_\mathrm{skip}\x,
 \end{equation}
 where $f_\theta$ represents the raw prediction from the neural network.
 Note that unlike \pcjedi, the target for the network is the true data sample $\x_0$ rather than the noise $\z$.
-The skip connection permits $\x_t$ to bypass the network at low $t$, as the input is inherently closer to the target.
-Due to the variance not being preserved during the diffusion process, these  scaling functions maintain the unit variance of the raw inputs and targets
+The skip connection permits $\x_t$ to bypass the network at low $t$, as the input is already close to the target.
+Due to the variance not being preserved during the diffusion process, these scaling functions maintain the unit variance of the raw inputs and targets
 for $f_\theta$.
 
-We reuse the same dataset, JetNet30, as outlined in \Cref{sec:jetgen_data} for some experiments in this section.
-However, most of the studies are performed using the extended JetNet150 dataset, which encompasses the same jets but with up to 150 constituents within the particle cloud.
-This expanded dataset poses new challenges for the generative task, necessitating more intricate models and increased computational resources to manage the larger set size effectively.
-Furthermore, we used all five jet types in JetNet150, rather than just the gluon and top jets.
+The same dataset, JetNet30, as outlined in \Cref{sec:jetgen_data}, is reused for some experiments in this section.
+However, most studies utilize the extended JetNet150 dataset, which encompasses the same jets, but with up to 150 constituents within the particle cloud.
+This expanded dataset introduces new challenges for the generative task, necessitating more intricate models and increased computational resources to manage the larger set size effectively.
+Additionally, all five jet types in JetNet150 are used ($q,\,g,\,t,\,W,\,Z$).
 
 \subsection{Model Architecture}
 
 The general \pcdroid architecture and the training process is shown in \cref{fig:droid_arch_train}.
 
-In addition to the preconditioning which comes from the EDM framework, the model has an additional MLP compared to \pcjedi which processes the conditional input before sending it to each sublayer.
-This is primarily because the number of context variables increased to also include the jet azimuthal angle ($\phi$), the number of constituents (which was previously only implicitly included in the input set size), and the jet type (PID).
-This last feature is significant because, whereas \pcjedi and MPGAN required separate models for each jet type, \pcdroid can generate all five jet types with a single conditional network.
-Furthermore, the conditioning features represent the full jet kinematics, rather than just the net kinematics of the particle cloud.
-This makes the generation a more challenging task, as it would have to learn the effects of truncating the particle cloud.
+\pcdroid incorporates an additional MLP compared to \pcjedi.
+The context vector is expanded to include the jet azimuthal angle ($\phi$), the number of constituents (which was previously only implicitly included in the input set size), and the jet type (PID).
+The new MLP processes this vector before sending it to each sublayer.
+Conditioning on the jet type is significant because, unlike \pcjedi and MPGAN, which required separate models for each jet type, \pcdroid can generate all five jet types with a single network.
+Moreover, the conditioning features represent the full jet kinematics rather than just the net kinematics of the particle cloud.
+Consequently, the generation task becomes more challenging, as the model must learn the effects of trimming the constituents.
 
 \begin{figure}[htpb]
     \centering
@@ -330,19 +329,19 @@ This makes the generation a more challenging task, as it would have to learn the
     \label{fig:droid_arch_train}
 \end{figure}
 
-In \pcjedi, only TE Blocks with self-attention were studied, which, despite their high expressiveness, are computationally expensive.
+In \pcjedi, only TE Blocks with self-attention are studied, which, despite their high expressiveness, are computationally expensive.
 The number of operations scales quadratically with the number of constituents $N_{const}$, i.e., $\mathcal{O}(N_{const}^2)$.
 Given that diffusion models necessitate multiple network passes during generation, self-attention becomes a suboptimal choice for fast generation.
-While this computational demand is manageable for models with 30 constituents, it becomes significantly impactful when scaling to 150 constituents.
-Consequently, alongside the TE based model, we introduce the cross-attention encoder (CAE), which serves as a more efficient and memory-conserving permutation-equivariant network.
+This computational demand is highly significant when scaling to 150 constituents.
+Consequently, alongside the TE based model, the cross-attention encoder (CAE) is introduced, which serves as a more efficient and memory-conserving permutation-equivariant network.
 
 A schematic overview of the CAE Block is illustrated in \Cref{fig:cae_network}.
-In a CAE Block, the input particle cloud updates a set of global tokens via multi-headed cross-attention, with the number of global tokens $N_{global}$ serving as a hyperparameter.
-These tokens are then refined through a residual MLP and redistributed back to the point cloud using another cross-attention layer and residual MLP.
-The full CAE is constructed by sequentially stacking multiple CAE Blocks, with the initial set of global tokens being fully learnable.
-For $N_{global}=1$, the distribution attention operation employs a sigmoid function instead of softmax.
+In this network layer, the input set updates a collection of global tokens via multi-headed cross-attention.
+These tokens are then refined through a residual MLP and redistributed back to the input set using another cross-attention layer and residual MLP.
+The layer therefore has two cross-attention operations, one to ``pool'' information from the input set into the global tokens and another to ``distribute'' information back to the input set.
 The CAE's attention operations scale with $\mathcal{O}(N_{const} \times N_{global})$.
-The first attention operation effectively pools information from the point cloud into the global tokens. The second attention operation is inverted, and information from the updated global token are distributed back to the point cloud.
+The full CAE is constructed by sequentially stacking multiple CAE Blocks, with the initial set of global tokens being fully learnable.
+The number of global tokens $N_{global}$ is as a hyperparameter and for $N_{global}=1$, the distribute attention operation employs a sigmoid function instead of softmax.
 
 \begin{figure}[htpb]
     \centering
@@ -354,71 +353,74 @@ The first attention operation effectively pools information from the point cloud
 To allow direct comparisons with \pcjedi, the optimizer, learning rate, scheduler, and the majority of hyperparameters remain unchanged.
 The only notable adjustments, based on a minor hyperparameter scan, include reducing the number of encoder layers from four to three and using MSE loss for training.
 For models with 150 constituents, the token dimension and the width of the MLP layers were doubled.
-We trained two additional models utilizing CAE Blocks with $N_{global}=1$ and 16, on the 150 constituent dataset, employing the same training configuration, dimensions, and number of layers as the baseline model.
+Two additional models utilizing CAE Blocks with $N_{global}=1$ and $N_{global}=16$ are trained on the 150 constituent dataset, employing the same training configuration, dimensions, and number of layers as the baseline model.
 
 \subsubsection{Integration Solvers}
 
-Another key development has been in the choice of integration solvers used during inference.
-Several state-of-the-art algorithms have been studied and \pcdroid was designed to be compatible with the popular \textsc{K-Diffusion} library~\cite{KDiffusion}.
-The most promising solvers include a fourth order linear multistep method (LMS)~\cite{ODEBook}, DPM-Solver-2~\cite{DPMSolverFastODE}, DPM-Solver++~\cite{DPMSolverFastSolver}, and DPM-Solver-2M~\cite{DPMSolverFastSolver}, and ancestral variants of these.
-Furthermore, we experimented with non-uniform step sizes during generation, and found that systematically taking larger steps at the beginning of the denoising process and smaller steps towards the end improved the quality of the generated samples.
+Another key development in \pcdroid has been in the choice of integration solvers used during inference.
+As the mechanisms for sampling from the diffusion process are an area of active research, it is challenging to keep up with and support all the latest advancements. Therefore, \pcdroid was designed to be compatible with the popular \textsc{KDiffusion} library~\cite{KDiffusion} and thus can utilize any of the samplers made available there.
+These samplers operate on either the reverse SDE or the probability flow ODE.
+
+The most promising methods include the Heun's method on both the ODE and SDE~\cite{ODEBook}, DPM-Solver-2~\cite{DPMSolverFastODE}, DPM-Solver++~\cite{DPMSolverFastSolver}, and DPM-Solver-2M~\cite{DPMSolverFastSolver}, a fourth order linear multistep method (LMS)~\cite{ODEBook} and ancestral sampling variants of these.
+Furthermore, experimenting with non-uniform step sizes during generation reveals that systematically taking larger steps at the beginning of the denoising process and smaller steps towards the end improves the quality of the generated samples.
 
 \subsection{Consistency Distillation}
 
-Additionally, this work investigated the process of consistency distillation (CD) \cite{ConsistencyModels}, wherein a teacher network trains a student network to solve the reverse diffusion process in fewer steps, and in some cases enabling \textit{one-shot} generation.
+This work investigated the process of consistency distillation (CD)~\cite{ConsistencyModels}, wherein a teacher network trains a student network to solve the reverse diffusion process in fewer steps, and in some cases enabling one-step generation.
 
-The teacher network is a standard pre-trained diffusion model which together with a sampling method, defines a method to trace paths along the learned probability flow ODE.
-During distillation, the weights of the teacher network are frozen, and a student network is trained to map all points sampled along a same ODE trajectory a common target.
-To prevent the student model from collapsing into a constant function, a boundary condition is enforced such that the student must become an identity map as the diffusion time approaches zero.
-The same skip connections used in the \pcdroid model are employed to enforce this.
-This boundary condition ensures the global minimum of the training loss was achieved only when the student network mapped each point of the ODE trajectory to its endpoint.
+The teacher network is a standard pre-trained diffusion model.
+Combined with a sampling method, it traces paths along the learned probability flow ODE.
+During distillation, the weights of the teacher network are frozen.
+A student network is then trained to map all points sampled along the same ODE trajectory to a constant output.
+This target is not required to be the end point of the trajectory, as this would require fully solving the ODE for each training step.
+To prevent the student model from collapsing, a boundary condition is enforced whereby the student must become an identity map as $t \rightarrow 0$.
+The $c_\text{skip}$ and $c_\text{out}$ preconditions used in the EDM framework already enforce this.
+This boundary condition ensures the global minimum of the training loss is achieved only when the student network maps each point of the ODE trajectory to its endpoint.
 
-Initially, the student model is initialized with the same parameter values as the teacher model.
+The student model is initialized with the same parameter values as the teacher.
 During training, the diffusion time is sampled, the input is corrupted using the same schedule as before, and then the teacher model is used to take a single step along the ODE.
 These two adjacent points on the ODE are each passed through the student network, and the student is trained to minimize the mean squared distance between its two outputs.
-To stabilize training, the student network was duplicated into an online and target network, a practice common in deep reinforcement learning \cite{PlayingAtariDeep, ContinuousControlDeep, ImplicitQuantileNetworks}.
-Gradients propagated only through the online network, which always processed the ODE sample with the larger $t$.
-After each iteration, the target network was synced with the student network using an EMA of the parameters.
+To stabilize training, the student network is duplicated into an online and target network, a practice common in deep reinforcement learning~\cite{PlayingAtariDeep, ContinuousControlDeep, ImplicitQuantileNetworks}.
+Gradients are propagated only through the online network, which always processes the ODE sample with the larger $t$.
+After each iteration, the target network is synced with the online network using an exponential moving average of the parameters.
 
-Although both are distillation methods, CD differs from progressive distillation models (PD) \cite{ProgressiveDistillationFast}.
-In progressive distillation, new models are iteratively trained to predict the amount of noise removed in $N$ steps of the previous model.
-This iterative process reduces the overall number of steps required with each new model, thereby resulting in faster generation times.
-Unlike CD, PD does not require information about the ODE trajectories, only the total amount of noise removed after $N$ steps.
+CD is similar to progressive distillation (PD)~\cite{ProgressiveDistillationFast}, but with key differences.
+In PD, new models are iteratively trained to predict the noise removed in $N$ steps of the previous model.
+This process reduces the number of steps required with each new model, leading to faster generation times.
+Unlike CD, PD does not need information about the ODE trajectories, only the total noise removed after $N$ steps.
 
 \subsection{Unconditional Generation}
 
-\pcdroid is trained as a conditional generative model, with the jet kinematics $(\pt, \eta, m)$, the number of constituents ($N_{const}$), and the PID used as conditions.
-We can marginalize the conditional variables using a second generative model to allow for unconditional generation.
-As this is a low-dimensional vector, we trained NFs for this task.
+\pcdroid is a conditional generative model, where the conditions include the jet kinematics $(\pt, \eta, \phi, m)$, the number of constituents ($N_{const}$), and the jet type PID.
+For unconditional generation, a second generative model is produced for these variables.
+As this is a low-dimensional vector, a normalizing flow (NF) is ideal for this task.
 This approach is preferable to explicitly unconditional models as it logically segments the learning process.
 
 Standard use cases would still demand control over the jet type, so
 one flow (Flow-$\p$) is trained to learn the probability density $p(\pt, \eta, m, N_{const} |\textrm{PID})$.
-A second flow (Flow-$N$) is trained to learn the probability density $ p(N_{const}|\pt, \eta, m, \textrm{PID}) $.
+As the main model denoises all input tokens, the number of constituents is always required at generation time.
+A second flow (Flow-$N$) is trained to learn the probability density $p(N_{const}|\pt, \eta, m, \textrm{PID})$.
+As $N_{const}$ correlates with many jet properties, a NF is necessary rather than sampling from a Poisson distribution.
 This second flow demonstrates how \pcdroid can be used as a surrogate fast simulator, especially when the parton type and kinematics are known, but the number of particles in the final jet is not.
-As the transformer denoises all input tokens, the number of constituents is always required at generation time.
-This number is correlated to many jet properties, necessitating a normalizing flow rather than simply sampling from a Poisson distribution.
 
 Both flows are trained with a maximum log-likelihood objective and consist of five transformation layers using rational quadratic splines~\cite{NeuralSplineFlows}.
-Coupling layers are used in Flow-$\p$, while none are needed for the one-dimensional transformation Flow-$N$.
+Coupling layers are used in Flow-$\p$, while none are needed for the one-dimensional transformation in Flow-$N$.
 For both flows, a dequantization step simplifies the learning of the $N_{const}$ distribution; at inference time, the generated value is rounded to the nearest integer.
 The Adam optimizer~\cite{Adam} with default settings and a cosine learning rate is used.
-Given the relatively simple nature of these distributions, near-perfect performance is achieved using only four layers and 100k learnable parameters.
+Given the relatively simple nature of these distributions, near-perfect performance is achieved.
 
 \subsection{Results on JetNet30}
 
-We compared the \pcdroid, \pcjedi, and MPGAN models on the JetNet30 dataset using the same distributions and metrics as before.
-This study utilized \pcdroid samples generated under the fully conditional regime.
-Performance comparison revealed minimal differences between jets conditioned on the training set kinematics and those conditioned on the flow outputs.
+The \pcdroid, \pcjedi, and MPGAN models are compared on the JetNet30 dataset using the same distributions and metrics as before.
+This study uses \pcdroid samples generated under the fully conditional regime.
 
-We test a wide variety of integration solvers in the generation stage for \pcjedi.
-We studied the trade-off between the quality of generated jets and the number of neural function evaluations (NFE) to determine the optimal solver and step size.
-The comparison focused on the FPND, $\mathrm{W}_1^M$, and $\mathrm{W}1^{\tau{32}}$ metrics, given the latter's difficulty in previous studies.
-For \pcjedi we used the results using the Euler-Maruyama sampler at 200 NFE.
-From \cref{fig:metrics_vs_steps-30}, we observe most solvers saturating around 100 NFE.
-We generated samples with \pcdroid using Heun and HeunSDE methods~\cite{ElucidatingDesignSpace}, DPM2~\cite{DPMSolverFastODE}, DPM2 with ancestral sampling (DPM2A), DPM++2M~\cite{DPMSolverFastSolver}, and LMS~\cite{ODEBook}
-Although no method was clearly superior, the LMS solver generally performed best across most metrics, and was thus used at 100 NFE for all \pcdroid results in the following sections.
-Additionally, \pcdroid outperformed MPGAN with as few as 20 steps for most solvers.
+A wide variety of integration solvers are tested for \pcdroid.
+The trade-off between the quality of generated jets and the number of neural function evaluations (NFE) is studied to determine the optimal solver and step size.
+The comparison focuses on the FPND, $\mathrm{W}_1^m$, and $\mathrm{W}1^{\tau{32}}$ metrics.
+For \pcjedi, the results using the Euler-Maruyama sampler at 200 NFE are used.
+From \cref{fig:metrics_vs_steps-30}, most solvers are observed to saturate around 100 NFE.
+\pcdroid outperforms MPGAN with as few as 20 steps for most solvers.
+Although no method is clearly superior, the LMS solver generally performs best across most metrics and is thus used at 100 NFE for all \pcdroid results in the following sections.
 
 \begin{figure}[tb]
     \centering
@@ -441,14 +443,14 @@ Effectively modelling the kinematics of individual constituents is essential for
     \label{fig:const-pt_dist-30}
 \end{figure}
 
-Next, we examine the substructure variable distributions of the generated jets and their correlations, essential for jet tagging.
-We focus on top jets due to their complex substructure, which has proven challenging to model.
+Next, the substructure variable distributions of the generated jets and their correlations, essential for jet tagging, are examined.
+Focus is on top jets due to their complex substructure, which has proven challenging to model.
 \Cref{fig:hlvs-30} shows that \pcdroid significantly improves $\tau_{32}$ modelling compared to \pcjedi and aligns excellently with \pythia simulations for all other substructure variables.
 
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=0.49\textwidth]{Figures/jet_generation/droid/30/hlvs/t/100/hlv_corr_PC-Droid.pdf}
     \includegraphics[width=0.49\textwidth]{Figures/jet_generation/droid/30/hlvs/t/100/hlv_corr_PC-Jedi.pdf}
+    \includegraphics[width=0.49\textwidth]{Figures/jet_generation/droid/30/hlvs/t/100/hlv_corr_PC-Droid.pdf}
     \caption{
         Mass and substructure distributions of the generated top jets with up to 30 constituents.
         The diagonal consists of the marginals of the distributions and the off-diagonal elements contain the joint distributions.
@@ -457,7 +459,7 @@ We focus on top jets due to their complex substructure, which has proven challen
 \end{figure}
 
 The generation performance is summarized in~\cref{tab:30_table} for gluon and top jets.
-The $\mathrm{W_1^P}$ score describes the average Wasserstein-1 distance between the marginal distributions of the generated and \pythia constituent kinematics.
+The $\mathrm{W_1^P}$ score is derived from the marginal distributions of the constituent kinematics.
 Particularly in FPND, \pcdroid surpasses all other methods in all metrics, reaching the intra MC-MC comparison limits in the subjettiness ratios for gluons and $\mathrm{W_1^{\Dtwo}}$ for both jet types.
 
 \begin{table}[tp]
@@ -475,35 +477,35 @@ Particularly in FPND, \pcdroid surpasses all other methods in all metrics, reach
 \subsection{Results on JetNet150}
 
 The JetNet150 dataset poses a more challenging task, both due to the increased number of constituents and the inclusion of all five jet types.
-For plots however, we focus on top jets, as they are the most challenging to model, but we derive metrics for all types.
-We compare marginals of the leading, fifth leading, and twentieth leading constituents of the generated jets compared to \pythia.
-This is shown in \Cref{fig:const-pt_dist-150}.
-We found that almost all methods were able to perform sufficiently well in this task.
+For plots, the focus is on top jets as they are the most challenging to model, but metrics are derived for all types.
+
+The marginals of the leading, fifth leading, and twentieth leading constituents of the generated jets are shown in \Cref{fig:const-pt_dist-150}.
+Both the original transformer-based model and CAE networks with 1 and 16 global tokens, labeled CAE-1 and CAE-16, are evaluated.
+The LMS sampling method at 100 NFE yields similarly optimal results for both networks and is used to derive all subsequent results.
+Almost all methods performed sufficiently well in this task.
 Substructure distributions are displayed in Figure \Cref{fig:hlvs-150-marginals}.
-A comparison between in the high level correlations between the transformer and CAE-1 models are shown in \Cref{fig:hlvs-150}.
+A comparison of high-level correlations between the transformer and CAE-1 models is shown in \Cref{fig:hlvs-150}.
 Both models accurately capture jet mass and $\Dtwo$, though CAE-1 exhibits slightly diminished performance in subjettiness ratios.
 
-MPGAN was never developed 150 constituents so as benchmarks for this dataset, we compare to two other deep generative models: FPCD~\cite{FPCD} and EPiC-GAN~\cite{EPICGAN}.
+MPGAN was never developed for 150 constituents.
+As benchmarks for this dataset, comparisons are made to two other deep generative models: FPCD~\cite{FPCD} and EPiC-GAN~\cite{EPICGAN}.
 
-FPCD is a similar diffusion model which was developed concurrently with \pcdroid.
-It too trains on all jet types simultaneously, employs a second model for generating conditions, and can produce jets with up to 150 constituents. It uses different network layers, diffusion schedule, and framework compared to \pcdroid.
-FPCD jointly trains a second diffusion to generate the kinematics and $N_{const}$ of the jets given the PID.
-We argue however that this an orthogonal task and does not need to share the same layers or noise seed.
-It also means that for unconditional generation, FPCD requires two separate numerical integrations.
-Similar to how we apply CD, FPCD was progressively distilled (PD) to a single step.
+FPCD is a diffusion model developed concurrently with \pcdroid.
+It trains on all jet types simultaneously and can produce jets with up to 150 constituents.
+FPCD uses different network layers, diffusion schedule, and framework compared to \pcdroid. It jointly trains a single model to produce both high-level kinematics and low-level constituents.
+This procedure is fairly inefficient, as for unconditional generation FPCD it must first sample from the former, which is then used as a condition for sampling the latter.
+Both steps require numerical integration.
+Furthermore, sampling the high-level features is an orthogonal task and does not need to share the same network layers or noise seed as the rest of the model.
+FPCD was progressively distilled to perform generation in a single step.
 
-EPiC-GAN is a GAN model using specificially designed layers.
-Rather than using conventional message passing, EPiC layers pool information to a global vector, then concatenate this to the input the node updates in the next layer.
-It is essentailly a repeated implementation of a deep set and also shares similarities with the CAE model.
-In EPiC-GAN a kernel-density estimator is used to model the number of constituents, which is a conditional parameter of the generation and correlated to the jet invariant mass and \pt.
-However, the KDE does not take into account correlations between the number of constituents and the kinematics of the jet.
+EPiC-GAN is a GAN model using specially designed layers.
+Instead of conventional message passing, EPiC layers pool information from all nodes to a global vector and then concatenate this to all nodes during the updates in the following layer.
+It is essentially a repeated implementation of a deep set and shares similarities with the CAE-1 model.
+In EPiC-GAN, a kernel-density estimator (KDE) models the number of constituents, which is a conditional parameter for generation.
 
-We evaluate both the original transformer-based model and CAE networks with 1 and 16 global tokens, labelled CAE-1 and CAE-16, respectively.
-We provide a quantitative comparison between the performance of the \pcdroid and other models in \cref{tab:perf-150}.
-All models here are run in the conditional mode.
-\pcdroid with the self attention network displays superior performance in all metrics on all jet types wherever there is notable separation between models.
+A quantitative comparison of the performance of \pcdroid and all other models is provided in \cref{tab:perf-150}.
+\pcdroid with the self-attention network shows superior performance in all metrics across all jet types wherever there is notable separation between models.
 Where performance is saturated, the CAE-1 or CAE-16 models are comparable to the transformer model.
-The LMS sampling method at 100 NFE yielded similarly optimal results for both networks and was used to derive all following results.
 
 \begin{figure}[tb]
     \centering
@@ -551,15 +553,15 @@ The LMS sampling method at 100 NFE yielded similarly optimal results for both ne
 
 \subsubsection{Conditional Adherence}
 
-As \pcdroid is a conditional generative model, it was crucial to determine if the model generates jets with kinematics consistent with the conditioning values.
-To test this, we examine the difference between the generated point cloud kinematics and the target conditions for mass and \pt, as shown in Figure \ref{fig:obedience}.
+It is important to test the claim that \pcdroid is actually a contidiional generative model.
+The difference between the generated point cloud kinematics and the target conditions for mass and \pt is examined, as shown in Figure \ref{fig:obedience}.
 
-The exact jet kinematics from the simulation are used for the \textit{conditional kinematics}, while the \textit{point cloud kinematics} are recalculated from the preprocessed jet constituents.
+The exact jet kinematics from the simulation are used for the \textit{conditional kinematics}, while the \textit{point cloud kinematics} are recalculated from the trimmed jet constituents.
 These different approaches result in minor discrepancies between the variables, even for the \pythia dataset.
 The original jets may have had more than 150 constituents when the kinematics were calculated, causing a negative shift in mass and \pt.
 
-In the mass plot in Figure \ref{fig:obedience}, \pcdroid displays a nearly identical spread to \pythia.
-For \pt, there is slightly more variation with higher residual magnitudes, but \pcdroid remains within $0.4\%$ of the target.
+In the mass plot in \Cref{fig:obedience}, \pcdroid displays a nearly identical spread to \pythia.
+For \pt, there is slightly more variation with higher residual magnitudes, but \pcdroid remains within $0.4\%$ of the target
 
 \begin{figure}[htpb]
     \centering
@@ -572,15 +574,14 @@ For \pt, there is slightly more variation with higher residual magnitudes, but \
 \subsubsection{Consistency Distillation}
 
 Diffusion models inherently present a trade-off between the number of iterations during generation and the quality of the final sample.
-Consistency models add another dimension to this trade-off by enabling the production of reasonable samples in as few as one iteration step.
-Consistency models significantly outperform diffusion models when constrained to minimal steps.
+Consistency models add another dimension to this trade-off by enabling the production of reasonable samples in as few as one iteration step, significantly outperforming diffusion models when highly constrained by time.
 
-To enhance generation speed and examine its impact on performance, we train a consistency model using \pcdroid as the teacher.
-We adopt the same training configuration as the original paper by \textcite{ConsistencyModels} with one modification: instead of employing the Heun integration solver to select adjacent points of the ODE, we find that DPM2 yields improved performance.
-During generation, we achieve reasonable performance with just a single network pass and observe that performance plateaus after five steps.
+A consistency model is trained using the TE-based \pcdroid as the teacher
+The same training configuration as the original paper by \textcite{ConsistencyModels} is adopted, with one modification: instead of using the Heun integration solver to select adjacent points of the ODE, DPM-Solver-2 yields improved performance.
 
-\Cref{fig:cd-150} compares the substructure variables for jets produced using the CD model with one-step (CD1) and multi-step (CD5) generation.
-The top jet subjettiness ratios continue to be the most challenging to reproduce, but the one-step consistency model also demonstrates a general broadening in the mass distribution.
+During generation, reasonable performance is achieved with just a single network pass, and performance plateaus after five steps.
+\Cref{fig:cd-150} compares the substructure variables for jets produced using the CD model with one-step (CD1) and five-step (CD5) generation.
+The top jet subjettiness ratios continue to be the most challenging to reproduce, especially for the one-step model.
 
 \begin{figure}[htpb]
     \centering
@@ -595,14 +596,14 @@ The top jet subjettiness ratios continue to be the most challenging to reproduce
 
 \subsubsection{Modelling The Conditional Variables}
 
-Utilizing normalizing flows, we have the flexibility to sample either the complete set of jet kinematics along with $N_{const}$ (Flow-$\p$) or just $N_{const}$ (Flow-$N$), both conditional on PID.
-It is crucial to emphasize that these flows are trained independently of \pcdroid, as this constitutes an entirely orthogonal task.
-The performance of Flow-$\p$ is showcased in \Cref{fig:unconditional-flows}, illustrating that the marginals and correlations of the conditioning variables are accurately modelled.
+Utilizing normalizing flows provides flexibility to sample either the complete set of jet kinematics along with $N_{const}$ (Flow-$\p$) or just $N_{const}$ (Flow-$N$), both conditional on PID.
+These flows are trained independently of \pcdroid, as this is an entirely orthogonal task.
+The performance of Flow-$\p$ is showcased in \Cref{fig:unconditional-flows}, illustrating that the marginals and correlations of the conditioning variables are accurately modeled.
 
-We evaluate the conditional and unconditional models using the full array of metrics in \Cref{tab:perf-150-unconditional}.
+The conditional and unconditional models are evaluated using the full array of metrics in \Cref{tab:perf-150-unconditional}.
 Here, \pcdroid denotes the conditional model, where $N_{const}$ and the jet kinematics are derived from the test set.
 The other two rows represent scenarios where either flow is used to initially sample these variables before passing them to the diffusion model.
-Notably, there is minimal difference in performance when shifting to unconditional generation, and \pcjedi continues to outperform other methods significantly.
+There is minimal difference in performance when shifting to unconditional generation.
 
 \begin{figure}[b!]
     \centering
@@ -628,17 +629,17 @@ Notably, there is minimal difference in performance when shifting to uncondition
 
 \subsubsection{Timing Studies}
 
-We examined the trade-off between quality and generation time across all models.
 \Cref{fig:timing} illustrates three key metrics for all models as a function of the generation time required to produce top jets with 150 constituents on identical hardware.
 All times are derived from the average of ten runs, each generating a batch of 512 jets using an NVIDIA GeForce 3080.
-All scores are benchmarked against the ideal performance, as defined by the \pythia datasets.
+All scores are defined as their ratio to ideal performance, as defined by the \pythia datasets.
 
-Our fastest model (CD1) requires three times the generation time of EPiC-GAN but induces a slight shift in the jet mass but improves the FPND score considerably.
-It is nearly 30\% faster than one step FPCD~(PD1) and shows markedly improved performance, especially in FPND.
+The fastest of the new models, CD1, requires three times the generation time of EPiC-GAN.
+It induces a slight shift in the jet mass while improving the FPND score considerably.
+It is nearly 30\% faster than one step FPCD (PD1) and shows markedly improved performance, especially in FPND.
 The $\tau_{32}$ scores of these models are comparable.
 CD5, although five times slower than the one-shot generation, improves all metrics across the board.
 CAE-1 further enhances all metrics, particularly $\mathrm{W}_1^m$.
-By increasing the number of global tokens to 16, we observe a 50\% increase in generation time but a significant improvement in both FPND and $\mathrm{W}1^{\tau{32}}$.
+By increasing the number of global tokens to 16, a 50\% increase in generation time is observed, but a significant improvement in both FPND and $\mathrm{W}1^{\tau{32}}$ is achieved.
 The full \pcdroid model, while approximately 250 times slower than EPiC-GAN, achieves nearly ideal performance in all metrics except $\mathrm{W}1^{\tau{32}}$, and is still around 4 times faster than the \pythia simulation.
 
 \begin{figure}[htbp]
@@ -650,16 +651,13 @@ The full \pcdroid model, while approximately 250 times slower than EPiC-GAN, ach
 
 \subsection{Diffusion with EPiC Layers}
 
-We collaborated with the research group responsible for the EPiC-GAN model, integrating our diffusion model with their EPiC layers~\cite{EpicJedi}.
-In this study, we also experimented with using the CFM framework to describe the diffusion process, which was significantly more efficient than the SM-TI framework employed in \pcjedi.
-This research was conducted concurrently with the development of the \pcdroid and thus only compared to the \pcjedi model.
+Collaboration with the research group responsible for the EPiC-GAN model led to the integration of the diffusion model with their EPiC layers~\cite{EpicJedi}.
+In this study, experiments using the conditional flow matchinng (CFM) framework to describe the diffusion process proved significantly more efficient than the SM-TI framework employed in \pcjedi.
+This research, conducted concurrently with the development of \pcdroid, is only compared to the \pcjedi model.
 
-Utilizing these layers, we achieved approximately a seven-fold increase in generation speed over the transformer.
-The resulting performance and generation time was comparable to the CAE-1 model from \pcdroid.
-One again, the subjettiness ratios remained particularly challenging to model for top jets, as illustrated in \Cref{fig:epic-diffusion}.
-
-An area yet to be explored is the comparison between the CFM and EDM frameworks for this specific task.
-While generative models for text-to-image generation have transitioned from EDM to CFM over the past year~\cite{SD3,flux2024github}, it remains uncertain if this trend applies to jet generation.
+Utilizing these layers achieves approximately a seven-fold increase in generation speed over the transformer.
+The resulting performance and generation time are comparable to the CAE-1 model from \pcdroid.
+Once again, the subjettiness ratios remain particularly challenging to model for top jets, as illustrated in \Cref{fig:epic-diffusion}.
 
 \begin{figure}[tb]
     \centering
@@ -673,63 +671,95 @@ While generative models for text-to-image generation have transitioned from EDM 
 
 \subsection{Conclusion}
 
+The \pcdroid model, utilizing the EDM framework, outperforms \pcjedi and all other models in all metrics, especially in the subjettiness ratios of top jets.
+
 Generative models employing diffusion processes present numerous points along the continuum between generation time and output quality.
-In this research, we have expanded the scope by introducing new components to this trade-off.
-We switched to the much more theoretically motivated EDM framework, which instantly yielded superior results compared to \pcjedi.
-We have incorporated additional integration solvers to further enhance generation and consistency distillation, producing derived models with ODEs with straighter paths, which can be calculated in fewer integration steps.
-We have also developed the CAE Block, which can scale to generate sets with higher multiplicities due to reduced computational overhead.
+Additional integration solvers enhance generation and consistency distillation, allowing for extremely fast generation, though with degraded quality.
+The development of the CAE Block allows scaling to sets with higher multiplicities due to reduced computational overhead.
 
-Our top-performing model approaches saturation across nearly all evaluative metrics for various jet types.
-The sole exception remains the complex subjettiness ratios within top jets, which encompass both three- and two-pronged jets.
+This framework represents a significant advancement in high-quality jet generation, now primed for applications in forward simulation and as a template construction tool for anomaly detection.
 
-Our framework represents a significant advancement in high-quality jet generation.
-It is now primed for applications in forward simulation and as a template construction tool for anomaly detection.
+An area yet to be explored is the comparison between the CFM and EDM frameworks for this specific task.
+While generative models for text-to-image generation have transitioned from EDM to CFM over the past year~\cite{SD3,flux2024github}, it remains uncertain if this trend applies to jet generation.
 
 \section{Full Forward Simulation}
 
-This enables physicists to quickly generate large amounts of high-fidelity simulated data, essential for designing experiments, optimizing detector configurations, and interpreting results from particle collisions. Ultimately, generative modeling enhances our ability to explore the fundamental laws of nature at unprecedented scales and speeds.
+The full simulation pipeline for collider data consists of many subtasks.
+It begins with event generation via matrix element calculation.
+The decay of heavy quarks and massive bosons is then modelled, resulting in parton-level information.
+These early stages are the computationally light parts of the simulation.
+Subsequent steps include parton showering and hadronization, interaction with detector material, digitization, and finally, reconstruction of the detector signal, leading to reco-level information.
 
+Several approaches have been proposed to replace parts of the pipeline with machine learning models.
+Some models focus on the detector simulation stages~\cite{CaloGAN,CaloFlow2,PhysicsGAN,ATLASGAN,CaloVQ}.
+\pcjedi and \pcdroid in the previous sections focus on the showering and hadronization stages.
+Although these are valid and well-motivated uses of machine learning, a more ambitious goal is to replace all computationally expensive stages with a single model; mapping directly from parton-level to reco-level information.
 
-
-To test the model in a forward simulation setting we used the \pcdroid framework in a set-to-set generation task.
 This section is a brief summary of the work presented in~\textcite{PIPPIN}.
-This method, called PIPPIN conditionally generated the full collection of physics objects at reco-level (post detector simulation and reconstruction) from the set of particles at truth-level (before any showering or hadronization).
+A novel method called Particles Into Particles with Permutation Invariant Networks (PIPPIN) is presented to directly generate variable-length point clouds.
+PIPPIN frames the problem as a set-to-set generative task and extends the work of \pcdroid to encompass more of the simulation pipeline.
+PIPPIN comprises a transformer encoder to encode the partons, a multiplicity predictor to estimate the number of reconstructed objects, and a \pcdroid style generator that conditionally generates all reconstructed objects.
 
-For this task we used a custom dataset of \ttbar events matching the setup in \Cref{sec:data} except without any constraints on the decay channels of the top quarks of the W bosons.
+\subsection{Data}
 
-To address the challenge of multiplicity variations between the parton and reconstructed object spaces we used a combination of transformers, diffusion models and normalizing flows.
-In the PIPPIN model, the set of truth-level particles is first passed through a transformer encoder to produce a set of embedded tokens.
-These are used in two separate models.
-The first is the multiplicity predictor.
-One of the main challenges in this set-to-set task was predicting how the cardinality of the reco-level set.
-In addition, this cardinality could be defined for each object type (jets, leptons, photons).
-We defined as a single vector $N_x$ which contained the number of each object type.
-This is a normalising flow which is trained to predict the number of reconstructed leptons, photons, and jets that the parton-set will produce.
-The flow models all of these multiplicities together using a single vector $N_x$ conditioned on the embedded parton tokens.
-This vector had to undergo dequantization when in forward mode and rounding when in reverse mode to model the discrete nature of the multiplicity.
-The second model is the denoising diffusion model.
-This model is trained to denoise the set of reco-level objects and their attributes and is constructed similarly to \pcdroid.
-The main difference is that since it is conditioned on the output of the parton transformer, it is built as a transformer encoder, with additional cross-attention layers.
+A custom dataset of $\ttbar$ events is produced.
+The configuration matches the setup described in \Cref{sec:nu_data} except without any constraints on the decay channels of the top quarks or the W bosons.
+Events are instead categorized based on these decays into all-hadronic ($0\ell$), semi-leptonic ($1\ell$), and di-leptonic ($2\ell$) classes.
+
+All parton and reco-level objects are defined by their four-momenta and type.
+Jets are not individually expressed as sets and receive additional labels based on whether they pass $b$- or $\tau$-jet identification criteria.
+Reconstructed electrons and muons must have $|\eta| < 2.5$ and $\pt > 15~\GeV$ and are also described by their charge.
+Missing transverse momentum \ptmiss is calculated from all visible particles.
+
+Only events with 2-16 jets and 0-2 leading leptons are considered.
+Truth matching partons to jets is done using a $\Delta R < 0.4$ criterion.
+Events with ambiguous matches are discarded.
+
+50 million events are generated, 40.4 million meet the selection criteria (18.6M all-hadronic, 17.8M semi-leptonic, 4.1M di-leptonic).
+37M events are used for training, 0.8M for validation, and 2.4M for evaluation of the PIPPIN model.
+
+\subsection{Model Architecture}
+
 A diagram of the information flow used during training is shown in \Cref{fig:pippin}.
-The two losses, from the multiplicity predictor and the denoising diffusion model, are combined to train the full PIPPIN model.
+There are three main subcomponents of PIPPIN: the parton encoder, the multiplicity predictor, and the diffusion model.
+
+Parton information is first passed through the parton encoder.
+The parton encoder is a basic TE that extracts the relevant physics information about the event.
+The output of this step is then used to condition the rest of the model.
+
+The multiplicity predictor is an NF that predicts the cardinality of the reco-level objects.
+Specifically, this cardinality is defined for each object type (jets, leptons, photons) individually and stored in a single vector $N_x$.
+The flow is trained via the maximum log-likelihood objective to generate $N_x$ given the outputs of the parton encoder.
+This vector undergoes dequantization in forward mode and rounding in reverse mode due to the discrete nature of the multiplicity.
+
+The diffusion model is constructed similarly to \pcdroid with the goal of denoising a set of reco-level objects.
+The main difference is that since it is conditioned on the output of the parton transformer, it is built as a transformer decoder, with additional cross-attention layers.
+
+The entire model is trained end-to-end, and the loss is the sum of the log-liklihood losses from the multiplicity predictor MSE loss from the diffusion model.
 
 \begin{figure}[tb]
     \centering
     \includegraphics[width=0.70\textwidth]{Figures/jet_generation/PIPPIN.pdf}
     \caption{
-        The PIPPIN model architecture which conditionally generates the full set of reconstructed (reco) physics objects from the set of truth-level objects.
+        The PIPPIN model architecture which conditionally generates the full set of reconstructed (reco) physics objects from the set of parton-level objects.
     }
     \label{fig:pippin}
 \end{figure}
 
-The results from this model were highly promising.
-The multiplicity predictor was able to match the marginals of the true multiplicities to within a few percent, as well as provide unbiased predictions as, shown in \Cref{fig:pippin_n}.
-The denoising diffusion model was able to generate reco-level objects with high fidelity to the true objects, as shown in \Cref{fig:pippin_jet}.
-Including for performing combined reconstruction to identify top quarks and W bosons, as shown in \Cref{fig:pippin_mass}.
+\subsection{Results}
 
-We compared with two other deep generative models for this type of task, OTUS~\cite{OTUS} and Turbo-Sim~\cite{TurboSim}.
-The main metrics were the Kolmogorov-Smirnov distances between the original MC reco-level distributions and the output of the different models.
-As shown in \Cref{tab:pippin}, the PIPPIN model outperformed both OTUS and Turbo-Sim in all metrics.
+The multiplicity predictor matches the marginals of the true multiplicities to within a few percent, as shown in \Cref{fig:pippin_n}.
+Additionally, the predictions are unbiased.
+The denoising diffusion model generates reco-level objects with remarkable accuracy to the MC reco-level distributions, as shown in \Cref{fig:pippin_jet}.
+
+In addition to the features of the reconstructed objects, several properties of the underlying decayed particles can be computed.
+These include the invariant masses of the W bosons, the top and anti-top quarks, and the full \ttbar system.
+To identify the objects originating from each underlying particle, a matching is performed between the partons and the reconstructed objects based on their proximity in $\eta$-$\phi$ space.
+These distributions are shown in \Cref{fig:pippin_mass}.
+
+This study compares PIPPIN with two other deep generative models designed for this task, OTUS~\cite{OTUS} and Turbo-Sim~\cite{TurboSim}.
+The main metrics are the Kolmogorov-Smirnov distances between the original MC reco-level distributions and the output of the different models.
+As shown in \Cref{tab:pippin}, the PIPPIN model outperforms both OTUS and Turbo-Sim in all metrics.
 
 \begin{figure}[htb]
     \centering
@@ -745,12 +775,14 @@ As shown in \Cref{tab:pippin}, the PIPPIN model outperformed both OTUS and Turbo
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=0.32\textwidth]{Figures/jet_generation/pippin/marginals/marginal_jet_energy.pdf}
-    \includegraphics[width=0.32\textwidth]{Figures/jet_generation/pippin/marginals/marginal_jet_pt.pdf} \\
-    \includegraphics[clip, trim=0cm 0cm 0cm 2.5cm, width=0.32\textwidth]{Figures/jet_generation/pippin/marginals_2D/marginal2D_jet_energy.pdf}
+    \includegraphics[width=0.32\textwidth]{Figures/jet_generation/pippin/marginals/marginal_jet_pt.pdf}
+    \includegraphics[width=0.32\textwidth]{Figures/jet_generation/pippin/marginals/marginal_lep_pt.pdf}
+    \includegraphics[width=0.32\textwidth]{Figures/jet_generation/pippin/marginals/marginal_met_pt.pdf}
     \includegraphics[clip, trim=0cm 0cm 0cm 2.5cm, width=0.32\textwidth]{Figures/jet_generation/pippin/marginals_2D/marginal2D_jet_pt.pdf}
+    \includegraphics[clip, trim=0cm 0cm 0cm 2.5cm, width=0.32\textwidth]{Figures/jet_generation/pippin/marginals_2D/marginal2D_lep_pt.pdf}
+    \includegraphics[clip, trim=0cm 0cm 0cm 2.5cm, width=0.32\textwidth]{Figures/jet_generation/pippin/marginals_2D/marginal2D_met_pt.pdf}
     \caption{
-        The marginal and conditional distributions of the predicted leading jet energy and \pt from the PIPPIN model compared to the full MC pipeline.
+        The marginal (top) and conditional distributions (bottom) of the predicted leading jet (left), lepton (middle), and missing \pt (right) from the PIPPIN model compared to the full MC pipeline.
     }
     \label{fig:pippin_jet}
 \end{figure}
@@ -761,8 +793,8 @@ As shown in \Cref{tab:pippin}, the PIPPIN model outperformed both OTUS and Turbo
     \includegraphics[width=0.32\textwidth]{Figures/jet_generation/pippin/masses/mass_w1.pdf}
     \includegraphics[width=0.32\textwidth]{Figures/jet_generation/pippin/masses/mass_ttbar.pdf}
     \caption{
-        The marginal distributions of the reconstructed top quark, W boson, and \ttbar invariant masses from the PIPPIN model compared to the full MC pipeline.
-        Also shown is the parton level mass.
+        The marginal distributions of the reconstructed top quark (left), W boson (middle), and \ttbar (right) invariant masses from the PIPPIN model compared to the full MC pipeline.
+        Also shown is the parton-level masses for reference.
         The percentages indicate the proportion of events for which all partons were unambiguously matched and therefore present in these plots.
     }
     \label{fig:pippin_mass}
@@ -778,62 +810,96 @@ As shown in \Cref{tab:pippin}, the PIPPIN model outperformed both OTUS and Turbo
 
 \FloatBarrier
 
+\subsection{Conclusion}
+
+This study introduces a novel approach to simulating high-energy physics events by utilizing advanced deep learning architectures.
+The PIPPIN model directly generates reconstructed objects from final state partons, bypassing the traditional step-by-step pipeline.
+The model demonstrates proficiency in addressing the complexity of top quark pair production, accurately predicting both the multiplicity and kinematics of outputs.
+It effectively learns the topologies of various decay channels simultaneously, without necessitating channel-specific training.
+Additionally, the model captures the correlations between different simulated reconstructed objects, which is crucial for accurate high-energy physics event simulations, as the kinematics of final state particles are interconnected.
+One limitation is that only \ttbar events are considered, and it remains to be seen if this can be fully applicable to all physics processes.
+
+The PIPPIN model is also well-suited for the inverse problem of unfolding reconstructed objects to initial partons.
+The model could predict the multiplicity of each parton and the correspondence between reconstructed objects and partons, followed by conditional generation with partons as outputs and reconstructed objects as conditional inputs.
+The complete application of this method to the unfolding problem remains a subject for future research.
+
 \section{Diffusion for Anomaly Detection}
 \label{sec:drapes}
 
-We developed the \pcdroid model to generate background templates for anomaly detection in jet structure.
-This section is a brief summary of the work presented in~\textcite{Drapes}.
-
-\subsection{CWoLa and Cathode}
-\label{sec:cwolacathode}
-
-As explained in \Cref{ch:sm}, there is reason to believe that the current understanding of physics is incomplete.
-However, despite extensive analyses optimized for various BSM models, no significant evidence of new physics has been found.
+As explained in \Cref{sec:sm_limitations}, there is reason to believe that the current understanding of physics as described by the Standard Model (SM) is incomplete.
+However, despite extensive analyses optimized for various beyond the standard model (BSM) signal, no statistically significant evidence of new physics has been found.
 Recently, broader anomaly detection methods have gained focus.
-These searches are not highly sensitive to specific models but aim for a broader range of new physics scenarios.
+These approaches target sensitivity to a much wider spectrum of possible new physics scenarios, at the expense of sensitivity to any one process.
 
-A key technique in new physics searches is the bump hunt, which identifies localized data excesses, often expressed as a resonance in invariant mass.
-Standard bump hunts are limited by the need to define a region in phase space enriched with enough BSM signal events to be statistically significant over the SM background.
+A key technique in many of these model agnostic searches is the \textit{bump hunt}, which searches for localized spikes in data density.
+These bumps are often expressed as a resonance in invariant mass, and thus indicative of the decay of a massive particle.
+Standard bump hunts are limited by the need to define a signal region (SR) in phase space enriched with enough BSM signal events to be statistically significant over the expected SM background.
 Machine learning classifiers can provide a filter to reduce the amount of background present and thus enhance the power of the search.
 However, training these models in a signal-agnostic way is challenging.
 
-One such approach called CWoLa~\cite{cwola} trains a classifier to distinguish between data in the signal region (SR), which is assumed to be a mixture of signal and background events ($s+b$), versus some reference background ($b'$).
-If the reference background $b'$ matches closely the true background $b$, then the ideal classifier that separates $s+b$ from $b'$ will also separate $s$ from $b$.
+One such approach is called Classification Without Labels (CWoLa)~\cite{cwola}, whereby a classifier is trained to distinguish between data in the SR against some reference background.
+It is assumed that the data in the SR is a mixture of the BSM signal and SM background, denoted as $s+b$.
+If the reference background denoted as $b'$ matches exactly the true background $b$, then the optimal classifier that separates $s+b$ from $b'$ is also the optimal classifier for $s$ from $b$.
 
-Constructing the reference background template now becomes the central challenge, and several methods have been proposed~\cite{cathode, salad, CURTAINs, feta, lacathode}.
-One of the first methods, Cathode~\cite{cathode}, identifies the SR by a slice in some one-dimensional variable $c$, flanked by two sidebands.
+Constructing the reference background template $b'$ now becomes the central challenge, and several methods have been proposed~\cite{cathode, salad, CURTAINs, feta, lacathode}.
+One of the first methods, Cathode~\cite{cathode}, identifies the SR by a slice in some one-dimensional variable $c$, flanked by sidebands (SB).
 Each data sample is defined by the slice variable $c$ and additional features $\x$.
 A conditional generative model is trained using data from the sidebands to learn $p_\theta(\x|c_{\text{SB}})$, and the template is constructed by sampling from this model using $c$ values in SR, $x_{\text{SR}} \sim p_\theta(\x|c_{\text{SR}})$.
 This method is highly effective, provided that the generative model can accurately capture the correlations between $c$ and $\x$, and can interpolate to unseen values of $c_\text{SR}$ during inference.
 As long as the signal contamination in the sidebands is much lower than in the SR, the reference background can still lead to a good CWoLa classifier usable for enhanced bump hunts.
 
-\drapes follows this approach, using a diffusion model as the generator.
+This section summarizes the work presented in \textcite{Drapes}, introducing a new model called \drapes.
+The \drapes model adapts the approach used in \pcdroid to fill the role of the generative model in the Cathode method using denoising diffusion.
 
-\subsection{Experiments}
+\subsection{Experimental Setup}
 
-For this study, we used the LHCO R\&D Dataset~\cite{LHCO}, which has become a standard candle for performance in anomaly detection.
-This is a di-jet dataset with a mixture of BSM and QCD events.
-The slice variable is taken to be the di-jet mass, and the SR is defined as $m_{jj} \in [3.0, 3.7]~\TeV$.
+This study uses the LHCO R\&D Dataset~\cite{LHCO}, a benchmark for performance in anomaly detection.
+The dataset consists of di-jet events, and contains a mixture of a BSM signal and QCD background.
+The slice variable $c$ is the di-jet invariant mass, with the SR defined as $m_{jj} \in [3.0, 3.7]~\TeV$.
 
-We constructed two diffusion models for this task.
-One which would generate purely the high-level features (\drapes HLV), where $\x$ is a one-dimensional vector, as this would allow us to compare the method to other models.
-We used the same features as many of the existing models~\cite{CURTAINs, feta, lacathode}, including each jet's individual masses and subjettiness ratios.
-The second model would generate the complete set of jet constituents, also called the low-level features (\drapes LLV).
-Each jet is defined by a set of up to 150 constituents, similar to JetNet150.
-The dijet event, therefore, has up to 300 individual particles.
-We used the same setup for both models as \pcdroid but with a basic MLP instead of a transformer encoder for \drapes HLV.
+Two diffusion models are constructed for this task.
+One generates only high-level features (\drapes HLV), where $\x$ is a one-dimensional vector, allowing for comparison with previous models which followed the same approach using NFs~\cite{cathode, CURTAINs, lacathode}.
+Specifically, these features are:
+\begin{equation}
+    \x = \left[ m^{1}, \tau_{21}^{1}, \tau_{21}^{2}, \Delta m, \Delta R \right],
+\end{equation}
+where the superscript denotes the jet number and the $\Delta$ variables measure the difference between the two jets.
 
-The CWoLa classifier for \drapes HLV was a simple MLP with two hidden layers, while for \drapes LLV we used a three-layer transformer encoder.
+The second model, \drapes LLV, generates the di-jet system by individually generating each jet as sets of constituents.
+Each jet is defined by up to 150 constituents, similar to JetNet150, resulting in up to 300 individual particles per event.
 
-As benchmarks, we compare to an over-idealised classifier, which uses actual background events as the template ($s+b$ vs $b$), and a supervised classifier trained with correct labels ($s$ vs $b$).
-The primary performance metric is the significance improvement $SI$, defined as the number of signal events divided by the square root of the number of background events passing the CWoLA filter.
+Both models use the same setup as \pcdroid, but with a basic MLP instead of a transformer encoder for \drapes HLV.
+The CWoLa classifier for \drapes HLV is a simple MLP with two hidden layers, while for \drapes LLV, a three-layer transformer with class-attention is used.
 
-The classifier's performance trained on the \drapes HLV template is compared to the previous state-of-the-art model \FfF in \Cref{fig:drapes_hlv}.
-For all levels of initial signal injection, \drapes provides a higher level of $SI$ than \FfF.
-All methods, including the idealised classifier, drop off at around 500 injected signal events.
-This is because we reach the CWoLa limit of the dataset, whereby the signal presence is too low for a $s+b$ vs $b$ classifier to learn to distinguish $s$ vs $b$.
-\drapes performs better than the over-idealised classifier in some cases as we can increase the $b'$ statistics by an arbitrary amount, so we sample from the diffusion model until the performance saturates.
-In contrast, the over-idealised classifier is limited to the number of QCD events in the dataset.
+Each run of the experiment involved the following steps:
+\begin{itemize}
+    \item Generate the training set by mixing some signal events with the rest of the QCD background.
+    \item Train a background template model using samples from the SB.
+    \item Generate the reference background using mass values in the SR.
+    \item Train a CWoLA classifier using the reference background and actual data from the SR.
+    \item Measure the performance of the classifier at various background rejection rates $r_b$.
+\end{itemize}
+This entire process is repeated for different levels of signal injection to gauge the model's ability to enhance bump hunts in the presence of different signal strengths.
+
+\subsection{Results}
+
+The primary performance metric, significance improvement ($SIC$), is defined as the number of signal events divided by the square root of the number of background events passing the CWoLA filter.
+It is measured for a given background rejection rate ($r_b$).
+
+The high-level template \drapes HLV is compared to the previous state-of-the-art model \FfF.
+Both models used the same setup and CWoLA classifier, only the generative model differs.
+As upper bounds on performance, two extra classifiers are produced.
+The first is a supervised classifier trained using truth labels ($s$ vs $b$).
+The second is an idealized CWoLA classifier, trained using true QCD background samples drawn from the SR ($s+b$ vs $b$).
+This shows the limits of the CWoLA approach even with perfect background knowledge.
+All other classifiers are trained using the reference background $b'$ generated by different methods.
+
+The results on the high-level features are shown in \Cref{fig:drapes_hlv}.
+For all levels of initial signal injection, \drapes provides a higher $SIC$ than \FfF.
+All template methods, including the idealized classifier, drop off at around 500 injected signal events due to reaching the CWoLA limit of the setup.
+This limit is where signal presence is too low compared to the natural fluctuations of the background for a $s+b$ vs $b$ classifier to be able to pick out the signal~\cite{AachenLimit}.
+
+\drapes outperforms the idealized classifier in some cases by increasing the $b'$ statistics through generating more samples, whereas the idealized classifier is limited to the number of QCD events in the dataset.
 
 \begin{figure}[hbpt]
     \centering
@@ -847,19 +913,18 @@ In contrast, the over-idealised classifier is limited to the number of QCD event
 \end{figure}
 
 The performance of \drapes~(LLV) with varying signal amounts is shown in \cref{fig:drapes_llv}.
-The first thing to note is that when using the low-level features, the supervised benchmark yields an $SI=23.5$ at $r_b=1000$, much higher than the supervised benchmark using the high-level features, $SI=13.5$.
-This increase in performance shows the potential sensitivity enhancements for searches operating on low-level features.
-\drapes~LLV surpasses the high-level supervised model easily; however, to do so, it needs around 2000 signal events injected into the signal region, which corresponds to a significance already of 5.
-In this setting, no extra anomaly detection methods would be needed, and this excess would easily be found by a simple bump hunt.
-Unfortunately, the performance of \drapes~LLV drops off significantly below 2000 signal events and becomes worse than the high-level approach in the regions where we need it most.
-This observation is consistent with a similar study contemporaneously to this work~\cite{FullPhaseSpace}.
+When using low-level features, the supervised benchmark yields an $SI=23.5$ at $r_b=1000$, significantly higher than the supervised benchmark using high-level features, which has an $SI=13.5$.
+This increase in performance demonstrates the potential sensitivity enhancements for searches operating on low-level features.
 
-A reason for this drop-off in performance is that CWoLa classifiers using neural networks lose sensitivity as input dimensionality increases, especially with signal-insensitive inputs~\cite{lacathode}.
-This effect is heightened as the number of signal events decreases.
-Many methods are reverting to decision trees as they seem better suited for CWoLa style training~\cite{TreebasedAlgorithmsWeakly, AnomalyDetectionPresence}.
+\drapes~LLV surpasses the high-level supervised model easily; however, it requires around 2000 signal events injected into the signal region, corresponding to a significance of 5.
+At these levels of signal presence, no additional anomaly detection methods would be needed as this excess would easily be detectable in a naive bump hunt.
+Unfortunately, the performance of \drapes~LLV drops off significantly below 2000 signal events and becomes worse than the high-level approach in the regions where it is most needed.
+This observation aligns with a similar study conducted contemporaneously with this work~\cite{FullPhaseSpace}.
+
+The reason for this drop-off in performance is that CWoLa classifiers using neural networks lose sensitivity as input dimensionality increases, especially with signal-insensitive inputs~\cite{lacathode}.
 Moving from a few high-level variables to jet constituents multiplies the input dimensionality by over 150, severely affecting weakly supervised neural networks.
-The so-called CWoLa limit, the minimum number of required signal events injected into the dataset, was increased when moving to this higher dimensional regime.
-Therefore, this loss in sensitivity is due to the CWoLa approach, and more work needs to be done to find a way to train larger models on point cloud data in a weakly supervised way.
+Many new searches revert to decision trees over neural networks for the classifiers as they seem better suited for CWoLa style training~\cite{TreebasedAlgorithmsWeakly, AnomalyDetectionPresence}, but this is not possible for the low-level jet constituents.
+More work is therefore needed to find a way to train larger models on point cloud data in a weakly supervised manner.
 
 \begin{figure}[hbpt]
     \centering
@@ -871,7 +936,8 @@ Therefore, this loss in sensitivity is due to the CWoLa approach, and more work 
 
 \subsection{Conclusion}
 
-We have demonstrated that diffusion models can generate templates for CWoLa classifiers in anomaly detection.
-The \drapes model generated templates led to increased sensitivity in CWoLa style signal searches, outperforming the previous state-of-the-art model \FfF.
-However, when transitioning to the full jet constituent space, we found a significant drop in sensitivity when the injected signal significance was below 4.33.
-Due to corroborating studies, we believe this is due to the failure of a large transformer being trained with highly noisy labels rather than issues with the template generation.
+Demonstrating that diffusion models can generate templates for CWoLa classifiers in anomaly detection highlights a significant advancement.
+The \drapes HLV generated templates lead to increased sensitivity in CWoLa-style signal searches, surpassing the previous state-of-the-art model \FfF.
+
+However, transitioning to the constituent space reveals a notable drop in sensitivity when the injected signal significance falls below 4.33.
+Corroborating studies~\cite{FullPhaseSpace} suggest this decrease is attributable to the challenges faced by a large transformer trained with highly noisy labels, rather than issues with the template generation process.
