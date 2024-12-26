@@ -1,3 +1,7 @@
+% Bibliography not breaking urls correctly
+\setcounter{biburllcpenalty}{7000}
+\setcounter{biburlucpenalty}{8000}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Put the DOI/eprint/url on a new line
 \newbibmacro*{bbx:parunit}{%
@@ -36,14 +40,14 @@
 
 % Redefine the eprint macro to exclude the "Pre-published" status
 \renewbibmacro*{eprint}{%
-  \iffieldundef{eprinttype}
+    \iffieldundef{eprinttype}
     {\printfield{eprint}}
     {\printfield[eprint:\strfield{eprinttype}]{eprint}}}
 \AtEveryBibitem{%
     \ifentrytype{online}{%
-      \clearfield{pubstate}%
+        \clearfield{pubstate}%
     }{}%
-  }
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % If the entries are introduced the same citation then order by year
