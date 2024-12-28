@@ -6,7 +6,7 @@ The Large Hadron Collider (LHC)~\cite{LHCMachine,LHC1,LHC2, LHC3} is a synchrotr
 It is also the world's most powerful particle accelerator, providing both proton-proton ($pp$) and heavy ion collisions at the high energy frontier.
 At maximum speed, the protons in the LHC are only $3~\mps$ slower than the speed of light.
 
-Four primary experiments utilize the $\TeV$ scale collisions generated the each of the the four interaction points (IPs) of the LHC.
+Four primary experiments utilize the $\TeV$ scale collisions generated at each of the four interaction points (IPs) of the LHC.
 Two general-purpose experiments, ATLAS~\cite{ATLAS} and CMS~\cite{CMS}, employ hermetic detectors to study various physics processes.
 The LHCb experiment~\cite{LHCb} focuses on measuring the properties of B mesons and other particles containing b-quarks, which are significant for understanding CP violation.
 The Alice experiment~\cite{ALICE} investigates the properties of quark-gluon plasma, a state of matter believed to have existed in the early universe.
@@ -105,8 +105,7 @@ Even with this finite angle, long-range beam-beam interactions can still occur a
 The LHC was designed to deliver $\mathcal{L}(t) = 10^{34}~\unit{\centi\meter^{-2}\second^{-1}}$ at the IPs of ATLAS and CMS.
 However, this has not been constant over the years, and each experiment independently measures the luminosity using well-understood processes.
 The total integrated luminosity delivered by the LHC and recorded by ATLAS is shown in \Cref{fig:luminosity}.
-The LHC's instantaneous luminosity has increased with each run and this is important as it boosts the production rate of all physical processes.
-It particularly beneficial for measurements on rare events where the uncertainty is statistically limited.
+The LHC's instantaneous luminosity has increased with each run and this is particularly beneficial for measurements on rare events where the uncertainty is statistically limited.
 
 \begin{figure}
     \centering
@@ -252,7 +251,7 @@ The SCT in total has around 6.3M readout channels.
 
 \subsubsection{TRT}
 
-The outermost sub-detector of the ID, occupying the volume from $554~\mm$ to $1082~\mm$ from the beamline, is the Transition Radiation Tracker (TRT)~\cite{ATLASTRT}.
+The outermost sub-detector of the ID is the Transition Radiation Tracker (TRT)~\cite{ATLASTRT}.
 It is a straw-tube tracker that aids in the momentum measurement and provides information for particle identification for tracks within $|\eta| < 2.0$.
 The TRT provides the most hits per track, around 35 on average, of the three sub-detectors.
 At a greater distance from the beamline, it also does not require such fine spatial resolution as the silicon detectors to provide a good measurement of the track kinematics.
@@ -336,7 +335,7 @@ This process is performed offline, after the data has been recorded and stored, 
 
 This section describes the basics of track, vertex, and jet reconstruction at ATLAS, as well as several approaches to jet tagging.
 
-\subsection{Track Reconstruction}
+\subsection{Tracks}
 
 Track reconstruction refers to taking the collection of hits registered by the ID, and grouping them into individual tracks likely to have been produced by a single charged particle.
 Tracks are key ingredients in the reconstruction and identification of other particles, such as electrons and muons, jets, and the multiple vertices produced in each collision.
@@ -357,88 +356,272 @@ In dense environments the clustering algorithm may merge mistakenly merge hits f
 
 Tracks are \textit{seeded} by grouping triplets of SPs in three sequential layers in either the pixel or SCT subdetectors.
 Each of these seeds forms a \textit{track candidate} and are used to determine the first crude estimates of the track parameters, assuming a perfectly uniform magnetic field and helical trajectory.
-At this stage, hits may be shared between multiple seeds, and the seeds are not required to be consistent with the primary vertex.
-This maximizes the number of possible seeds and thus the efficiency.
 The only requirement to improve purity is that one additional SP is found compatible with the track candidate outside the seeding region.
-The following steps are therefore designed to improve the track quality and remove fake tracks.
+
+A combinatorial Kalman filter~\cite{ApplicationKalmanFiltering} is employed to iteratively extend this candidate by incorporating additional SPs in the other layers both towards and away from the IP\@.
+If multiple compatible space-point extensions are found on the same layer, the filter generates several track candidates for each seed.
+At this stage, hits may be shared between multiple candidates, which is intentionally done to maximize the number of possible candidates and thus the efficiency of the algorithm.
+
+The following steps are designed to improve the track quality and remove fake tracks.
 
 \subsubsection{Ambiguity Resolution}
 
+The ambiguity resolver begins by defining a \textit{track score} for each candidate.
+This score quantifies the likelihood that each candidate corresponds to a real trajectory.
+The score takes into account several factors; the number of SP assigned to the track will increase its score, while the number of holes will decrease it.
+Holes are defined as intersections between the reconstructed track and active sensor material where no matching SP is found.
+They can be found in data due to inefficiencies in the silicon sensors.
+The track score also considers the $\chi^2$ of the track fit.
+Tracks with higher \pt also receive a higher score.
+The ambiguity resolver then iterates over the list of track candidates in order of decreasing score.
+
+Clusters can overlap naturally in high-density environments.
+These are referred to as \textit{merged clusters}.
+A neural network estimates the number of particles traversing each cluster and their positions~\cite{NeuralNetworkClustering}.
+This information allows the cluster to be split and allocated to the different candidates.
+A track can have no more than two shared clusters, and clusters may be shared by no more than two tracks, with preference given to the track with the highest score.
+The refined and purified track candidates are then re-fit to obtain the final parameters.
+It obtains a new score and is inserted back into the list of candidates.
+
+During this stage, seeds that fail the track-finding process are checked for compatibility with information from the calorimeter.
+If a seed is within a region of interest in the calorimeter, the track-finding procedure is repeated, permitting an extra \textit{kink} in the track as this may have been caused by Bremsstrahlung radiation.
+This step improves electron reconstruction efficiency.
+
+The ambiguity resolver fully rejects track candidates if they fail to meet the criteria in \Cref{tab:track_criteria}.
+If the track is processed twice by the resolver without modification, it is saved to the final collection and all associated hits are removed.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{ll}
+        \toprule
+        Parameter           & Selection   \\
+        \midrule
+        $p_T$               & $> 400$ MeV \\
+        $|\eta|$            & $< 2.5$     \\
+        $|d_0|$             & $< 3.0$ mm  \\
+        $|z_0 \sin \theta|$ & $< 5$ mm    \\
+        Shared clusters     & $< 2$       \\
+        SCT + Pixel hits    & $\geq 8$    \\
+        Pixel holes         & $< 2$       \\
+        SCT + Pixel holes   & $< 3$       \\
+        \bottomrule
+    \end{tabular}
+    \caption{Track selection criteria used by the ambiguity resolver.}
+    \label{tab:track_criteria}
+\end{table}
+
+\subsubsection{TRT Extension}
+
+Finally, information from the TRT is used to extend the tracks.
+A similar Kalman filter incorporates TRT hits starting from the predicted intersection between each silicon track and the TRT.
+If successful, the TRT hits are added to the track, and the whole track is fit once more using a global $\chi^2$ fitter.
+The inclusion of TRT hits enhances momentum resolution and allows for particle identification.
+However, the extension may be rejected if it worsens the $\chi^2$ of the track candidate or if more than 50\% of the TRT hits are tube hits with no leading edge.
+
+\subsection{Vertices}
+
+Vertex reconstruction is the process of identifying the many primary and secondary vertices produced in each collision.
+Each vertex is a location in space, constructed from a convergence of fully reconstructed tracks, and indicates the point of origin for multiple charged particles.
+
+Primary vertices are those produced by the many $pp$ collisions during the bunch crossing.
+For Run 1 and 2, the primary vertices are reconstructed using the Iterative Vertex Fitter~\cite{ATLASVertex}.
+First, a seed position of the vertex is selected using the mode of the $z$-coordinate all tracks in the event measured at the point of closest approach to the beamline.
+Next, the vertex position is iteratively refined, and in each iteration, less compatible tracks are down-weighted.
+After the final iteration, all tracks with low enough weights are removed from the vertex and used for the next.
+
+For each event, the primary vertex with the highest $\Sigma\pt^2$ of all associated tracks is labelled as the \textit{hard scatter vertex}.
+It is sometimes ambiguously referred to as \textit{the} primary vertex (PV) while the others are referred to as \textit{pileup} vertices.
+Reconstruction on Run 3 data is switching to an Adaptive Multi-Vertex Fitter~\cite{Run3Vertex}.
+
+Secondary vertices are those produced by the decay of particles originating from the PV.
+This secondary decay must take place at a distance sufficiently far away in the transverse plane to be resolved and not mistakenly identified as pileup.
+They are typically caused by the decay of long-lived $b$-hadrons or the interaction of particles with the detector material and are thus crucial tools for identifying $b$-jets.
+In ATLAS, secondary vertex reconstruction is performed within the context of jet reconstruction using the JetFitter~\cite{JetFitter} or SV1~\cite{SV1} algorithms.
+
+\subsection{Jets}
+\label{sec:jets_reconstruction}
+
+As described in \Cref{sec:jets} are an emergent property of QCD\@, which results in a collimated spray of particles stemming from the decay and fragmentation of an initiating color-charged parton.
+From a detector perspective, jets result in large localized energy deposits in both calorimeters and many tightly packed tracks in a cone emanating from the PV.
+The width of the jet cone is dependent on the mass of the initiating particle and its transverse momentum, with $\Delta R \approx \sfrac{2m}{\pt}$.
+
+Due to the stochastic nature of the showering process, the jet signal can never be perfectly isolated.
+Particles within the jet cone may overlap with other initial state radiation, multiple parton interactions (from the underlying event), or pileup.
+Jet reconstruction is, therefore, a difficult optimization problem.
+The goal is to maximally capture the energy of the initiating particle while minimizing the contamination from other sources.
+A jet reconstruction algorithm should capture all hard partons in the event, have an axis parallel to the jet momentum, and accept roughly uniform contamination.
+
+Jet reconstruction in ATLAS is performed using the anti-$k_t$ algorithm~\cite{AntiKt}.
+This is a sequential recombination algorithm that iteratively clusters a collection of objects.
+It is both infrared and collinear safe.
+The algorithm is defined by a maximum distance parameter $R$.
+The algorithm begins with the hardest, highest \pt, object in the event $i$.
+During each iteration, the distance $d_{ij}$ is calculated to all other objects $j$ in the event,
+\begin{equation}
+    d_{ij} = \frac{1}{\max(\pt{_i}^2, \pt{_j}^2)} \frac{\Delta R_{ij}^2}{R^2}.
+\end{equation}
+If this value is less than $\sfrac{1}{\pt{_i}^2}$, then the objects are combined, and the algorithm proceeds; otherwise, $i$ is considered a jet and removed from the list.
+The algorithm continues until all objects are clustered or declared as jets.
+
+Jets can be clustered using the anti-$k_t$ algorithm with a variety of inputs.
+During Run 1, jets were constructed from topo-clusters, topologically connected calorimeter cells~\cite{TopoJets}.
+In some analyses, jets are clustered from tracks only~\cite{TrackJets}.
+The general approach for Run 2 and 3 data is to include both sets of information using the Particle Flow (PFlow) algorithm~\cite{PFlow}.
+
+\subsubsection{Particle Flow}
+
+The PFlow algorithm is designed to prevent the double-counting of momentum contributions from charged particles that leave both ID tracks and calorimeter energy deposits.
+This algorithm iterates through the tracks in descending \pt order, constructing charged PFlow objects.
+The algorithm begins by attempting to match the selected track to a topo-cluster in the calorimeter.
+Both are then used to compute the expected energy contribution to the cluster by the particle that created the track.
+A single particle may deposit energy in multiple topo-clusters, and the algorithm evaluates the probability of this occurring and may include additional topo-clusters if necessary.
+The expected energy is then subtracted from the associated topo-clusters, cell-by-cell.
+A new track is then selected, and the process is repeated.
+If, at any point, the remaining cell energy following the subtraction falls below expected shower fluctuations, it is removed.
+
+Topo-clusters not matched to any tracks are deemed to have been produced from neural particles and left unmodified.
+These, and the remaining clusters after the subtraction step, are used to construct neutral PFlow objects.
+
+The output of the PFlow algorithm is a collection of charged and neutral PFlow objects, each with defined energy and momentum.
+Charged PFlow objects not matched to the PV are removed to reduce pileup contamination.
+The remaining objects are clustered into jets using the anti-$k_t$ algorithm with $R=0.4$.
+
+\subsubsection{Jet Association}
+
+Once jets are defined, other objects can be associated using a $\Delta R$ matching criterion.
+For instance, a jet might be constructed from calorimeter energy deposits, but tracks can still be associated.
+The width of the $\Delta R$ association cone typically decreases as with jet \pt.
+This track association is beneficial for the ATLAS experiment because it enables using the Jet Vertex Tagger (JVT)~\cite{JVT}.
+The JVT leverages the transverse momenta from associated tracks to discriminate against jets originating from pileup interactions.
+Furthermore, many of the flavour tagging algorithms mentioned in the next section and in \Cref{sec:flavour_tagging} operate on the set of tracks associated with a jet, even though the jets themselves were clustered from PFlow objects.
+
+\subsection{Large Radius ``Fat'' Jets}
+
+Many decay channels of massive particles result in multiple parton final states.
+Some examples that are frequently encountered include $W/Z \rightarrow q \bar{q}$, $t \rightarrow Wb \rightarrow q \bar{q} b$, and $H \rightarrow VV \rightarrow q \bar{q} q \bar{q}$.
+If the initiating particle is produced at rest in the lab frame, the final state partons would be emitted back-to-back and likely be reconstructed as individual jets.
+However, as the transverse momentum of the initiating particle increases, the decay products become more collimated, as shown in \Cref{fig:jet_topologies}.
+In the highly boosted regime, the parton showers overlap in the detector and may be reconstructed as a single jet.
+To fully capture these composite jets, the anti-$k_T$ algorithm is run with a larger radius parameter of $R=1.0$.
+These jets are colloquially referred to as \textit{fat} jets.
+
+The overlapping showers lead to a distinct internal substructure within the jet, with regions of high energy density called \textit{subjets} or \textit{prongs}.
+The processes listed above, for example, would lead to 2-prong, 3-prong, and 4-prong jets, respectively.
+Jets from non-resonant QCD processes tend to have smooth energy distributions and no substructure (1-prong).
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.28\textwidth]{Feynman/sep.pdf}
+    \hfill
+    \includegraphics[width=0.28\textwidth]{Feynman/W.pdf}
+    \hfill
+    \includegraphics[width=0.28\textwidth]{Feynman/top.pdf}
+    \caption{A top quark decay with increasing momentum, showing the transition from three separately resolved jets (left), to a $W$-jet and a $b$-jet (middle), to a single fat jet (right).}
+    \label{fig:jet_topologies}
+\end{figure}
+
+The number of subjets and the angular separation of these subjets can be used to identify the initiating particle.
+One commonly used set of observables to describe jet substructure is its \emph{N-subjettiness}~\cite{Subjet}, denoted by ${\tau_N}$.
+N-subjettiness is a measure of how well a jet can be decomposed into $N$ subjets.
+For a given $N$ these subjets can be found via some other clustering algorithm, such as the exclusive-$k_t$ algorithm~\cite{ExclusiveKT}, and then the $\tau_N$ observable is defined as,
+\begin{equation}
+    \tau_N = \frac{1}{\pt R} \sum_{i} \min(\Delta R_{1,i}, \Delta R_{2,i}, \ldots, \Delta R_{N,i}),
+\end{equation}
+where $k$ runs over the constituents of the jet, and $\Delta R_{i,j}$ is the angular separation between the $i$th constituent and the $j$th subjet.
+The discriminating variable for jet tagging is often the ratio of these observables, $\tau_{21} = \sfrac{\tau_2}{\tau_1}$, is commonly used to distinguish vector boson jets from QCD jets, and
+$\tau_{32} = \sfrac{\tau_3}{\tau_2}$, is used to identify top quark jets.
+
+Other commonly used observables relate to the jet's energy correlation functions~\cite{ECF} and their ratios.
+Analyses at ATLAS make frequent use of the $\Dtwo$ observable~\cite{ATLASD2} to separate 1-prong and 2-prong jets,
+\begin{align}
+    \Dtwo & = \frac{e_3}{(e_2)^3}, \\
+          & = \frac{
+        \sum_{1 \leq i < j < k \leq N} z_i z_j z_k \Delta R_{ij} \Delta R_{ik} \Delta R_{jk}
+    }{
+        (\sum_{1 \leq i < j \leq N} z_i z_j \Delta R_{ij})^3
+    },
+\end{align}
+where $z_i$ is the \pt fraction of the jet carried by the $i$th constituent, and $\Delta R_{ij}$ is the angular separation between the $i$th and $j$th constituents, and $N$ is the number of constituents in the jet.
+Additionally, the Energy Flow Polynomials~(EFPs)~\cite{EFP} are a set of basis features which are sensitive to the underlying substructure of different jet types.
+
+\subsection{Heavy-Flavour Tagging}
+\label{sec:flavour_tagging}
+
+Heavy-flavour tagging, or simply flavour tagging, is the process of identifying jets that contain the decay products of $b$-quarks ($b$-jets) or  $c$-quaks ($c$-jets).
+Jets originating from the decay of $u-$, $d-$, $s-$ quarks and gluons are collectively called light-jets.
+Identifying jets from either process is known as $b$-tagging or $c$-tagging, respectively.
+In ATLAS, $b$-tagging plays a critical role in many analyses, particularly those measuring properties of the Higgs boson or the top quark.
+Nearly all top quarks decay rapidly into a $W$-boson and a $b$-quark, and the dominant decay mode of the Higgs boson is to a pair of $b$-quarks.
+
+Unlike the methods to distinguish large-radius jets, which rely on the jet substructure, the main distinguishing feature used in $b$-tagging is the extended lifetime of hadrons containing $b$-quarks.
+As discussed in \Cref{sec:electroweak}, the weak interaction CKM matrix is nearly diagonal, thus favouring transitions within the same generation.
+However, the $b$-quark is approximately 40 times lighter than the $t$-quark; it can only decay into lighter generations and is thus CKM suppressed.
+
+The $b$-hadrons are quasi-stable bound states between a $b$-quark and one or two lighter quarks.
+They have an average lifetime of around $1.5~\ps$, and if emitted with $\pt=50~\GeV$ would travel around $L_{xy} = 5~\mm$ in the transverse plane before decaying.
+This distance can be resolved by the ID vertex fitting algorithms and would result in a vertex with a notable transverse displacement, as shown in \Cref{fig:btagging}.
+The presence of a high mass secondary vertex within a jet is the primary feature used in $b$-tagging
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Figures/cern_atlas/bjet.png}
+    \caption{An interaction producing two light-flavour jets and one $b$-jet in the transverse plane. $B$-hadrons have a transverse decay length $L_{xy}$ of a few millimetres, creating displaced tracks and a secondary vertex. The transverse impact parameter (d0) is the closest approach distance of these tracks to the primary vertex, typically large for b-hadrons. Image taken from Ref.~\cite{BJetImage}.}
+    \label{fig:btagging}
+\end{figure}
+
+Flavour tagging at ATLAS has evolved over many years.
+Typically, the tools return the likelihood of a $b$- $c$- or light-jet, given some properties of the associated tracks.
+A collection of comparisons between these algorithms used in $b$-tagging is shown in \Cref{fig:btagging_roc}.
+Several handcrafted algorithms were designed for flavour tagging before the start of Run 1, such as IPxD~\cite{IPxD}, SV1~\cite{SV1}, and JetFitter~\cite{JetFitter}.
+Each tagger used a unique approach to extract different high level features from the jet and associated tracks.
+They also yielded different performances depending on the phase space.
+It was found that combining the most discriminating features from each in a single neural network resulted in a more versatile tagger known as MV1~\cite{MV1}, which was used at the start of Run 1.
+At the start of Run 2, it was replaced by MV2~\cite{MV2}, a boosted decision tree with similar inputs.
+In 2017, it was replaced by DL1~\cite{DL1}, a neural network again with much the same approach.
+These figures plot the $b$-jet efficiency against light and $c$-jet rejection.
+
+Also introduced at this time was the first tagger based purely on the raw collection of tracks and their parameters, known as RNNIP~\cite{RNNIP}.
+This was a recurrent neural network (RNN) that processed all the tracks in the jet sequentially to determine the three class probabilities.
+Again, the performance could be improved by combining the outputs of RNNIP with the other IPxD, SV1, JetFitter.
+This combination yielded the DL1r tagger~\cite{Run2FTAlgs}.
+A second track-based tagger known as DIPS~\cite{DIPS} was developed in 2020.
+It used the deep sets architecture~\cite{DeepSets}, and the corresponding combined tagger was labelled DL1d~\cite{AlexThesis}.
+
+The most recent iteration is a departure from the previous approach of combining multiple high level and track based taggers.
+In 2022 ATLAS introduced the GN1 tagger~\cite{GN1} which is a graph neural network, \Cref{ch:gnns}, that only uses the track information.
+This single network, as shown in \Cref{fig:gn1}, simultaneously performs jet tagging, as well as vertex matching and track classification trained end-to-end.
+
+More details on the GN1 tagger are provided in \Cref{ch:spice}, which also details the development of a new flavour tagging algorithm, GN2, which would supersede it.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.99\textwidth]{Figures/cern_atlas/GN1.png}
+    \caption{Schematic diagram of the GN1 model from Ref.~\cite{GN1}.}
+    \label{fig:gn1}
+\end{figure}
 
 
-% The trajectory of a charged particle (track) is parameterized as a helix using five parameters:
-
-% Impact parameter significances are calculated as:
-
-% In flavor tagging, IP significances are lifetime signed:
-
-% \begin{itemize}
-%     \item $d_0$ and $z_0$: Transverse and longitudinal impact parameters (IP), specifying the closest approach of the track to the primary vertex.
-%     \item $\phi$ and $\theta$: Azimuthal and polar angles.
-%     \item $q/p$: Measured charge divided by the scalar 3-momentum.
-%     \item $s(d_0) = \frac{d_0}{\sigma(d_0)}$
-%     \item $s(z_0) = \frac{z_0}{\sigma(z_0)}$
-%     \item Positive: Track crosses the jet axis in front of the primary vertex.
-%     \item Negative: Track crosses the jet axis behind the primary vertex.
-% \end{itemize}
-
-% \subsection{Jets}
-
-% For example, the differentiable cross-section of the ($2\rightarrow n+1$) process in \Cref{fig:quark_gluon} in the extreme soft and collinear limits factorizes into a $2 \rightarrow n$ process times a $1 \rightarrow 2$ split.
-% In this extreme limit the probability for soft-colinear gluon emission is given by,
-% \begin{equation}
-%     \label{eq:gluon_emission}
-%     d \mathcal{S} = \frac{2 \alpha_s C_F}{\pi} \frac{d \theta}{\sin\theta} \frac{dE}{E} \frac{d\phi}{2\pi},
-% \end{equation}
-% where $C_F = \sfrac{4}{3}$ is the color factor for the quarks, $\theta$ is the angle of the emitted gluon with respect to the quark, $E$ is the energy of the emitted gluon, and $\phi$ is the azimuthal angle.
-
-% \subsubsection{Particle Flow}
-% \label{sec:particle_flow}
-
-% \subsubsection{Fat Jets}
-% \label{sec:fat_jets}
-
-% At the LHC, quarks can be produced in the decays of particles such as $W/Z$~bosons, or top quarks through their decay into a $W$~boson and a $b$-quark.
-% For most energy scales, the two or three quarks from these decays produce jets that can be individually resolved in the detector.
-% However, as the momenta of the intermediate particles increase, the decay products themselves start to collimate, resulting in a single large-radius or \textit{fat} jet in the detector; this is the so-called boosted regime.
-% These objects are colloquially referred to as \textit{fat jets}.
-% The vast majority of jets, however, are initiated by partons, which are not the decay products of other massive particles (QCD background).
-% https://tikz.net/jet_top/
-
-% \subsection{Jet substructure}
-% \label{sec:jet_substructure}
-% Properties relating to the distribution of constituents within a jet are known as the substructure of a jet, which can be used to identify the original seed particle~\cite{Kogler:2018hem}.
-% This is particularly interesting in the boosted regime, where several partons from the decay of another elementary particle have overlapping showers.
-% % In boosted topologies it is of particular interest to identify whether a jet is from hadronic decays of a resonant particle or otherwise.
-% % Therefore, accurate modelling of jet substructure is of importance in many measurements and searches at the LHC.
-% % Many high level features are defined based on physics principles and are calculated from the constituents in a jet.
-
-% One commonly used set of observables to describe jet substructure is its \emph{N-subjettiness}~\cite{Thaler_2011}, denoted by ${\tau_N}$.
-% These are useful in identifying jets originating from processes with $N$ prongs as a result of the decay of the initial particle.
-% A jet originating from a gluon is likely to have a 1-prong substructure, whereas a $W/Z$~boson decay is likely to produce a 2-prong jet, and a jet originating from the all-hadronic decay of a top quark will tend to be 3-prong.
-% Other commonly used observables relate to the energy correlation functions of a jet and their ratios, such as $\Dtwo$~\cite{Larkoski_2013,Larkoski_2014}.%
-% \footnote{$\Dtwo$ is defined as the ratio of the three-point and cubed two-point energy correlation functions.}
-% A new set of features which have been found to be sensitive to the underlying substructure of different jet types are the Energy Flow Polynomials~(EFPs)~\cite{Komiske_2018}.
-
-% Furthermore, when a seed particle decays, the observed opening angle of the decay products is strongly dependent on its mass and momentum.
-% In jets, this means that the distribution of constituent properties is strongly correlated to the overall invariant mass and transverse momentum \pt.
-
-% Classification approaches applying cuts on the substructure features, as well as machine learning algorithms trained using such features have been successfully employed in the ATLAS and CMS collaborations to distinguish jets originating from $W$~bosons ($W$-jets), top quarks (top jets), gluons, and light quarks~\cite{ATLAS:2018wis,CMS:2020poo}.
-% In recent years, more sophisticated classification algorithms have been trained on the constituents themselves, either represented as ordered vectors~\cite{pearkes2017jet,ATLAS:2018wis,CMS:2020poo,Butter_2018}, images~\cite{de_Oliveira_2016,Kasieczka_2017,Macaluso_2018}, or point clouds~\cite{ParticleNet,Komiske:2018cqr,Moreno:2019bmu,Dreyer:2020brq,Dolan:2020qkr,Mikuni:2021pou,Shimmin:2021pkm,Gong:2022lye,Qu:2022mxj} (see Ref.~\cite{TopLandscape} for a review).
-
-% These approaches are very sensitive to the substructure of jets originating from different particles.
-% As such, when using fast surrogate models it is crucial that they accurately capture the distribution of the constituents within a jet and their correlations to the mass and \pt.
-
-% \section{Event Simulation}
-
-% \section{Flavour Tagging}
-% \label{sec:flavour_tagging}
-
-% A diagram of the GN1 model is shown in \Cref{fig:gn1}.
-
-% \begin{figure}
-%     \centering
-%     \includegraphics[width=0.99\textwidth]{figures/atlas/gn1.png}
-%     \caption{Schematic diagram of the GN1 model from Ref.~\cite{GN1}.}
-%     \label{fig:gn1}
-% \end{figure}
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{0.435\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/cern_atlas/dl1r.png}
+        \caption{}
+        \label{fig:dl1r}
+    \end{subfigure}
+    \begin{subfigure}{0.555\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/cern_atlas/dl1d.png}
+        \caption{}
+        \label{fig:dl1d}
+    \end{subfigure}
+    \begin{subfigure}{0.85\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/cern_atlas/gn1roc.pdf}
+        \caption{}
+        \label{fig:gn1r}
+    \end{subfigure}
+    \caption{The rejection factors for light-jets and c-jets as a function of the $b$-tagging efficiency for the different algorithms used by ATLAS over the years as measured on simulated \ttbar datasets. \subref{fig:dl1r} shows the performance of the MV2, DL1, DL1r taggers with the bottom panels showing the performance ratio to MV2. \subref{fig:dl1d} shows the performance of the DL1d and DL1r taggers with the bottom panels showing the performance ratio to DL1r. \subref{fig:gn1r} shows the performance of the GN1 tagger. Images taken from Refs.~\cite{Run2FTAlgs,AlexThesis,GN1} respectively.
+    }
+    \label{fig:btagging_roc}
+\end{figure}
