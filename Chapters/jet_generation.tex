@@ -81,7 +81,7 @@ and solving this equation yields
     f(t) = (\lambda_b - \lambda_a) \tan\bigl(\lambda_a + t(\lambda_b - \lambda_a)\bigr).
 \end{equation}
 
-This task is framed using the noise predictive reparametrisation in \Cref{eq:noise_loss}, extended for conditional generation based on context variable $\con$,
+This task is framed using the noise predictive reparametrization in \Cref{eq:noise_loss}, extended for conditional generation based on context variable $\con$,
 \begin{equation}
     \label{eq:training_objective}
     \mathcal{L}(\theta) =
@@ -176,6 +176,7 @@ For these initial studies the focus was on quality rather than speed, so 200 int
 
 Generated jets are compared to the JetNet30 test set using a variety of metrics
 As an additional benchmark for performance, MPGAN~\cite{MPGAN}, a GAN trained on the same dataset, is used.
+GANs are covered in \Cref{sec:gan}.
 MPGAN generates the particle cloud with attributes $(\Delta\eta, \Delta\phi, \pt^\text{rel})$, where $\pt^\text{rel} = \pt / \ptjet$.
 Therefore, the outputs of \pcjedi are transformed to this format for comparison.
 For evaluation, 50,000 jets per class are generated using MPGAN and \pcjedi with the different solvers.
