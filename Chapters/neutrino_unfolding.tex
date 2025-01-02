@@ -3,10 +3,10 @@
 
 Particle physics experiments have finite resolution, limited acceptance, and error-prone reconstruction algorithms.
 These limitations mean that the actual physical variable of interest $\x$ and its associated distribution $p_\text{true}(\x)$ are not directly observable.
-In data, we only have access to some distorted reconstructed proxy variable $\y$ and its distribution $p_\text{data}(\y)$.
+Data only provides access to some distorted reconstructed proxy variable $\y$ and its distribution $p_\text{data}(\y)$.
 MC generators use theoretical assumptions to approximate $p_\text{gen} \approx p_\text{true}$.
 Expensive detector simulations allow us to sample from the conditional distribution $p_\text{sim}(\y|\x)$.
-This allows us to form our estimation of the data distribution through the marginalization,
+This allows an estimation of the data distribution through the marginalization,
 \begin{equation}
     \int p_\text{sim}(\y|\x) p_\text{MC}(\x) \diff\x = p_\text{MC}(\y) \approx p_\text{data}(\y).
 \end{equation}
@@ -18,13 +18,12 @@ yielding a direct approximation for the underlying physical distribution.
 Unfolding is useful as it allows a comparison between predicted theory and observed data in a way that is independent of the detector response, ensuring that any observed irregularities are due to physics rather than detector artefacts.
 Approximating $p_\text{unfold}(\x|\y)$ however is a difficult and ill-possed task: solutions are not unique, and small changes in $p_\text{data}$ can cause large changes in the predicted $p_\text{true}$.
 
-In this chapter we describe the work done to create deep generative models to approximate $f_\theta(\y) \approx p_\text{unfold}(\x|\y)$.
-Specifically, we focus on the problem of unfolding the momentum of the neutrinos in the final state of the event.
+This chapter describes work done to create deep generative models to approximate $f_\theta(\y) \approx p_\text{unfold}(\x|\y)$, specifically the problem of unfolding the momentum of the neutrinos in the final state of the event.
 This is a specifically challenging setting as neutrinos are not directly observable in data.
 Their experimental signature \ptmiss, described in \Cref{sec:MET}, only captures a noisy approximation of the net neutrino momentum in the transverse plane.
 In order to yield $p_\text{unfold}(\x|\y)$ a significant amount of domain knowledge is required.
 
-This chapter summarizes the work done in \textcite{NuFlows1} and \textcite{Nu2Flows}, which describes the development of models to unfold the neutrino momentum in simulated \ttbar events with one and two neutrinos in the final state, respectively.
+This chapter summarizes publications \textcite{NuFlows1} and \textcite{Nu2Flows}, which describes the development of models to unfold the neutrino momentum in simulated \ttbar events with one and two neutrinos in the final state, respectively.
 
 \section{Introduction}
 
@@ -45,23 +44,22 @@ Its rapid decay offers a unique opportunity to measure the properties of a bare 
 Reconstructing the \ttbar system, including top quarks decaying leptonically via a $W$ boson, is crucial for many top quark measurements.
 However, the unknown momentum of final-state neutrinos makes it impossible to reconstruct the event entirely.
 
-Our method utilizes a deep generative model to approximate the set of neutrino momenta $\{\p^{\nu_i}\}_{i=1}^N$, given all observable objects in the event and the number of neutrinos $N$.
-It is trained on simulated events with known neutrino momenta.
+The method presented here utilizes a deep generative model to approximate the set of neutrino momenta $\{\p^{\nu_i}\}_{i=1}^N$, given all observable objects in the event and the number of neutrinos $N$.
+It is trained on simulated events with known, truth level, neutrino momenta.
 Standard deep learning regression methods collapse the posterior into a point estimate, failing to capture solution diversity or uncertainty.
 Therefore, a probabilistic approach that provides the likelihood over a range of viable solutions is necessary.
-
-We use a normalizing flow (NF), detailed in \Cref{sec:flows}.
-For this task, the NF requires observed data and two main underlying assumptions or implicit biases: the physical process being studied, ingrained into the flow by the training set's composition, and the assumed number of neutrinos or non-interacting particles, built into the flow's structure.
+A normalizing flow (NF), detailed in \Cref{sec:flows}, is used for this task.
+This approach requires main underlying assumptions: the physical process being studied, which is ingrained into the flow by the training set's composition, and the assumed number of neutrinos or non-interacting particles, built into the flow's layer structure.
 These assumptions are crucial to constraining the solution space.
 
-We call our method \vvflows, and it is composed of two key networks.
+This method is labelled as \vvflows, and it is composed of two key networks.
 The first is an invertible neural network which learns a bijection between truth neutrino momenta and the latent space, each represented as flattened rank-1 tensors, given a context tensor.
-The second is a feature extractor, which learns an expressive context tensor given all the visible objects in the event.
-Much of the work throughout these projects involved expanding and testing more sophisticated feature extractors.
+The second is a feature extractor, which learns an expressive context tensor given all the reconstructed objects in the event.
+Much of the work throughout these projects involves expanding and testing more sophisticated feature extractors.
 
 \section{Single Neutrino Final State}
 
-The simplest case is when there is only one neutrino in the final state which has three dimensions, and we use the semi-leptonic \ttbar decay as a case study\footnote{The code~\cite{SemileptonicTtbarNeutrino} and datasets~\cite{NuFlowsCode} are publicly available.}.
+The simplest case is when there is only one neutrino in the final state which has three dimensions, and the semi-leptonic \ttbar decay is used as a case study\footnote{The code~\cite{SemileptonicTtbarNeutrino} and datasets~\cite{NuFlowsCode} are publicly available.}.
 The final-state of this process contains at least four jets, a lepton, and a single neutrino as shown in \Cref{fig:feynman}.
 
 \begin{figure}[ht]
@@ -85,11 +83,10 @@ For this process, the standard approach~\cite{Quad1, Quad2, Quad4, Quad5} to est
     \end{aligned}
 \end{equation}
 Here $(p_x^\ell, p_y^\ell, p_z^\ell, E^\ell)$ is the lepton's four-momenta with mass $m_\ell$, and $\pt^\nu$ is the transverse momentum of the neutrino, estimated by $|\ptmiss|$.
-
 This approach has several drawbacks.
 It assumes an exact $m_W$, introducing bias by ignoring its natural width.
 It also assumes $\pt^\nu$ is perfectly captured by $\ptmiss$, overlooking misidentification and resolution effects.
-These factors can result in complex solutions where the convention is to drop the imaginary component.
+These factors can result in complex solutions where the convention is simply disregard the imaginary component.
 Additionally, even with perfect reconstruction, the equation will yield two real solutions, with no reason to favour one over the other, though the smaller magnitude result is typically taken.
 
 \subsection{Data}
@@ -109,20 +106,20 @@ The detector response is simulated using \delphes 3.4.2~\cite{Delphes} with a pa
 Jets are reconstructed using energy-flow objects and the anti-$k_t$ algorithm~\cite{AntiKt} with a radius parameter of $R = 0.4$ using FastJet~\cite{FastJet}.
 Jet $b$-tagging at $\bnom$ is used to identify jets originating from $b$-quarks.
 
-Events are required to contain exactly one reconstructed electron or muon with $p_\mathrm{T} > 15~\GeV$ in the range $|\eta|<2.5$ and at least four jets with $\pt > 25~\GeV$ in the range $|\eta|<2.5$.
+Events require exactly one reconstructed electron or muon with $p_\mathrm{T} > 15~\GeV$ in the range $|\eta|<2.5$ and at least four jets with $\pt > 25~\GeV$ in the range $|\eta|<2.5$.
 At least two of the jets are required to pass the $b$-tagging criteria.
-For truth labelling, jets were matched to partons within a radius of $\Delta R < 0.4$.
-Events containing jets matched to multiple partons were removed from the training and evaluation datasets.
+For truth labelling, jets are matched to partons within a radius of $\Delta R < 0.4$.
+Events containing jets matched to multiple partons are removed from the training and evaluation datasets.
 
 \subsubsection{Input and Target Features}
 
 Variables from event reconstruction are used as conditioning inputs to the feature extractor network.
 Up to 10 jets, as ordered by $p_\mathrm{T}$, are selected per event.
-The full set of observed features is described in Table~\ref{tab:inputs}.
+The full set of observed features is described in \Cref{tab:inputs}.
 The target for the flow is the neutrino three-momentum vector defined by $(p_x^\nu, p_y^\nu, \eta^\nu )$.
-The coordinate system used to represent the momentum of each physics object, was optimized as part of a hyperparameter scan.
-We found that using $\eta$ instead of $p_z$ and the logarithm of the energy $\log E^j$ yielded the best performance.
-We used standard normalization techniques to scale the inputs and targets to zero mean and unit variance.
+The coordinate system used to represent the momentum of each physics object, is optimized as part of a hyperparameter scan.
+Using $\eta$ instead of $p_z$ and the logarithm of the energy $\log E^j$ yielded the best performance.
+Standard normalization techniques are employed to scale the inputs and targets to zero mean and unit variance.
 
 \begin{table}[ht]
     \caption{The observable inputs used for the event feature extractor.}
@@ -148,8 +145,8 @@ The \vflows architecture optimized for this process is depicted in \Cref{fig:flo
 All observed inputs are passed through a feature extractor network to produce a context tensor for the flow.
 As there are a variable number of jets in each event, they are first passed through a multi-headed conditional deep set network.
 Inside the deep set there are three separate MLPs, one to extract the features, one to calculate the attention weights, and a final network to apply to the aggregated attributes.
-The NF was constructed from of seven rational-quadratic spline coupling layers~\cite{NeuralSplineFlows} interleaved with LU-parameterized linear layers.
-The latent distribution was chosen to be $\mathcal{N}(0, I)$.
+The NF is constructed from of seven rational-quadratic spline coupling layers~\cite{NeuralSplineFlows} interleaved with LU-parameterized linear layers.
+The latent distribution is chosen to be $\mathcal{N}(0, I)$.
 
 \begin{figure}[ht]
     \centering
@@ -163,26 +160,27 @@ The latent distribution was chosen to be $\mathcal{N}(0, I)$.
     \label{fig:flow}
 \end{figure}
 
-The model was constructed using the nflows library~\cite{nflows} and trained using the standard negative log-likelihood loss function.
-A cosine annealing scheduler adjusted the learning rate from zero to $5\times 10^{-4}$ every two epochs.
-Gradient clipping with a max-norm of 5 ensured stable convergence.
-For cross-validation, $10\%$ of the training data was reserved as a holdout set, and early-stopping was applied using a 30-epoch patience parameter.
-We used the Adam optimizer~\cite{Adam} with default parameters and a 256 batch size.
-The training was done on an NVIDIA 2080-Ti GPU, with the NF taking around 4 hours to converge.
+The model is constructed using the \texttt{nflows} library~\cite{nflows} and trained using the standard negative log-likelihood loss function.
+A cosine annealing scheduler adjusts the learning rate from zero to $5\times 10^{-4}$ every two epochs.
+Gradient clipping with a max-norm of five ensures stable convergence.
+For cross-validation, $10\%$ of the training data is reserved as a holdout set, and early-stopping is applied using a 30-epoch patience parameter.
+The Adam optimizer~\cite{Adam} is used with default parameters and a 256 batch size.
+The training is done on an NVIDIA 2080-Ti GPU, with the NF taking around 4 hours to converge.
 
-To compare performance with standard regression, we also trained a feed-forward network (FF) using only the feature extractor to predict the neutrino three-momentum directly.
-The FF network was trained using Smooth-L1 loss function~\cite{SmoothL1}.
-All other training parameters were kept the same.
+To compare performance with standard regression, a feed-forward network (FF) using only the feature extractor to predict the neutrino three-momentum directly is also trained.
+This network is trained using Smooth-L1 loss function~\cite{SmoothL1}.
+All other training parameters are kept the same.
 This approach is termed \vff.
 
 \subsection{Results}
 
-For unfolding, we sample under the flow in reverse-mode, and we call this method \vsample.
-This method has low bias but high variance.
-Alternatively, we can approximate $\argmax_\X{p_X(\x|\con)}$ by generating 256 neutrinos per event and selecting the solution with the highest likelihood.
-We call this method \vmode.
-We compare these methods to the mass constraint solution and \vff.
-Furthermore, we include reconstruction using the true neutrino momenta; plots labelled \emph{Truth} refer only to the neutrino values, while other properties, such as those of leptons or jets, are from reconstructed objects.
+For unfolding, sampling is done under the flow in reverse-mode, and this method is called \vsample.
+As an estimator \vsample has low bias, but high variance.
+Alternatively, the approximation of $\argmax_\X{p_X(\x|\con)}$ is made by generating 256 neutrinos per event and selecting the solution with the highest likelihood.
+This method is called \vmode.
+Both of these methods are compared with the mass constraint solution and \vff.
+To gauge performance under optimal conditions, reconstruction using the true neutrino momenta is also included.
+Plots labelled \emph{Truth} refer only to the neutrino values, while other properties, such as those of leptons or jets, are from reconstructed objects.
 
 \subsubsection{Per Event Inference}
 
@@ -192,8 +190,8 @@ In contrast, \vflows provides the entire probability distribution across $\eta^\
 It also highlights a preference for the solution closer to the actual value.
 The \vff yields a point estimate falling between the two peaks, collapsing to the mean of the data distribution due to the symmetrical loss function.
 In \Cref{fig:inf_ambig}, \vflows reproduces the multimodal distribution with less preference for either solution.
-\Cref{fig:inf_bad} shows an event where no method provides a reasonable estimate for $\eta^\nu$, suggesting poor object reconstruction in the event, particularly \ptmiss.
-The increased uncertainty in the likelihood plot of \vflows highlights its ability to identify poorly reconstructed events for filtering as one can devise a method to reject events matching \Cref{fig:inf_bad} and \Cref{fig:inf_ambig}.
+\Cref{fig:inf_bad} shows an event where no method provides a reasonable estimate for $\eta^\nu$, suggesting poor object reconstruction in the event, particularly for \ptmiss.
+The increased uncertainty in the likelihood plot of \vflows highlights its ability to identify poorly reconstructed events for filtering since one can devise a method to reject events matching \Cref{fig:inf_bad} and \Cref{fig:inf_ambig}.
 
 \begin{figure}[ht]
     \centering
@@ -283,14 +281,14 @@ The distribution closest to truth is \vsample.
 
 \subsubsection{Jet Association}
 
-We examine the effect of \vflows on the combinatoric assignment of jets to final-state partons.
+The effect of \vflows on the combinatoric assignment of jets to final-state partons is examined.
 This task is crucial for top quark physics analyses such as measurements of the top quark mass~\cite{ATLAS:2015pfy,CMS:2018quc,ATLAS:2018fwq,ATLAS:2019guf}, differential cross-sections~\cite{CMS:2016oae,CMS:2018htd,Quad4,CMS:2021vhb}, spin correlation~\cite{CMS:2015cal} and charge asymmetry~\cite{ATLAS:2022waa}.
 
 Semi-leptonic \ttbar events feature four final state partons: $b_{lep}$, $b_{had}$, and the hadronically decaying $W$ boson products, $q_1$ and $q_2$.
-These objects may be reconstructed as jets, but so too are signals from initial-state radiation and final-state radiation.
+These objects may be reconstructed as jets, but so too are signals from initial-state radiation (ISR) and final-state radiation (FSR).
 Jet assignment often utilizes a $\chi^2$ fit~\cite{Chi2ATLAS}, which is dependent on the neutrino kinematics, underscoring the value of precise neutrino estimation.
 This fitting procedure is just one of many jet combinatoric solving methods.
-Other methods include KLFitter~\cite{KLFitter} or any of the new deep learning approached~\cite{SAJA, SPANet, Spatter, TopoGraphs}.
+Other methods include KLFitter~\cite{KLFitter} or any of the new deep learning approaches~\cite{SAJA, SPANet, Spatter, TopoGraphs}.
 All of these techniques could also be complemented by \vflows.
 
 In the $\chi^2$ fit method, every possible jet-parton assignment is tested, and the one with the lowest $\chi^2$ value defined by
@@ -299,9 +297,9 @@ In the $\chi^2$ fit method, every possible jet-parton assignment is tested, and 
     \label{eq:chi_square}
 \end{equation}
 is kept.
-The $\sigma$ values are derived the root-mean-square error of the relevant mass distributions using the true jet-assignments and each neutrino reconstruction method separately.
+The $\sigma$ values are defined by the root-mean-square error of the relevant mass distributions using the true jet-assignments and each neutrino reconstruction method separately.
 
-We perform the fit using permutations of leading 9 jets in $\pt$ and record the parton association accuracy for each neutrino reconstruction method.
+The fit is performed using permutations of leading 9 jets in $\pt$ and record the parton association accuracy for each neutrino reconstruction method.
 The results are shown in \Cref{tab:blep_1sig}.
 The $b_\text{lep}$ matching efficiency heavily depends on the neutrino in the $\chi^2$ fit.
 Estimates from either \vsample or \vmode enhance matching efficiency over standard kinematic methods.
@@ -311,7 +309,7 @@ Consequently, the relationship between the performance gains of $\nu$-Flows and 
 Enhancing jet-parton matching efficiency benefits \ttbar event measurements, and $\nu$-Flows is expected to improve various measurements, although further studies are required to validate these outcomes.
 
 \begin{table}[h]
-    \caption{The fraction of events for which the $\chi^2$ method identified the correct $b_{lep}$ jet using the various neutrino estimation methods. The results are binned by the number of reconstructed jets in the event. Events must first pass a selection requirement where the partons were reconstructed as jets, so a correct permutation was at least possible.
+    \caption{The fraction of events for which the $\chi^2$ method identified the correct $b_{lep}$ jet using the various neutrino estimation methods. The results are binned by the number of reconstructed jets in the event. Events must first pass a selection requirement where the partons are reconstructed as jets, so a correct permutation is at least possible.
         This selection did not change the ranking of the methods.}
     \label{tab:blep_4sig}
     \centering
@@ -337,9 +335,9 @@ Enhancing jet-parton matching efficiency benefits \ttbar event measurements, and
 The case of two neutrinos in the final state is more challenging as the problem is under-constrained.
 In single-neutrino scenarios, the main challenge is recovering the neutrino's longitudinal momentum.
 In multi-neutrino events, the complexity increases due to the need to distribute the total missing transverse momentum among all final-state neutrinos.
-For this case, we use the dileptonic \ttbar process\footnote{The code~\cite{DileptonicTtbarNeutrino} and datasets~\cite{Nu2FlowsCode} are publicly available.}, which is similar to the semi-leptonic case but with both top quarks decaying leptonically, resulting in final states with two lepton-neutrino pairs.
+For this case study, the dileptonic \ttbar process is used\footnote{The code~\cite{DileptonicTtbarNeutrino} and datasets~\cite{Nu2FlowsCode} are publicly available.}, which is similar to the semi-leptonic dataset but with both top quarks decaying leptonically, resulting in final states with two lepton-neutrino pairs.
 In each event, there will be one neutrino and one anti-neutrino, giving us the order to define the combined 6-dimensional tensor for the flow.
-We label model adapted for this final state as \vvflows.
+The model adapted for this final state is labelled as \vvflows.
 
 \subsection{Reference Methods}
 
@@ -350,9 +348,8 @@ This study compares \vvflows with \vweight due to its widespread use and the \el
 \subsubsection{Neutrino Weighting}
 
 In \vweight, individual neutrino kinematics are derived from a grid search over possible neutrino rapidities.
-Following the procedure defined in Ref.~\cite{ATLAS:2019zrq}, we perform a grid search of $\eta^\nu$ and $\eta^{\bar\nu}$ from -5 to 5 with a step size of 0.2.
-For each pair of $\eta$ values, we then iterate through all possible assignments of $b$-tagged jets to the $b$-quarks from the \ttbar decay.
-Next, we calculate the neutrino four-momenta using the mass constraints,
+Following the procedure defined in Ref.~\cite{ATLAS:2019zrq}, a grid search of is performed over $\eta^\nu$ and $\eta^{\bar\nu}$ values from -5 to 5 with a step size of 0.2.
+For each pair of $\eta$ values, all possible assignments of $b$-tagged jets to the $b$-quarks from the \ttbar decay are considered and the neutrino four-momenta are calculated using the mass constraints,
 \begin{gather}
     \label{eq:mass_constraints}
     (\ell_{1, 2} + \nu_{1, 2})^2 = m_w^2 = 80.38~\GeV^2, \\
@@ -360,19 +357,21 @@ Next, we calculate the neutrino four-momenta using the mass constraints,
 \end{gather}
 where $\ell_{1, 2}$, $\nu_{1, 2}$, and $b_{1, 2}$ represent the four-momenta of the charged leptons, neutrinos, and $b$-tagged jets.
 This yields two possible neutrino kinematic solutions.
-For each solution, we calculate its weight by comparing the total neutrino transverse momentum \ptvv to the measured \ptmiss,
+For each solution, the \textit{weight} is calculated by comparing the total neutrino transverse momentum \ptvv to the measured \ptmiss,
 \begin{equation}
     \label{eq:neutrino_weight}
     w = \exp \left( - \frac{||\ptmiss - \ptvv||_2^2}{2 \sigma^2} \right),
 \end{equation}
 where $\sigma$ is a fixed resolution scale related to \ptmiss reconstruction.
-The $\eta$ pair maximizing $w$ is chosen as the correct solution however any solution which results in a reconstructed $\mttbar < 300~\GeV$ or where either of the two reconstructed top quarks has negative energy automatically rejected.
-This represents a very costly computation scan that considers only discrete $\eta$ values.
+The $\eta$ pair and jet assignment that corresponds to the maximum value of $w$ is chosen as the correct solution.
+However, any solution which results in a reconstructed $\mttbar < 300~\GeV$ or where either of the two reconstructed top quarks has negative energy automatically rejected.
 
 A notable limitation of this method is that, despite numerous neutrino solutions being tested, constraint systems may still be unsolvable due to measurement errors, incorrect object assignment, or deviations in the masses of the top quarks or
 $W$ bosons.
-We therefore also iterate over different values of $\mtop$ from 171 to $174~\GeV$ in step sizes of $0.5~\GeV$, which increases the number of hypotheses to test but improves solution efficiency.
-We find that approximately 5\% of the time, the \vweight method fails to find a valid solution.
+Therefore, the method may fail to find a valid solution for a significant fraction of events.
+To increase the success rate, different values of $\mtop$ from 171 to $174~\GeV$ in step sizes of $0.5~\GeV$ are also included in the grid search.
+With this addition, approximately 5\% of the time the \vweight method fails to find a valid solution.
+This entire process represents a very costly scan that considers only discrete $\eta$ values.
 
 \subsubsection{Ellipse method}
 
@@ -380,24 +379,24 @@ The \ellipse method employs a geometric approach to analytically constrain neutr
 For a single neutrino, its momentum is determined using the 4-momenta of the $b$-quark and the charged lepton, the \Wboson mass, and the top quark mass, defining an elliptical surface in the momentum space.
 Combining this with observed \ptmiss collapses the solution set to a unique value. For events with two neutrinos, the method is extended to calculate the most probable neutrino pair solutions producing the observed \ptmiss.
 
-We utilize the implementation by the method's authors~\cite{EllipseCode}.
+The implementation use here is directly copied by the method's authors~\cite{EllipseCode}.
 The method's drawbacks include the necessity for precise lepton to $b$-jet matching as well as making hard assumptions on the \Wboson and top quark masses.
 Like \vweight, it may yield no solutions.
-We use simple $\Delta R$ matching to make the lepton to $b$-jet association, considering only the two leading jets in passing $b$-tagging criteria.
-If this assignment fails to yeild a neutrino solution, the opposite association is tested.
-We find that the method fails to make an assigment in 22\% of \ttbar dilepton events, more than \vweight, but it requires significantly fewer computational.
+A simple $\Delta R$ matching is used to make the lepton to $b$-jet association, considering only the two leading jets in passing $b$-tagging criteria.
+If this assignment fails to yield a neutrino solution, the opposite association is tested.
+The method fails to make an assignment in 22\% of \ttbar dilepton events, more than \vweight, but it requires significantly fewer computational resources.
 
 \subsection{Data}
 
 In this work, \vvflows is applied to simulated \ttbar events where both top quarks decay leptonically, resulting in a final state with exactly two leptons, two neutrinos and two jets initiated by $b$-hadrons ($b$-jets).
 Additional jets arise from ISR and FSR.
 
-All events are simulated in proton-proton collisions at a centre-of-mass energy of \mbox{$\sqrt{s}=13$~TeV}.
+All events are simulated in proton-proton collisions at a centre-of-mass energy of \mbox{$\sqrt{s}=13~\TeV$}.
 Two different samples are generated, each using a different generator for the hard interactions in the matrix element.
-In the nominal sample, simulation setting match exactly the description in \Cref{sec:nu_data}.
+In the nominal sample, simulation setting matches exactly the description in \Cref{sec:nu_data}.
 In the alternative sample, both the hard interactions and parton shower are simulated with \pythia 8.307 with the Monash tuned set of parameters~\cite{Monash} at leading order accuracy.
 The same PDF set is used as for the nominal sample.
-Detector response, reconstruction, and jet tagging matches the configurations from the the single neutrino case.
+Detector response, reconstruction, and jet tagging matches the configurations from the single neutrino case.
 Truth association of the lepton to the parent top quark is performed assuming there is no charge misidentification, and the true neutrino momenta are taken directly from simulation.
 
 In total there are 1.02 million events in the nominal sample and 1.4 million events in the alternative sample passing all selection requirements.
@@ -409,8 +408,9 @@ There is the addition of a second lepton and neutrino, and the longitudinal comp
 \subsection{Model Architecture}
 
 The feature extraction network attempts to produce a contextual vector specific to each event to guide the transformations within the normalizing flow.
-A significant amount of optimization was performed to find the best architecture compared to the single neutrino case.
-To extend the model to handle multiple input leptons, we require a permutation invariant architecture that can accommodate a variable number of inputs, motivating the move to transformers, detailed in \Cref{sec:transformers}.
+A significant effort is performed to optimize this network, as the deep set approach used in the single neutrino case proved to be inadequate.
+To extend the model to handle multiple input leptons, a permutation invariant architecture is required that can accommodate a variable number of inputs.
+This motivates the move to transformers, detailed in \Cref{sec:transformers}.
 
 A schematic of the new \vvflows architecture is shown in \Cref{fig:nunuflows}.
 This new model uses object-specific embedding networks to project each input into a common high-dimensional space.
@@ -418,12 +418,12 @@ These embeddings are then passed through multiple TE Blocks,
 A single global vector is obtained via repeated cross-attention with a learnable class token, following techniques used in vision transformers~\cite{GoingDeeper}.
 
 The specific model used in this section comprises three TE and two CA blocks, each with embedding dimensions of 128 and 4 attention heads.
-All embedding MLPs have a single hidden layer of 256 neurons, using LeakyReLU activation and Layer-Normal1ization.
+All embedding MLPs have a single hidden layer of 256 neurons, using LeakyReLU activation and Layer-Normalization.
 The NF uses ten rational-quadratic spline coupling layers interspersed with LU-parameterized linear layers.
-For this model, we switch to the normflows library~\cite{Stimper2023}.
+For this model, switch is made to the \texttt{normflows} library~\cite{Stimper2023}.
 The entire \vvflows model has approximately 600,000 trainable parameters.
 
-We train for 100 epochs using the AdamW~\cite{AdamW} with a weight decay strength of \num{e-4} and a learning rate cycled from \num{e-8} to \num{e-3} every 25 epochs
+The model is trained for 100 epochs using the AdamW~\cite{AdamW} optimizer with a weight decay strength of \num{e-4} and a learning rate cycled from \num{e-8} to \num{e-3} every 25 epochs
 
 \begin{figure}[ht]
     \centering
@@ -434,12 +434,14 @@ We train for 100 epochs using the AdamW~\cite{AdamW} with a weight decay strengt
 
 \subsection{Results}
 
-We compare the performance of the \vvflows model with the \vweight and \ellipse methods.
+The performance of the \vvflows model is compared with the \vweight and \ellipse methods.
 Also included are results using \vtruth, which uses the true neutrino momenta to establish the performance upper limit for any neutrino reconstruction method.
 Note that for \vtruth, all other measurements, like the combined invariant masses, include reconstructed objects.
-Using the \textit{mode} method does not improve performance for \vvflows, so all flow results are from sampling under the learned conditional distribution.
+Using the \textit{mode} method does not improve performance for \vvflows, so all flow results are from direct sampling under the learned conditional distribution.
 
-A significant drawback of \vweight, leading to the preference for \ellipse despite its reduced performance, is its high computational resource requirement. Conversely, \vflows requires only a single forward pass per event. On a CPU, typical inference times for a single event are around 70 ms, decreasing substantially with parallelized execution on a GPU, as summarized in \Cref{tab:inf_times}.
+A significant drawback of \vweight, leading to the preference for \ellipse despite its reduced performance, is its high computational resource requirement.
+Conversely, \vflows requires only a single forward pass per event.
+On a CPU, typical inference times for a single event are around 70 ms, decreasing substantially with parallelized execution on a GPU, as summarized in \Cref{tab:inf_times}.
 
 \begin{table}[htbp]
     \centering
@@ -512,17 +514,17 @@ In contrast, \ellipse shows poor modelling in both the \mttbar and \pttt distrib
 
 \subsubsection{Unfolding Analysis}
 
-To evaluate the downstream impact of the improved neutrino reconstruction, we follow the unfolding analysis in Ref.~\cite{ATLAS:2016pbv}.
+To evaluate the downstream impact of the improved neutrino reconstruction, the unfolding analysis in Ref.~\cite{ATLAS:2016pbv} is replicated.
 In this analysis, normalized differential cross-sections in the fiducial phase space region for specific \ttbar system observables are unfolded to the particle level.
 These observables are shown in \Cref{tab:diff_observables}, including extra observables motivated by a similar study~\cite{CMS:2017iqf}, each depending on the neutrino kinematics.
 In the reference analysis, the \vweight method is used to reconstruct the neutrinos, which is then used to reconstruct the observables, which are then unfolded using iterative Bayesian unfolding.
-For our reimplementation, we compare this process using \vvflows, \vweight, \ellipse, and \vtruth to determine the neutrino kinematics.
+The process is repeated using \vvflows, \vweight, \ellipse, and \vtruth to determine the neutrino kinematics.
 
 Double differentiable unfolding is performed by initially binning the data in \mttbar, then in the observable of interest.
 The correct jet and lepton associations for both top quarks are used to eliminate matching inefficiencies.
-We perform the unfolding using the Singular Value Decomposition (SVD) method~\cite{SVDApproachData} with a regularization factor of 7, using the RooUnfold~\cite{ComparisonUnfoldingMethods} package.
-The regularization factor was optimized for the \vtruth distributions for a reduced $\chi^2$ value closest in agreement with one for the four double differential distributions.
-We do not make measurements of the cross-section in this work but instead focus on the statistical uncertainties of the unfolded distributions, which are compared to the optimal performance using \vtruth.
+The unfolding is performed using the Singular Value Decomposition (SVD) method~\cite{SVDApproachData} with a regularization factor of 7, using the \texttt{RooUnfold}~\cite{ComparisonUnfoldingMethods} package.
+The regularization factor is optimized for the \vtruth distributions for a reduced $\chi^2$ value closest in agreement with one for the four double differential distributions.
+This work does not make measurements of the cross-section but instead focus on the statistical uncertainties of the unfolded distributions, which are compared to the optimal performance using \vtruth.
 
 \begin{table}[htbp]
     \centering
@@ -548,7 +550,7 @@ Ideally, only the main diagonal would have entries, but due to inefficiencies in
 Using \vvflows results in a more diagonal response matrix, as quantified by the trace fraction shown in each plot's top right corner.
 
 While the trace fraction indicates method performance, off-diagonal elements still impact the unfolded distributions.
-To assess this impact true impact, response matrices are inverted using SVD, and overall uncertainties for each bin at the parton level are calculated.
+Response matrices are inverted using SVD, and overall uncertainties for each bin at the parton level are calculated.
 \Cref{fig:stat_gain_unfold_all} displays the relative statistical uncertainty for each method compared to \vtruth, also shown in \Cref{tab:all_unfolding}.
 Uncertainties in the four double differential distributions are typically 1.5 to 2 times smaller with \vvflows compared to \vweight and up to four times smaller compared to \ellipse.
 
@@ -585,12 +587,12 @@ Uncertainties in the four double differential distributions are typically 1.5 to
 
 Compared to standard analytical methods, \vflows is trained on MC simulated events.
 This may result in the model learning sample-specific effects, and lead to suboptimal or even unusable performance when applied to different samples from other generators.
-To evaluate this effect, \vvflows was trained using the alternative \ttbar dilepton sample (\vvflowsPy) and used to reconstruct the neutrinos for the nominal \ttbar sample.
-We compare the reconstructed kinematic distributions as well as the unfolding performance.
+To evaluate this effect, \vvflows is trained using the alternative \ttbar dilepton sample (\vvflowsPy) and used to reconstruct the neutrinos for the nominal \ttbar sample.
+The reconstructed kinematic distributions as well as the unfolding performance are compared.
 
-Negligible differences are observed in the reconstructed neutrino kinematics, though the minor offsets can clearly be seen for the reconstructed \Wboson mass top quark invariant masseses.
+Negligible differences are observed in the reconstructed neutrino kinematics, though the minor offsets can clearly be seen for the reconstructed \Wboson mass top quark invariant masses.
 For the double differential unfolding analysis, there is a slight change in the statistical uncertainty in each bin after unfolding, shown in \Cref{tab:all_unfolding}.
-However, most of these changes are minor and the method still outperforms \vweight and \ellipse.
+However, most of these changes are minor, and the method still outperforms \vweight and \ellipse.
 
 \begin{figure}[htbp]
     \centering
@@ -612,7 +614,7 @@ However, most of these changes are minor and the method still outperforms \vweig
     }
 \end{table}
 
-As an additional robustness test, we evaluate how \vvflows compares to \vweight and \ellipse in reconstructing \ttbar events simulated with extra ISR.
+As an additional robustness test, \vvflows is compared to \vweight and \ellipse in reconstructing \ttbar events simulated with extra ISR.
 This sample consists of 280,000 events and is identical to the nominal sample, except for notable differences in jet multiplicity distributions and the underlying kinematics of the top-quark and \ttbar pair.
 The distribution of \pttt, in particular, is significantly harder due to the recoil from the extra ISR.
 \Cref{fig:extraISRttbar} shows the reconstructed distributions for the three approaches.
@@ -631,12 +633,12 @@ As before, \vvflows exhibits very good agreement across the majority of the kine
 \subsubsection{Sensitivity to Top Mass}
 
 In contrast to \vweight and \ellipse, which both assume specific values for the top quark mass in the neutrino reconstruction \vvflows only implicitly learns this relation from the training data.
-To test whether \vvflows has sensitivity to the underlying top quark mass, we use the default \vvflows model in a data sample where the generator top quark mass has been changed to either 171~GeV or 175~GeV.
+To test whether \vvflows has sensitivity to the underlying top quark mass, the default \vvflows model is used to perform inference on a data sample where the generator top quark mass has been changed to either $171~\GeV$ or $175~\GeV$.
 These samples each have 160,000 events and are otherwise the same as the nominal.
 
 The top quark mass is reconstructed using the lepton, $b$-jet, and neutrino.
 A mass shift in the generated top quark mass should be reflected in the distributions of both the lepton-$b$ jet mass ($m_{b\ell}$) and the lepton-$b$-jet-neutrino mass ($m_t$).
-We compare these two distributions to determine if the mass shift is more pronounced in $m_{b\ell\nu}$, indicating the neutrino's significant contribution to the reconstruction.
+These two distributions are compared to determine if the mass shift is more pronounced in $m_{b\ell\nu}$, indicating the neutrino's significant contribution to the reconstruction.
 
 The distributions are shown in \cref{fig:top_mass_reco}.
 Despite training purely on events with the nominal top quark mass, the reconstructed distribution using \vvflows is sensitive to the difference in truth $m_t$.
@@ -664,8 +666,8 @@ Furthermore, in contrast to other approaches, \vvflows has solutions for all eve
 
 Future work includes extending this approach to final states with more than two neutrinos and training on a wide range of top quark masses for direct top quark mass measurements.
 
-We could also investigate using the model as an event filter.
+The model can also be investigated as its role as an event filter.
 As each sample is associated with a probability from the transformation under the normalizing flow, this could also provide opportunities for separating \ttbar events from background processes, similar to the weight in \vweight.
 
-Finally, while we have not noticed any significant shortcomings in the flow model's expressivity, a diffusion model could possibly achieve improved results.
-One of the reasons for this is that the same model could be applied to final states with varying numbers of neutrinos using a denoising transformer encoder as used in \Cref{ch:jet_generation}.
+Finally, while there is no significant evidence of the flow not being sufficiently expressive, a diffusion model could possibly achieve improved results.
+Furthermore, a diffusion model could be applied to final states with varying numbers of neutrinos using a denoising transformer as used in \Cref{ch:jet_generation}.

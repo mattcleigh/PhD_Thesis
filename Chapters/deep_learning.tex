@@ -1,11 +1,11 @@
 \chapter{Deep Learning Basics}
 \label{ch:deep_learning}
 
-Deep learning has revolutionized the field of collider physics, and the performance gain observed in many algorithms used in the ATLAS experiment has substantial.
+Deep learning has revolutionized the field of collider physics, and the performance gain observed in many algorithms used in the ATLAS experiment has been substantial.
 One of the most successful stories has been deep learning based algorithms for flavour tagging, covered in \Cref{sec:flavor_tagging}.
 However, despite the enthusiastic integration of ML tools and techniques in HEP, the swift pace of advancements presents a unique challenge.
 Researchers often find themselves in a situation where, by the time a newly developed ML tool is implemented and fully integrated into experiments, the technology has already progressed, leading to newer methodologies that render previous tools obsolete.
-In addition, experimentalists in HEP favour tools with greater, robustness, and domain adaptation
+In addition, experimentalists in HEP favour tools with greater, robustness, and domain adaptation.
 The final point is relevant as most models are trained on simulated data.
 
 This chapter provides a brief introduction to deep learning, focusing on the core concepts and techniques that are relevant to the rest of the thesis.
@@ -31,7 +31,7 @@ As the networks have grown in size and complexity, model interpretability has be
 \section{Supervised Learning}
 \label{sec:supervised_learning}
 
-Supervised Learning is often introduced first in a pedagogical setting, as it is the simplest and most intuitive form of machine learning. While it is not limited to deep learning, it is introduced here within its context as it is arguably the most common form of training for deep models. Indeed, many other training frameworks, such as reinforcement learning, are reframed as supervised problems to facilitate training.
+Supervised learning is often introduced first in a pedagogical setting, as it is the simplest and most intuitive form of machine learning. While it is not limited to deep learning, it is introduced here within its context as it is arguably the most common form of training for deep models. Indeed, many other training frameworks, such as reinforcement learning, are reframed as supervised to facilitate training.
 
 In supervised learning, a single data sample is a coupling of two variables $(x, y)$ and is drawn from unknown joint distribution $p_{XY}(X, Y)$.
 In this setting, $x$ is the observable information about the sample, and thus the input for a model, and $y$ is some truth label, target, or desired output for a model.
@@ -46,7 +46,7 @@ A supervised learning algorithm $f$, probabilistic or not, is selected out of so
     f = \argmin_{f \in \mathcal{H}} \frac{1}{N} \sum_{i=1}^N \mathcal{R}(f, (x_i, y_i)).
 \end{equation}
 
-For now, we make no assumptions about the structure of the input or output samples except that they can be represented as tensors, or collections of tensors, of real numbers.
+For now, no assumptions are made about the structure of the input or output samples, except that they can be represented as tensors, or collections of tensors, of real numbers.
 Common types of supervised algorithms $f$ including support vector machines, decision trees, and of course neural networks.
 For a neural network $f_{\theta}$, the hypothesis space $\mathcal{H}$ is the set of all possible network architectures and network parameter values $\theta$.
 
@@ -80,7 +80,7 @@ Inductive biases can also be understood in terms of the bias-variance trade-off,
 
 The Multi-Layer Perceptron (MLP) is arguably the simplest form of a deep neural network.
 It is also referred to as a dense network, fully connected network, or sometimes confusingly as a feed-forward neural network (FFN)\footnote{A term which can be used to describe any neural network without loops in the computational graph.}.
-In an MLP, there is a single input and single output both of which are rank-1 tensors but can have differing numbers of features.
+In an MLP, there is a single input and single output both of which are rank-1 tensors, but can have differing numbers of features.
 A minimal working example of an MLP is a series of affine transformations\footnote{Often called a linear layer, but the operation almost always includes a bias term.}, each parametrized by a weight matrix $\W$ and bias vector $\bias$, followed by a non-linear activation function $\sigma$.
 The depth of the MLP is the number of intermediate representations in the computational graph between the input and output.
 A minimal MLP with two hidden layers can be written as
@@ -118,7 +118,7 @@ Training or fitting a deep neural network is an optimization problem where the b
     \theta^* = \argmin_{\theta} \frac{1}{N} \sum_{i=1}^N \mathcal{L}(\theta, x_i).
 \end{equation}
 For generalization, $x_i \in \mathcal{D}$ may also include the target if present.
-Due to the size of the parameter space and the non-linearity of the model, the $\theta^*$ can not be found analytically.
+Due to the size of the parameter space and the non-linearity of the model, the $\theta^*$ cannot be found analytically.
 The most common method for training deep neural networks is mini-batch stochastic gradient descent (SGD)~\cite{Perceptron} or one of its many variants.
 SGD is an iterative optimization algorithm that attempts to minimize the loss over a dataset by adjusting the parameters of the model in the direction of the negative gradient of the loss calculated over a random subset of the data.
 An outline of the basic training algorithm is shown in \Cref{alg:gradient_descent}.
@@ -198,7 +198,7 @@ In both cases, the layer can no longer approximate non-linear transformations.
 Normalization starts with the input data itself, which can be seen as a preprocessing step or as the first layer of the network.
 This is typically performed using the statistics of the training set.
 Variables with long tails are also transformed to have a more Gaussian distribution.
-This can be done by taking the logaritm of variables with large dynamic ranges, or by using more advanced techniques like a quantile transformation.
+This can be done by taking the logarithm of variables with large dynamic ranges, or by using more advanced techniques like a quantile transformation.
 Within the network itself, normalization layers $L_{\text{norm}}$ are interleaved between others.
 Methods such as batch normalization (BatchNorm)~\cite{BatchNorm} or layer normalization (LayerNorm)~\cite{LayerNorm} are widely used and both have been shown to be greatly effective, with the latter seen as essential for transformer neural networks~\cite{Attention}.
 
@@ -216,15 +216,15 @@ where $l$ is the transformation of the layer.
 A single operation of this form is called a residual block.
 Residual connections have been shown to improve the training of very deep networks, as they allow the gradient to flow directly through the network, bypassing the squashing or exploding effects of the intermediate layers.
 Residual connections are a key component of almost all modern architectures from convolutional neural networks~\cite{ResNet} to transformers~\cite{Attention}.
-The residual connection is usually additive, but other operations exist, for example UNets~\cite{UNet} use concatenation.
+The residual connection is usually additive, but other operations exist, for example UNets~\cite{Unet} use concatenation.
 If the input and output of the layer have different dimensions, the residual path can be adjusted by a minimal transformation, in a convolutional network this is typically a $1 \times 1$ convolution.
 
 The addition of two signal paths means that $a_{i+1}$ will have a larger variance than $a_i$.
 This can cause a deeper network to become unstable, especially in the early stages of training.
 One method to circumvent this is the inclusion of a normalization layer after the residual block, as was done in the original transformer architecture~\cite{Attention}, which is referred to as post-normalization.
-However, this was shown to be detrimental in very deep networks and recent methods use pre-normalization~\cite{PreLN} (PreNorm), where the input to the learnable layer is normalized.
-With a PreNorm residual block one can prevent an exploding variance problem by scaling the residual path by a small constant, such as $\frac{1}{\sqrt{2}}$~\cite{StyleGAN2}.
-Recent methods allow this constant to be trainable with some set it to zero at the beginning of training such that the block behaves like an identity function~\cite{ReZero, SkipInit, Fixup}.
+However, this was shown to be detrimental in very deep networks and recent methods use pre-normalization (PreNorm)~\cite{PreLN}, where the input to the learnable layer is normalized.
+With a PreNorm residual block one can prevent an exploding variance problem by scaling the residual path by a small coefficient, such as $\frac{1}{\sqrt{2}}$~\cite{StyleGAN2}.
+Recent methods initialize this coefficient to zero, such that the block behaves like an identity function, but allow it to be learned during training~\cite{ReZero, SkipInit, Fixup}.
 This was extended to the LayerScale method~\cite{GoingDeeper}, where a fully learnable tensor $\mathbf{L}_\text{scale}$ matching the output shape of the layer is used to scale the residual path.
 Initialized to zero, the network will learn the optimal scaling during training.
 
@@ -259,7 +259,7 @@ Confusingly, increasing the size of the network can also help prevent overfittin
 This is known as the double descent phenomenon~\cite{UnderstandingDoubleDescent}, whereas the effective model capacity grows, more solutions become accessible, and the model becomes a self ensemble.
 
 Domain shift is a problem which is similar to overfitting, but occurs when the underlying distribution of the training and test datasets differ.
-This is a significant issue in fields HEP, where models are trained on simulated samples, in order to have access to ground truth labels, but must be applied to real data.
+This is a significant issue in HEP, where models are trained on simulated samples, in order to have access to ground truth labels, but must be applied to real data.
 Domain adaptation~\cite{UnsupervisedDomainAdaptation} and adversarial training~\cite{EnhancingGeneralizationHigh} are methods to address this.
 
 Finally, unwanted biases in the training set can lead to skewed predictions.
