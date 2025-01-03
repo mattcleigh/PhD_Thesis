@@ -30,6 +30,7 @@
 \usepackage{mathtools}
 \usepackage{placeins}
 \usepackage{xspace}
+\usepackage{textpos}
 % \usepackage{makecell}
 
 \input{bibmacros.tex}
@@ -47,7 +48,7 @@
 	%showframe,
 }
 
-\thesistitle{Transformers, Generative Modelling, and High Energy Physics}
+\thesistitle{Transformers and Generative Modelling in High-Energy Physics}
 \supervisorA{Prof. Tobias \textsc{Golling}}
 \supervisorB{Prof. Svyatoslav \textsc{Voloshynovskiy}}
 \degree{Doctor of Philosophy}
@@ -69,36 +70,35 @@
 \frontmatter
 \pagestyle{plain}
 
-% \include{Preface/title}
-% \include{Preface/declaration}
-% \include{Preface/abstract}
-% \include{Preface/acknowledgements}
+\include{Preface/title}
+\include{Preface/declaration}
+\include{Preface/abstract}
+\include{Preface/acknowledgements}
 
-% \tableofcontents
+\tableofcontents
 
 % Reset page numbering and headers
 \mainmatter
 \pagestyle{thesis}
 
-% \include{Chapters/introduction}
-% \include{Chapters/standard_model}
-% \include{Chapters/lhc_atlas_detector}
-% \include{Chapters/deep_learning}
-% \include{Chapters/graph_networks}
-% \include{Chapters/flavour_tagging}
+\include{Chapters/introduction}
+\include{Chapters/standard_model}
+\include{Chapters/lhc_atlas_detector}
+\include{Chapters/deep_learning}
+\include{Chapters/graph_networks}
 \include{Chapters/generative_models}
-% \include{Chapters/neutrino_unfolding}
-% \include{Chapters/jet_generation}
-% \include{Chapters/foundation_models}
-% \include{Chapters/conclusion}
+\include{Chapters/flavour_tagging}
+\include{Chapters/neutrino_unfolding}
+\include{Chapters/jet_generation}
+\include{Chapters/foundation_models}
+\include{Chapters/conclusion}
 
 \printbibliography{}
 
 \appendix
 
-% \include{Appendices/neutrino}
-% \include{Appendices/jet_generation}
-% \include{Appendices/foundation_models}
-
+\include{Appendices/neutrino}
+\include{Appendices/jet_generation}
+\include{Appendices/foundation_models}
 
 \end{document}

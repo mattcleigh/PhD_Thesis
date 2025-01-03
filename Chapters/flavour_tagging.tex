@@ -11,12 +11,12 @@ The previous state-of-the-art flavour tagger used by the ATLAS experiment was GN
 In this section, two new models and their variants are introduced.
 Each are GNNs with different architectures and mechanisms for message passing.
 The first new model is called GN++ and is based on the complete GN Block architecture described in \Cref{sec:gn_block}, complete with persistent edge information and global attributes.
-The second new model, Spice, is based on the transformer-encoder architecture described in \Cref{sec:transformer}.
+The second new model, Spice, is based on the transformer-encoder architecture described in \Cref{sec:transformers}.
 Spice would turn out to be so performant and efficient that it would form the basis of the new GN2 flavour tagger adopted by the ATLAS collaboration~\cite{GN2Plots}.
 
 One observation made during this project is that the field of machine learning moves is significantly faster compared to HEP.
 Spice was being developed and presented to the flavour tagging group while GN1 was still undergoing calibration.
-To address this rapid progression and prevent obsolescence, a major contribution of this thesis is the development of Salt~\cite{Salt}, a repository for the dedicated research, development, and deployment of deep learning algorithms for flavour tagging.
+To address this rapid progression and prevent obsolescence, a major contribution of this thesis is the development of \texttt{Salt}~\cite{Salt}, a repository for the dedicated research, development, and deployment of deep learning algorithms for flavour tagging.
 It ensures that the models used by the ATLAS collaboration remain up-to-date with the state-of-the-art models employed by the broader machine learning community.
 
 \section{Datasets}
@@ -265,7 +265,7 @@ Self-loops are also permitted.
 This fully connected approach is found to be beneficial for performance while not significantly increasing the computational cost as the maximum cardinality of the graph (40) is relatively low compared to other graph-based tasks in machine learning.
 
 To compare the information flow within the layers of GN1, the GN++ models, and Spice, the flowcharts in \Cref{fig:gn1_graph}, \Cref{fig:gnpp_graph}, \Cref{fig:gna_graph}, and \Cref{fig:spice_graph} are used.
-These diagrams share similarities with the illustrations of the GN Block \Cref{fig:gn_block} but explicitly display the tensor operations acting on each attribute.
+These diagrams share similarities with the illustrations of the GN Block \Cref{fig:full_gn_block} but explicitly display the tensor operations acting on each attribute.
 The key for each operation is shown in \Cref{fig:key}.
 
 \begin{figure}[h!]
@@ -689,7 +689,7 @@ This is not a minor feature, as it allows for rapid development and deployment, 
 
 \section{The GN2 Tagger}
 
-Developed in the Salt~\cite{Salt} framework, Spice was adapted into the new GN2 model, the new recommended flavour tagger actively used by the ATLAS Collaboration.
+Developed in the \texttt{Salt}~\cite{Salt} framework, Spice was adapted into the new GN2 model, the new recommended flavour tagger actively used by the ATLAS Collaboration.
 
 Several architectural changes are made transitioning from Spice to GN2.
 There the main backbone of the network comprises 8 TE Blocks, each with an embedding dimension of 192 and an MLP hidden dimension of 256, resulting in 1.5M trainable parameters.
@@ -721,14 +721,14 @@ ROC curves comparing GN1, GN2, and deep sets based DL1d~\cite{DL1D}  are shown i
 
 \subsection{Further utilization of GN2 and Salt}
 
-The GN2 model, alongside the Salt framework, has been extensively utilized across various analyses and projects within the ATLAS Collaboration.
+The GN2 model, alongside the \texttt{Salt} framework, has been extensively utilized across various analyses and projects within the ATLAS Collaboration.
 In addition to its application in flavour tagging, the GN2 tagger was retrained to identify large-radius jets originating from boosted Higgs bosons decaying into $b\bar{b}$ and $c\bar{c}$ pairs~\cite{GN2X}.
 In this context, the principal backgrounds are top quark pairs and multi-jet events.
 The model, designated as GN2X, demonstrated significant classification performance improvements over established baselines, as illustrated in \Cref{fig:gn2x}.
 
 Moreover, GN2 was adapted for constituent-based $b$-jet calibration, where the model was trained to regress correction factors for the jet kinematics~\cite{GN2Calib}.
 The initial results are presented in \Cref{fig:gn2calib}.
-The GN2 model and Salt framework have been incorporated into numerous ongoing works within ATLAS, including $\tau$-jet identification, vertex regression, electron/gamma energy calibration, pileup rejection, multi-top analyses, and lepton tagging.
+The GN2 model and \texttt{Salt} framework have been incorporated into numerous ongoing works within ATLAS, including $\tau$-jet identification, vertex regression, electron/gamma energy calibration, pileup rejection, multi-top analyses, and lepton tagging.
 
 \begin{figure}
     \centering

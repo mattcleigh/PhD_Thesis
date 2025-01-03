@@ -5,7 +5,8 @@ The philosophy behind graph neural networks (GNNs) is rooted in the idea that na
 By understanding these elements and the rules governing their interactions, we can gain insights into the system as a whole.
 This reductionist approach is used in many areas of science, and indeed is the basis for all of particle physics.
 
-Graphs serve as a prime example of explicitly structured data, encompassing entities and their pairwise relationships. GNNs are a type of deep learning model designed to handle this structure, allowing information to flow through the network in a manner that mirrors the graph's organization.
+Graphs are a way to represent explicitly structured data, encompassing entities and their pairwise relationships.
+GNNs are a type of deep learning model designed to handle this structure, allowing information to flow through the network in a manner that mirrors the graph's organization.
 
 This chapter explores the foundational principles of GNNs, how they operate, and their limitations.
 It also delves into the most successful GNN variant to date, the transformer model, which is utilized extensively in the subsequent chapters of this thesis.
@@ -13,17 +14,18 @@ This chapter follows the notation and formalism of~\textcite{RelationalInductive
 
 \section{Learning Relations}
 
-Relational reasoning~\cite{SimpleNeuralNetwork} is the development of rules that describe how the properties of entities modify the relations between them, and how in turn the relations modify the properties of the entities.
+Relational reasoning~\cite{SimpleNeuralNetwork} is the development of rules that describe how the properties of entities modify the relations between them, and how in turn, the relations modify the properties of the entities.
 GNNs employ relational reasoning to complete tasks by directly manipulating the rules, entities, and relations of a system.
+Rules may be reused across different entities within the system, allowing for more efficient learning and greater generalization.
 
 An example of successful relational reasoning being used in deep learning outside GNNs is in image processing tasks.
 An image is typically represented as a rank-3 tensor using the pixel values as the tensor elements.
-This tensor of has shape $(H, W, C)$, where $H$ and $W$ describe the image resolution, and $C$ is the number color channels.
+This tensor has shape $(H, W, C)$, where $H$ and $W$ describe the image resolution, and $C$ is the number color channels.
 If one wanted to process this tensor with an MLP, it must first be flattened to a have of shape $H \times W \times C$.
-Within each affine layer every element of the input tensor is connected to every element of the output tensor.
+Within each affine layer, every element of the input tensor is connected to every element of the output tensor.
 While this leads to a flexible model, it also destroys the spatial structure of the image and no reusable relationships or rules are used.
 
-Alternatively, we could use a network composed of learnable convolutional kernels.
+Alternatively, a network composed of learnable convolutional kernels can be used.
 These kernels scan over the input tensor, computing the weighted sum of the elements within the kernel window.
 This introduces two key relational inductive biases: locality and translation invariance.
 Locality refers to the assumption that the relationship between two elements is stronger if they are close together in the input space.
@@ -32,25 +34,29 @@ Locality is enforced by using a kernel width of limited size and translation inv
 Each convolutional kernel defines rule for how elements within the structure of the input tensor are related.
 
 This is an example of geometric deep learning, also called a relational inductive bias, whereby the known structure of the data is embedded into the architecture of the model itself, rather than being learned directly from the data.
-This reduces the number of parameters required in the model, allowing for more statistically efficient learning.
+This reduces the number of parameters required in the model.
 
 \section{Defining a Graph}
 \label{sec:graph_definition}
 
-A graph $\mathcal{G}$ is a data structure that consists of a set of $N$ attributed nodes $\mathcal{N} = \{\x_i\}_{i=1}^{N}$ interconnected by a set of $N^e$ attributed edges $\mathcal{E} = \{(\x_k, r_k, s_k)\}_{k=1}^{N^e}$.
-Here $\edge_k$ are the edge attributes, and $s_k$ and $r_k$ are the indices of the sender and receiver nodes in $\mathcal{N}$ respectively.
+A graph $\mathcal{G}$ is a data structure that at its most basic level consists of a set of $N$ attributed nodes $\mathcal{N} = \{\x_i\}_{i=1}^{N}$.
+Here, $\x_i$ is the attribute of the $i$-th node.
+Two nodes may be connected by an edge.
+Each edge possess its own attributes and has a defined direction, designating one node as the sender and the other as the receiver.
+Thus, the edge is defined by a tuple $(\edge_k, r_k, s_k)$, where $\edge_k$ is the attribute of the edge, and $r_k$ and $s_k$ are the indices of the receiver and sender nodes $\mathcal{N}$ respectively.
+All edges in the graph are defined by the set of $N^e$ attributed edges $\mathcal{E} = \{(\edge_k, r_k, s_k)\}_{k=1}^{N^e}$.
 It is also useful in many contexts to define a global attribute $\u$ which describes the graph as a whole.
 A singular-graph can be represented as a tuple $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$.
-The structure of the graph is only defined by the interconnections between the nodes, the actual ordering of the nodes in the set is arbitrary.
-Therefore, any operation on the graph should not depend on this order.
+The structure of the graph is only defined by the interconnections between the nodes.
+The actual ordering of the nodes in the set is arbitrary, and any operation on the graph should not depend on this order.
 Note that the adjacency matrix of the graph is not explicitly defined, but can be inferred from the elements of $\mathcal{E}$.
 
 This description of a graph is very general and each of the terms $\mathcal{N}$, $\mathcal{E}$, and $\u$ are optionally included.
-We could allow multiple sets of edges to exist between nodes $\{\mathcal{E}^1, \mathcal{E}^2, \ldots\}$, defining a multi-graph.
-Each of the edge $\x_i$, node $\edge_{k}$, and global $\u$ attributes can also be encoded as any type of representation, even graphs themselves.
+Multiple sets of edges are allowed to exist between nodes $\{\mathcal{E}^1, \mathcal{E}^2, \ldots\}$, defining a multi-graph.
+Each of the edge $\edge_i$, node $\x_i$, and global $\u$ attributes can also be encoded as any type of representation, even graphs themselves.
 In most use cases dealt with in this thesis, each of $\x_i$, $\edge_k$, and $\u$ are real valued tensors.
-It is also common for all the nodes to share the same dimensionality, and the same for the edges, imposing an equivalence between the elements of the set.
-This it simplifies the design of the model as it allows operations on the individual elements to be parameterized with standard building blocks, such as affine layers, MLPs, and CNNs.
+It is also common for all the nodes and edges to share same dimensionality, imposing an equivalence between the elements of the set.
+This simplifies the design of models operating on the graph as it allows operations on the individual elements to be parameterized with standard building blocks, such as affine layers, MLPs, and CNNs.
 
 Representing a graph in code requires tuple or dictionary of real valued tensors $(\x, \edge, \u)$.
 Here, $\x \in \mathbb{R}^{N \times d}$, $\edge \in \mathbb{R}^{N \times N \times d_e}$, and $\u \in \mathbb{R}^{1 \times d_u}$, where $d$, $d_e$, and $d_u$ are the dimensionality of the node, edge, and global features respectively.
@@ -76,15 +82,15 @@ Exact details of how this is done can vary between models, but the core idea is 
 Graph or set representation is fairly ubiquitous in the real world as it may be used for anything that can be broken down into discrete elements.
 For instance, a collection of particles captured by a detector can be expressed as sets, where the stable particles are the nodes and their attributes are the particle kinematics.
 This is a natural representation because, for a single collision event, there is no inherent ordering to the outgoing particles.
-This is natural representation as for a single collision event, there is no inherent ordering to the outgoing particles.
 Some other examples are shown in \Cref{fig:graph_examples}.
 Particle interactions and decay chains, such as the all-hadronic $ttH$ production process shown in \Cref{fig:feynman}, can be represented as a graph.
-In this situation, it might be more natural to represent the particles in the Feynman diagram as edges rather than the nodes.
+In this example, it might be more natural to represent the particles in the Feynman diagram as edges rather than the nodes.
 Chemical compounds can also be easily represented as graphs, where the atoms are the nodes and the chemical bonds between them are the edges.
 
 Even data which is not inherently graph-like can be broken down into constituent parts and interconnected to form a graph.
 Text can be \textit{tokenized} by treating words or subwords as nodes~\cite{Attention} and images may be segmented into patches \Cref{fig:dog}.
-Though graphs typically have no natural ordering, text and image patches would not make sense if shuffled, thus order has to be imposed by the model.
+Though graphs typically have no natural ordering, text and image patches would not make sense if shuffled.
+Therefore, order has to be imposed by the model.
 This can be done by including the position of the node in its attributes or limiting the edges to only connect the nodes in a predetermined order.
 This is covered in more detail in \Cref{sec:edge_biases_sequences}.
 
@@ -126,7 +132,7 @@ Finally, there are edge-level tasks which predict properties or even the existen
 
 \subsection{Interconnectivity}
 
-When constructing a graph representation it is crucial to consider its interconnectivity; which pairs of nodes have edges between them.
+When constructing a graph representation it is crucial to consider its interconnectivity, i.e. which pairs of nodes have edges between them.
 GNNs propagate information along edges, so the structure of the graph can have a significant impact on the model's performance.
 Interconnectivity is closely tied to two key issues in GNNs: over-squashing~\cite{OverSquashing} and the over-smoothing~\cite{OverSmoothing}.
 
@@ -164,12 +170,15 @@ The function of one part of a protein may be altered by the presence of a ligand
 Constraining the message passing graph to match the physical graph may limit the model from learning these relationships.
 
 The GNNs that work well in these cases are equipped with all the tools needed to combat over-smoothing mentioned in the previous section, as well as the attention mechanism~\cite{Attention}.
-Attention refers the learnable process of weighting the incoming messages before aggregation.
+Attention refers to the learnable process of weighting the incoming messages before aggregation.
 It allows the GNN to ``pay more attention'' to specific connections within the graph.
 
-This raises the point that if we have enough data and a large enough model, enforcing what relationships are important may not be necessary, and it is better to let the model learn these rules itself.
+The fact that the state-of-the-art models in computer vision disregard the locality inductive bias raises the point that perhaps we might actually not know what is best for the model.
+These models, as shown in \Cref{fig:benchmarks}, however require much more data and computational resources than CNNs.
+This raises the point that with enough data, a large enough model, and sufficient training time, enforcing what relationships are important may not be necessary, and it is better to let the model learn these rules itself.
 It also raises whether the message passing graph and the input data graph should be tied together at all.
-Models such as the perceiver~\cite{Perceiver} project input information onto a completely different latent graph for message passing and recent work for GNNs in computer vision has shown that they require extra, fully learnable nodes not tied to any image patch~\cite{VisionTransformersNeed}.
+Models such as the perceiver~\cite{Perceiver} project input information onto a completely different latent graph for message passing.
+Recent work for GNNs in computer vision has shown that they require extra, fully learnable nodes not tied to any image patch~\cite{VisionTransformersNeed}.
 
 \begin{figure}
     \centering
@@ -194,8 +203,8 @@ Models such as the perceiver~\cite{Perceiver} project input information onto a c
 
 The Graph Network Block (GN Block)~\cite{RelationalInductiveBiases} is a useful building block for constructing deep learning models that operate on graph-structured data.
 It offers a framework that generalizes to many other existing graph-based models, such as graph convolutional networks (GCNs)~\cite{GCN}, graph attention networks (GATs)~\cite{GraphAttentionNetworks}, deep sets~\cite{DeepSets}, and even transformers~\cite{Attention}.
-A GN Block is defined as a series of operations that update the node, edge, and global attributes via facilitating the exchange and aggregation of information according to the structure of the graph.
-The GN Block does not change the cardinality of the features present, only updating their attributes,
+A GN Block is defined as a series of operations that update the node, edge, and global attributes via the exchange and aggregation of information according to the structure of the graph.
+The GN Block does not change the cardinality of the features present, it only updates their attributes,
 \begin{equation}
     \text{GN}(\mathcal{N}, \mathcal{E}, \u) = (\mathcal{N}', \mathcal{E}', \u').
 \end{equation}
@@ -204,30 +213,30 @@ Given an input graph $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$ the GN Block
 
 \begin{enumerate}
     \item \textbf{Edge Block:} The edges are updated using the current edge attributes, the attributes of the sender and receiver nodes, and the global attribute.
-    \begin{equation}
-        \edge_k' = \phi^e(\edge_k, \x_{s_k}, \x_{r_k}, \u).
-    \end{equation}
-    All edges throughout the graph are updated in this manor and this step can be executed in parallel.
-    The updated edges $\edge_k'$ can be thought of as the message being passed from the sender to the receiver.
+          \begin{equation}
+              \edge_k' = \phi^e(\edge_k, \x_{s_k}, \x_{r_k}, \u).
+          \end{equation}
+          All edges throughout the graph are updated in this manner and this step can be executed in parallel.
+          The updated edges $\edge_k'$ can be thought of as the message being passed from the sender to the receiver.
     \item \textbf{Node Block:} Incoming edge information is aggregated for each node.
-    For node with index $i$, this is represented by the set $E_i$.
-    \begin{equation}
-        \bar\edge_i = \rho^{e \to x}(E_i) = \rho^{e \to x}\left(\{(\edge_k', r_k, s_k) | r_k = i\}\right)
-    \end{equation}
-    All nodes are then updated using its current attributes, the aggregated edge information, and the global attribute.
-    Updating the nodes using incoming information is called message passing.
-    \begin{equation}
-        \x_i' = \phi^x(\bar\edge_i, \x_i, \u).
-    \end{equation}
+          For node with index $i$, this is represented by the set $E_i$.
+          \begin{equation}
+              \bar\edge_i = \rho^{e \to x}(E_i) = \rho^{e \to x}\left(\{(\edge_k', r_k, s_k) | r_k = i\}\right)
+          \end{equation}
+          All nodes are then updated using its current attributes, the aggregated edge information, and the global attribute.
+          Updating the nodes using incoming information is called message passing.
+          \begin{equation}
+              \x_i' = \phi^x(\bar\edge_i, \x_i, \u).
+          \end{equation}
     \item \textbf{Global Block:} All edge information and node information across the graph is aggregated,
-    \begin{alignat}{2}
-        \bar\x &= \rho^{x \to u}(\mathcal{N}') &&= \rho^{x \to u}(\{\x_i\}_{i=1}^{N}) \\
-        \bar\edge &= \rho^{e \to u}(\mathcal{E}') &&= \rho^{e \to u}(\{\edge_k'\}_{k=1}^{N^e}),
-    \end{alignat}
-    and used to update the global attribute,
-    \begin{equation}
-        \u' = \phi^u( \bar\edge, \bar\x, \u).
-    \end{equation}
+          \begin{alignat}{2}
+              \bar\x    & = \rho^{x \to u}(\mathcal{N}') &  & = \rho^{x \to u}(\{\x_i\}_{i=1}^{N})        \\
+              \bar\edge & = \rho^{e \to u}(\mathcal{E}') &  & = \rho^{e \to u}(\{\edge_k'\}_{k=1}^{N^e}),
+          \end{alignat}
+          and used to update the global attribute,
+          \begin{equation}
+              \u' = \phi^u( \bar\edge, \bar\x, \u).
+          \end{equation}
 \end{enumerate}
 
 The GN Block describes a basic graph to graph transformation which can be composed to form a deeper model.
@@ -241,7 +250,7 @@ First, it is clear that the updates to the graph do not depend on the order of t
 Formally, the node and edge updates $(\mathcal{N}, \mathcal{E}) \rightarrow (\mathcal{N}', \mathcal{E}')$ are permutation equivariant to the node set, and the global update $U \rightarrow U'$ is permutation invariant.
 The GN Block applies the same update and aggregation functions to all nodes and edges in the graph.
 This reflects the relational inductive bias which seeks to learn general rules that apply to all entities in the system while also adhering to the equivalence of the elements within the set.
-Furthermore, as the GN Block only prescribes the rules for how the features of a graph are updated, it is agnostic to the structure and size of the input graph.
+Furthermore, as the GN Block only prescribes the rules for how the features of a graph are updated; it is agnostic to the structure and size of the input graph.
 This allows the same model to be applied to input sets with varying cardinality or connectivity.
 This is a crucial feature for many applications, such as in collider physics where the number of particles in an event can vary.
 Finally, information flow between elements of the set can follow two paths.
@@ -255,8 +264,8 @@ This creates the update shown in \Cref{alg:gn_block}, where the square brackets 
 Even the deep set, which has no pairwise interactions between the nodes can be seen as a reduced form of a GN Block, as shown in \Cref{fig:deep_set}.
 Here the operations are simply,
 \begin{align}
-    \x_i' &= \text{MLP}_v\left(\left[\x_i, \u\right]\right),\\
-    \u' &= \text{MLP}_u\left(\left[\sum_{i} \x_i', \u\right]\right).
+    \x_i' & = \text{MLP}_v\left(\left[\x_i, \u\right]\right),           \\
+    \u'   & = \text{MLP}_u\left(\left[\sum_{i} \x_i', \u\right]\right).
 \end{align}
 
 \begin{algorithm}
@@ -266,11 +275,11 @@ Here the operations are simply,
         \State \textbf{Input:} Graph attributes $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$
         \State \textbf{Output:} Updated graph attributes $\mathcal{G}' = (\mathcal{N}', \mathcal{E}', \u')$
         \For{each edge $\edge_k$ in $\mathcal{E}$}
-            \State $\edge_k' \gets \text{MLP}_e([\edge_k, \x_{s_k}, \x_{r_k}, \u])$ \Comment{update edge features}
+        \State $\edge_k' \gets \text{MLP}_e([\edge_k, \x_{s_k}, \x_{r_k}, \u])$ \Comment{update edge features}
         \EndFor
         \For{each node $\x_i$ in $\mathcal{N}$}
-            \State $\mathbf{\bar\edge}_i \gets \sum_{k: r_k = i} \edge_k'$ \Comment{aggregate incoming information per node}
-            \State $\x_i' \gets \text{MLP}_v([\mathbf{\bar\edge}_i, \x_i, \u])$ \Comment{update node features}
+        \State $\mathbf{\bar\edge}_i \gets \sum_{k: r_k = i} \edge_k'$ \Comment{aggregate incoming information per node}
+        \State $\x_i' \gets \text{MLP}_v([\mathbf{\bar\edge}_i, \x_i, \u])$ \Comment{update node features}
         \EndFor
         \State $\mathbf{\bar{x}} \gets \sum_{i} \x_i'$ \Comment{aggregate features across the graph}
         \State $\mathbf{\bar\edge} \gets \sum_{k} \edge_k'$
@@ -299,7 +308,8 @@ Here the operations are simply,
 \label{sec:transformers}
 
 It is hard to overstate the impact of the transformer model~\cite{Attention} on deep learning.
-Originally designed for NLP sequence-to-sequence tasks, transformers far surpassed the performance of all previous models, so much so that research in other sequence-based models, such as recursive neural networks, almost ceased entirely.
+Originally designed for NLP sequence-to-sequence tasks, transformers have since become the dominant model in many areas of deep learning.
+They marked such an improvement that research in other sequence-based models, such as recursive neural networks, almost ceased entirely.
 They also marked a massive leap in commercializing deep learning for NLP.
 Starting in 2018, OpenAI began releasing the GPT~\cite{GPT} series of transformer models, arguably triggering a boom around large language models that continues to this day.
 In 2019, Google announced that they were using the transformer-based BERT model~\cite{BERT} to power their search engine and transformers for their translation service.
@@ -308,8 +318,8 @@ Even image generation tasks that used to be dominated by UNets~\cite{Unet, Diffu
 Transformers have become so ubiquitous that they are now considered the default choice for many deep learning tasks, regardless of the data type.
 
 There are many variants for the transformer model, but they all share the same basic features.
-Contrary to popular belief, these models do not natively run on sequences but on sets, and must be adapted to work on data with an inherent order.
-We will focus on two main types of transformers, the transformer encoder and the transformer decoder.
+These models do not natively run on sequences, but on sets, and must actually be adapted to work on data with an inherent order.
+Two main types of transformers are described, the transformer encoder and the transformer decoder.
 The transformer encoder (TE) is a variant of the GN Block called a non-local neural network (NLNN)~\cite{NonlocalNeuralNetworks} as shown in \Cref{fig:transformer}.
 This function operates on a pure set, with no persistent edge or global features.
 It involves and message passing step equipped with an attention mechanism, followed by a node update step using an MLP\@.
@@ -352,21 +362,21 @@ The adjacency matrix in a graph is also called the attention mask in a transform
 There are many of ways to parameterize the message passing step in a GNN, and the one used in the transformer is the scaled dot-product attention (SDPA).
 In SDPA, the message passed between nodes is a linear projection of the sender node attributes.
 This means that each node sends out the same message to all of its neighbours called its \textit{value}, $\vert_{i} = \mathbf{W}^v \x_i$.
-The message weight is based on a dot product between additional linear projections of the sender node, called they key \textit{key} $\k_{i} = \mathbf{W}^k \x_i$, and the receiver node, called the \textit{query} $\q_{j} = \mathbf{W}^q \x_j$.
+The message weight is based on a dot product between additional linear projections of the sender node, called they \textit{key} $\k_{i} = \mathbf{W}^k \x_i$, and the receiver node, called the \textit{query} $\q_{j} = \mathbf{W}^q \x_j$.
 Aggregation is simply a weighted mean of the incoming messages, where a softmax operation is applied to the attention logits to ensure that they sum to one.
 To prevent the gradients from exploding, the attention logits are scaled by the square root of the dimensionality of the key and value tensors $d_k$.
 
-In the framing of the GN Block, SDPA has the edge update is factorized into a tuple containing a scalar expressing the message weight $\alpha_k'(\x_{s_k}, \x_{r_k})$ and a vector function for calculating the message content $\mathbf{v}_k'(\x_{s_k})$.
+In the framing of the GN Block, SDPA factorizes the edge update into a tuple containing a scalar expressing the message weight $\alpha_k'(\x_{s_k}, \x_{r_k})$ and a vector function for calculating the message content $\mathbf{v}_k'(\x_{s_k})$.
 Only $\alpha_k'$ depends on the pairwise interaction of both the sender and receiver nodes.
 The pooling operation $\rho^{e \to x}$ normalizes over the receiver weights before aggregating the messages.
 The block can be written as,
 \begin{equation}
     \begin{aligned}
-        \edge_k' &= \phi^e(\edge_k, \x_{s_k}, \x_{r_k}, \u)
-        = ( a_k', \mathbf{v}_k' ) \\
-        &= \left( \exp \left( \frac{1}{d_k} \mathbf{W}^q \x_{s_k} \cdot \mathbf{W}^k \x_{r_k} \right), \mathbf{W}^v \x_{s_k} \right), \\
-        \mathbf{\bar\edge}_i &= \rho^{e \to x}(E_i) \\
-       &= \frac{\sum_{k: r_k = i} a_k' \mathbf{v}_k'}{\sum_{k: r_k = i} a_k'},
+        \edge_k'             & = \phi^e(\edge_k, \x_{s_k}, \x_{r_k}, \u)
+        = ( a_k', \mathbf{v}_k' )                                                                                                                           \\
+                             & = \left( \exp \left( \frac{1}{d_k} \mathbf{W}^q \x_{s_k} \cdot \mathbf{W}^k \x_{r_k} \right), \mathbf{W}^v \x_{s_k} \right), \\
+        \mathbf{\bar\edge}_i & = \rho^{e \to x}(E_i)                                                                                                        \\
+                             & = \frac{\sum_{k: r_k = i} a_k' \mathbf{v}_k'}{\sum_{k: r_k = i} a_k'},
     \end{aligned}
 \end{equation}
 for learnable weight matrices $\mathbf{W}^k \in \mathbb{R}^{d \times d_k}$, $\mathbf{W}^q \times \mathbb{R}^{d \times d_k}$, and $\mathbf{W}^x \in \mathbb{R}^{d \times d_v}$.
@@ -377,11 +387,11 @@ Furthermore, it allows us to extend to two forms, self-attention and cross-atten
     \label{eq:attention}
     \begin{aligned}
         \text{Attention}(\X_R, \X_S)
-        &= \text{softmax}\left(\frac{(\X_S \mathbf{W}^q) (\X_R \mathbf{W}^k)^T}{d_k} + \mathbf{B}\right) \X_S \mathbf{W}^v, \\
-        &= \text{softmax}\left(\frac{\mathbf{Q} \mathbf{K}^T}{d_k} + \mathbf{B}\right) \mathbf{V}.
+         & = \text{softmax}\left(\frac{(\X_S \mathbf{W}^q) (\X_R \mathbf{W}^k)^T}{d_k} + \mathbf{B}\right) \X_S \mathbf{W}^v, \\
+         & = \text{softmax}\left(\frac{\mathbf{Q} \mathbf{K}^T}{d_k} + \mathbf{B}\right) \mathbf{V}.
     \end{aligned}
-    \end{equation}
-In this expression we distinguish between the tensor representing the sender nodes $\X_S \in \mathbb{R}^{N_S \times d}$ and the receiver nodes $\X_R \in \mathbb{R}^{N_R \times d}$.
+\end{equation}
+In this expression, the tensor representing the sender nodes $\X_S \in \mathbb{R}^{N_S \times d}$ is distinguished from the tensor representing the receiver nodes $\X_R \in \mathbb{R}^{N_R \times d}$.
 Self-attention is where the sender and receiver set are the same $\X_S = \X_R$.
 This is the standard message passing operation between nodes in a graph.
 Cross-attention is where the sender set and receiver set are different $\X_S \neq \X_R$.
@@ -403,16 +413,19 @@ This is where SDPA is performed $H$ times in parallel with different matrices $\
 The output of each head is concatenated and then mixed using a final linear layer,
 \begin{equation}
     \begin{aligned}
-    & \text{Head}_1 = \text{Attention}(\X_R, \X_S), \\
-    & \text{Head}_2 = \text{Attention}(\X_R, \X_S), \\
-    & \ldots, \\
-    & \text{Head}_H = \text{Attention}(\X_R, \X_S), \\
-    \vphantom{x} \\
-    & \text{MHA}(\X_R, \X_S) = \text{Concat}(\text{Head}_1, \ldots, \text{Head}_H) \mathbf{W}^o.
+         & \text{Head}_1 = \text{Attention}(\X_R, \X_S),                                              \\
+         & \text{Head}_2 = \text{Attention}(\X_R, \X_S),                                              \\
+         & \ldots,                                                                                    \\
+         & \text{Head}_H = \text{Attention}(\X_R, \X_S),                                              \\
+        \vphantom{x}                                                                                  \\
+         & \text{MHA}(\X_R, \X_S) = \text{Concat}(\text{Head}_1, \ldots, \text{Head}_H) \mathbf{W}^o.
     \end{aligned}
 \end{equation}
 In MHA, many types of messages are passed between the nodes and one can think of this as constructing a multi-graph on the set.
-Both self- and cross-attention can be multi-headed where multi-headed self-attention (MHSA) is defined as $\text{MHSA}(\X) = \text{MHA}(\X, \X)$.
+Both self- and cross-attention can be multi-headed where multi-headed self-attention (MHSA) is defined as,
+\begin{equation}
+    \text{MHSA}(\X) = \text{MHA}(\X, \X).
+\end{equation}
 
 \begin{figure}
     \centering
@@ -435,8 +448,9 @@ While many variants of GN Block block variants require custom libraries and are 
 All heads are computed in parallel using smart reshaping of the tensors.
 This significantly simplifies the process of designing, building, testing, and exporting models.
 
-While the message passing operation is considerably simpler than using MLPs for each stage as described in~\Cref{alg:gn_block}, it is possible to enhance the model's expressivity by scaling either the model dimension or the number of heads.
-Contrary to popular belief, self-attention with these mechanisms does not require $O(N^2)$ memory complexity. There are algorithms available that achieve this without needing to manifest the full attention matrix~\cite{SelfattentionDoesNot, FlashAttentionFastMemoryEfficient}.
+While the message passing operation is considerably simpler than using MLPs for each stage as described in \Cref{alg:gn_block}, it is possible to enhance the model's expressivity by scaling either the model dimension or the number of heads.
+Self-attention requires $O(N^2)$ many operations, where $N$ is the number of nodes in the set.
+Its memory usage however is $O(N)$, as there exist algorithms that perform the update without ever needing to manifest the full attention matrix~\cite{SelfattentionDoesNot, FlashAttentionFastMemoryEfficient}.
 
 \begin{figure}
     \centering
@@ -542,7 +556,7 @@ Common similarities exist among them, though terminology can be ambiguous and ov
 A single transformer block generally includes two types of sub-blocks: MHA for message passing and FFN/MLP layers for the node update.
 These sub-blocks combine and repeat to form the larger transformer block.
 MHA layers can be configured as self-attention or cross-attention, and are typically stacked with FFN layers in series~\cite{Attention}, but sometimes in parallel~\cite{Palm}.
-Another distinguishing feature is the use of residual connections and normalization layers with various configuration options to stabilize training and prevent over-smoothing
+Another distinguishing feature is the use of residual connections and normalization layers with various configuration options to stabilize training and prevent over-smoothing.
 Due to the wide range of transformer variants, empirical performance is often the guide for best practices.
 
 Most transformer layers use an MLP with a single hidden layer that expands the node attributes' dimensionality by a factor of $M$.
@@ -563,10 +577,10 @@ Extra normalization within the sub-blocks is also common.
 A single PreNorm TE Block is shown in \Cref{fig:transformer_blocks}.
 The update is given by,
 \begin{equation}
-\begin{aligned}
-    \X & \leftarrow \X + \text{MSHA}(L_\text{norm}(\X)), \\
-    \X & \leftarrow \X + \text{FFN}(L_\text{norm}(\X)).
-\end{aligned}
+    \begin{aligned}
+        \X & \leftarrow \X + \text{MSHA}(L_\text{norm}(\X)), \\
+        \X & \leftarrow \X + \text{FFN}(L_\text{norm}(\X)).
+    \end{aligned}
 \end{equation}
 A full TE is composed of many TE Blocks stacked in series forming a permutation equivariant set to set transformation.
 For many tasks, the TE is the main feature extractor.
@@ -577,11 +591,11 @@ To condition the update of one set on another, a cross-attention (CA) block, can
 For a more expressive operation, the layer can include both self-attention and cross-attention, creating a transformer decoder (TD) block, as shown in \Cref{fig:transformer_blocks}.
 The update of a TD block is written as,
 \begin{equation}
-\begin{aligned}
-    \X_R & \leftarrow \X_R + \text{MHSA}(L_\text{norm}(\X_R)), \\
-    \X_R & \leftarrow \X_R + \text{MHA}(L_\text{norm}(\X_R), \X_S), \\
-    \X_R & \leftarrow \X_R + \text{FFN}(L_\text{norm}(\X_R)).
-\end{aligned}
+    \begin{aligned}
+        \X_R & \leftarrow \X_R + \text{MHSA}(L_\text{norm}(\X_R)),      \\
+        \X_R & \leftarrow \X_R + \text{MHA}(L_\text{norm}(\X_R), \X_S), \\
+        \X_R & \leftarrow \X_R + \text{FFN}(L_\text{norm}(\X_R)).
+    \end{aligned}
 \end{equation}
 The TE and TD are typically combined to create a set-to-set transformation that first extracts features from the input set, and the conditions the output set on these features.
 This set-to-set transformation is the basis of many generative of sequence-to-sequence models.
@@ -619,7 +633,7 @@ Causal masking allows for highly efficient training, as each stage of the autore
 Although generation requires sequential model execution, the training speed-up is a substantial benefit.
 Many sequence generating models are called ``decoder only'', however in the presented framework, these models are TE models with a causal attention mask.
 
-While a causal mask suffices for a transformer to grasp order~\cite{TransformerLanguageModels}, it is often complemented by \textit{positional encoding}.
+While a causal mask is sufficient for a transformer to grasp order~\cite{TransformerLanguageModels}, it is often complemented by \textit{positional encoding}.
 Absolute positional encoding (APE) integrates sequence positions into node attributes.
 A unique tensor $\mathbf{p}_i \in \mathbb{R}^{d}$ is constructed for each possible observed position $i$ and is added to the node attributes before the first transformer block, $\x_i \leftarrow \x_i + \mathbf{p}_i$.
 Originally, fixed sinusoidal functions of varying frequencies encoded these positions, but recent models make $\mathbf{p}_i$ fully learnable~\cite{GPT}.
@@ -643,8 +657,8 @@ More effectively, they can be used to perform adaptive normalization~\cite{FiLMV
 This is shown for a TE block in \Cref{fig:adaptive_gating} and can be written for a single sub-block $f$ as,
 \begin{equation}
     \begin{aligned}
-    & [\boldsymbol{\alpha}, \boldsymbol{\beta}, \boldsymbol{\gamma}] \leftarrow \text{MLP}(\u) \\
-    & \X \leftarrow \X + \boldsymbol{\alpha} \otimes f \left(L_\text{norm}(\X)\boldsymbol{\gamma} \otimes  + \boldsymbol{\beta}\right).
+         & [\boldsymbol{\alpha}, \boldsymbol{\beta}, \boldsymbol{\gamma}] \leftarrow \text{MLP}(\u)                                          \\
+         & \X \leftarrow \X + \boldsymbol{\alpha} \otimes f \left(L_\text{norm}(\X)\boldsymbol{\gamma} \otimes  + \boldsymbol{\beta}\right).
     \end{aligned}
 \end{equation}
 

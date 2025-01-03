@@ -1,7 +1,7 @@
 \chapter{Additional Material For Diffusion Models for Surrogate Simulation}
 \label{app:jet_generation}
 
-The four integration sampler algorithms used in the \pcjedi experiments for solving variance preserving (VP) stochastic differential equation (SDE) and ordinary differential equation (ODE) systems are presented in \cref{alg:euler_maruyama,alg:DDIM,alg:euler,alg:runge_kutta}
+The four integration sampler algorithms used in the \pcjedi experiments for solving variance preserving (VP) stochastic differential equation (SDE) and ordinary differential equation (ODE) systems are presented in \Cref{alg:euler_maruyama,alg:DDIM,alg:euler,alg:runge_kutta}
 Each algorithm utilizes a parametrized noise estimator $\z_\theta$ based on the perturbed input $\x$, the diffusion time $t$, and other conditional variables $\cond$.
 It is noteworthy that the time update $t \gets t - \Delta t$ for DDIM uniquely occurs before the $\x$ update.
 The fourth order Runge-Kutta solver is slightly more involved than the other methods since it requires four network evaluations.

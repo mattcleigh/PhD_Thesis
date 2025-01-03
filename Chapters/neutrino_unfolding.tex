@@ -1,5 +1,5 @@
 \chapter{Neutrino Unfolding}
-\label{ch:gnns}
+\label{ch:neutrino_unfolding}
 
 Particle physics experiments have finite resolution, limited acceptance, and error-prone reconstruction algorithms.
 These limitations mean that the actual physical variable of interest $\x$ and its associated distribution $p_\text{true}(\x)$ are not directly observable.
@@ -18,9 +18,13 @@ yielding a direct approximation for the underlying physical distribution.
 Unfolding is useful as it allows a comparison between predicted theory and observed data in a way that is independent of the detector response, ensuring that any observed irregularities are due to physics rather than detector artefacts.
 Approximating $p_\text{unfold}(\x|\y)$ however is a difficult and ill-possed task: solutions are not unique, and small changes in $p_\text{data}$ can cause large changes in the predicted $p_\text{true}$.
 
+During collisions, linear momentum must be conserved, and the transverse momentum of colliding protons is nearly zero, implying that the net transverse momentum of all products must also be zero.
+Any deviation suggests an undetected particle carried away momentum.
+The negative sum of observed momenta serves as a proxy for the total transverse momentum of all undetected particles, known as missing transverse momentum \ptmiss.
+
 This chapter describes work done to create deep generative models to approximate $f_\theta(\y) \approx p_\text{unfold}(\x|\y)$, specifically the problem of unfolding the momentum of the neutrinos in the final state of the event.
 This is a specifically challenging setting as neutrinos are not directly observable in data.
-Their experimental signature \ptmiss, described in \Cref{sec:MET}, only captures a noisy approximation of the net neutrino momentum in the transverse plane.
+Their experimental signature \ptmiss only captures a noisy approximation of the net neutrino momentum in the transverse plane.
 In order to yield $p_\text{unfold}(\x|\y)$ a significant amount of domain knowledge is required.
 
 This chapter summarizes publications \textcite{NuFlows1} and \textcite{Nu2Flows}, which describes the development of models to unfold the neutrino momentum in simulated \ttbar events with one and two neutrinos in the final state, respectively.
@@ -300,11 +304,11 @@ is kept.
 The $\sigma$ values are defined by the root-mean-square error of the relevant mass distributions using the true jet-assignments and each neutrino reconstruction method separately.
 
 The fit is performed using permutations of leading 9 jets in $\pt$ and record the parton association accuracy for each neutrino reconstruction method.
-The results are shown in \Cref{tab:blep_1sig}.
+The results are shown in \Cref{tab:blep_4sig}.
 The $b_\text{lep}$ matching efficiency heavily depends on the neutrino in the $\chi^2$ fit.
 Estimates from either \vsample or \vmode enhance matching efficiency over standard kinematic methods.
 Replacing the $m_W$ constraint with \vmode in the $\chi^2$ fit improved accuracy by factors of 1.03 for four-jet events and 1.41 for nine-jet events.
-For events with fewer jets, the limited permutations reduce the impact of the neutrino term in Equation~\ref{eq:chi_square}.
+For events with fewer jets, the limited permutations reduce the impact of the neutrino term in \Cref{eq:chi_square}.
 Consequently, the relationship between the performance gains of $\nu$-Flows and the jet count is anticipated.
 Enhancing jet-parton matching efficiency benefits \ttbar event measurements, and $\nu$-Flows is expected to improve various measurements, although further studies are required to validate these outcomes.
 
@@ -460,7 +464,7 @@ On a CPU, typical inference times for a single event are around 70 ms, decreasin
 
 \subsubsection{Kinematic Reconstruction}
 
-The individual neutrino kinematics and the angular separation between the two neutrinos are depicted in \Cref{fig:vvbarkinematics, fig:vreco_delta}.
+The individual neutrino kinematics and the angular separation between the two neutrinos are depicted in \Cref{fig:vvbarkinematics,fig:vreco_delta}.
 Both \vweight and \ellipse methods overestimate the neutrino transverse momenta and energy.
 These methods also tend to predict neutrino pairs which are back-to-back in $\phi$, with opening angles differing significantly from the ground truth.
 In contrast, \vvflows accurately reproduces the ground truth in all neutrino kinematic distributions, with only minor discrepancies in the low-statistic tails.
@@ -545,7 +549,7 @@ This work does not make measurements of the cross-section but instead focus on t
     }
 \end{table}
 
-The response matrix for each neutrino reconstruction method is depicted in \cref{fig:unfold_dphill} for the two-dimensional binning in \mttbar and \dphill, and in \cref{fig:unfold_pttop} for \mttbar and \pttop.
+The response matrix for each neutrino reconstruction method is depicted in \Cref{fig:unfold_dphill} for the two-dimensional binning in \mttbar and \dphill, and in \Cref{fig:unfold_pttop} for \mttbar and \pttop.
 Ideally, only the main diagonal would have entries, but due to inefficiencies in the reconstruction methods and detector resolution effects, off-diagonal elements are present.
 Using \vvflows results in a more diagonal response matrix, as quantified by the trace fraction shown in each plot's top right corner.
 
@@ -608,7 +612,7 @@ However, most of these changes are minor, and the method still outperforms \vwei
 \begin{table}[thp]
     \centering
     \caption{Relative uncertainty in each bin of the respective unfolded double differential distributions for each neutrino reconstruction method with respect to the uncertainty when using \vtruth. The bins are ordered first by increasing \mttbar followed by the second variable, with vertical dividers indicating the bin edges in \mttbar. The method with the smallest relative increase in uncertainty in comparison to \vtruth is highlighted in bold.}
-    \label{tab:app:rel_unfold_uncerts}
+    \label{tab:all_unfolding}
     \resizebox{\textwidth}{!}{
         \input{Figures/neutrino_unfolding/table.tex}
     }
@@ -640,7 +644,7 @@ The top quark mass is reconstructed using the lepton, $b$-jet, and neutrino.
 A mass shift in the generated top quark mass should be reflected in the distributions of both the lepton-$b$ jet mass ($m_{b\ell}$) and the lepton-$b$-jet-neutrino mass ($m_t$).
 These two distributions are compared to determine if the mass shift is more pronounced in $m_{b\ell\nu}$, indicating the neutrino's significant contribution to the reconstruction.
 
-The distributions are shown in \cref{fig:top_mass_reco}.
+The distributions are shown in \Cref{fig:top_mass_reco}.
 Despite training purely on events with the nominal top quark mass, the reconstructed distribution using \vvflows is sensitive to the difference in truth $m_t$.
 The separation between the three templates is similar to using $m_{b\ell}$, however for \vvflows the difference is more prominent in the bulk of the distribution.
 This sensitivity could be improved by training \vvflows on samples with a range of values for $m_t$.

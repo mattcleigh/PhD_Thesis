@@ -1,4 +1,4 @@
-\chapter{Foundation Models in High Energy Physics}
+\chapter{Foundation Models in High-Energy Physics}
 \label{ch:foundation_models}
 
 One of the main driving forces behind the successes and widespread adoption of machine learning in natural language processing (NLP) and computer vision (CV) is the utilization of large pre-trained models, often referred to as foundation models (FMs)~\cite{OpportunitiesRisksFoundation}.
@@ -13,11 +13,11 @@ Current research in these fields is focused on developing new self-supervised le
 Pre-training tasks in NLP typically involve predicting the next token in a sequence, as with GPT, or randomly masked tokens, as with BERT.
 Common \textit{downstream} tasks include sentiment analysis and machine translation. The FM in these tasks is also referred to as the \textit{backbone} as it contains most of the trainable parameters, though additional learnable layers may still be required.
 
-As discussed in this thesis, the field of high energy physics (HEP) has increasingly integrated machine learning (ML) methods to tackle diverse challenges, including event reconstruction, anomaly detection, and data generation.
+As discussed in this thesis, the field of high-energy physics (HEP) has increasingly integrated machine learning (ML) methods to tackle diverse challenges, including event reconstruction, anomaly detection, and data generation.
 These developments have largely mirrored the trends of the wider ML community: model sizes across all fields have grown exponentially, and transformer-based neural networks have become the dominant architecture for many tasks.
 However, HEP has yet to fully embrace the FM paradigm, which could provide a powerful tool for the field, though studies are now emerging that explore this potential~\cite{MPM, MPM2, ReSim, JapanPretrain, Omnijet, Omnilearn, LargeScalePretraining, JetCLR}.
 
-This section describes work done on developing SSL strategies for particles physics jets expressed as sets of constituents, as used in \Cref{ch:spice, ch:jet_generation}.
+This section describes work done on developing SSL strategies for particles physics jets expressed as sets of constituents, as used in \Cref{ch:spice,ch:jet_generation}.
 The initial paper on the topic, \textcite{MPM}, introduced the masked particle modelling (MPM) method and demonstrated that it could be a viable pre-training strategy for jet data.
 The follow-up study, \textcite{MPM2}, further refined this method into MPMv2, demonstrating its effectiveness in various downstream tasks.
 Code for both studies is publicly available~\cite{MPMCode, MPM2Code} and additional results for this section can be found in \Cref{app:foundation_models}.
@@ -572,7 +572,7 @@ For these studies only, pre-training is limited to 200k steps.
 Pre-training is performed using the regression or K-Means tasks for \xc.
 After this, the backbone is frozen and a classifier-head made from two class-attention layers~\cite{GoingDeeper}, is appended.
 These new layers are trained for 200k steps using cross-entropy loss.
-The results of this ablation study are shown in~\Cref{tab:construction}.
+The results of this ablation study are shown in \Cref{tab:construction}.
 
 Initially, the original training setup of MPMv1, which used a masking rate of $D_f=0.3$, is replicated.
 The first modification is the updated transformer layers.

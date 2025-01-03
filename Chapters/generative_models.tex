@@ -178,7 +178,7 @@ As NFs describe continuous morphs of data if the latent distribution is connecte
 This causes issues when attempting to model data with disconnected support.
 Discrete data needs to be \textit{dequantized} before being fed into the flow to prevent singularities from occurring during training, a notable feature in image modelling where pixel values tend to be quantized to 8-bit integers~\cite{FlowImprovingFlowBased}.
 
-These types of networks have successfully applied to collider physics, with notable applications including event generation~\cite{EventGen}, template construction~\cite{ANODE, CATHODE, CURTAINs}, unfolding~\cite{PartonsAndBack}, and detector simulation~\cite{CaloFlow2}.
+These types of networks have successfully applied to collider physics, with notable applications including event generation~\cite{EventGen}, template construction~\cite{ANODE, cathode, CURTAINs}, unfolding~\cite{PartonsAndBack}, and detector simulation~\cite{CaloFlow2}.
 
 \subsection{Flow Layers}
 
@@ -492,7 +492,7 @@ For the SDE defined in \Cref{eq:sde} it is given by,
     \diff \x_t = \left[f(\x_t, t) - \frac{1}{2} g(t)^2 \score\right] \diff t.
 \end{equation}
 Empirically, the probability flow ODE provides a larger tolerance to truncation errors, allowing for fewer integration steps and, thus, faster generation.
-In addition, it enables the use of more advanced ODE solvers, provides deterministic encoding, and allows for log-likelihood computation via~\Cref{eq:cnf_loglikelihood}, indicating the strong connection between score-based models and CNFs.
+In addition, it enables the use of more advanced ODE solvers, provides deterministic encoding, and allows for log-likelihood computation via \Cref{eq:cnf_loglikelihood}, indicating the strong connection between score-based models and CNFs.
 Furthermore, while the probability flow ODE was initially introduced as an alternative method for generation, \textcite{ElucidatingDesignSpace} showed that the entire training objective of a score-based model can be derived purely from an ODE perspective.
 
 \subsection{Conditional Flow Matching}
@@ -766,10 +766,10 @@ For parameters $t_\text{min}$, $t_\text{max}$, and $d$ the CosEnc layer is given
         \cos\left(e^1 t'\right) \\
         \vdots                  \\
         \cos\left(e^{d-1} t'\right)
-    \end{bmatrix}, \quad \text{where} \quad t' = \pi \frac{t - t_\text{min}}{t_\text{max} - t_\text{min}}. \\
+    \end{bmatrix}, \quad \text{where} \quad t' = \pi \frac{t - t_\text{min}}{t_\text{max} - t_\text{min}}.
 \end{equation}
 This can be seen as a form of continuous binary encoding.
-For larger networks such as transformers, this encoded time vector can be injected into the model via adaptive normalization and gating, as described in~\Cref{sec:global_attributes}.
+For larger networks such as transformers, this encoded time vector can be injected into the model via adaptive normalization and gating, as described in \Cref{sec:global_attributes}.
 
 \subsubsection{Conditional Generation}
 

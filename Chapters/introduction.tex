@@ -1,14 +1,51 @@
-\chapter{Introduction}
+\chapter{Preface}
 \label{ch:intro}
 
-\Cref{ch:intro} quam eu nisl interdum at interdum enim egestas. Aliquam placerat justo sed lectus
-lobortis ut porta nisl porttitor. Vestibulum mi dolor, lacinia molestie gravida
-at, tempus vitae ligula. Donec eget quam sapien, in viverra eros. Donec
-pellentesque justo a massa fringilla non vestibulum metus vestibulum.
-Vestibulum in orci quis felis tempor lacinia. Vivamus ornare ultrices
-facilisis. Ut hendrerit volutpat vulputate. Morbi condimentum venenatis augue,
-id porta ipsum vulputate in. Curabitur luctus tempus justo. Vestibulum risus
-lectus, adipiscing nec condimentum quis, condimentum nec nisl. Aliquam dictum
-sagittis velit sed iaculis. Morbi tristique augue sit amet nulla pulvinar id
-facilisis ligula mollis. Nam elit libero, tincidunt ut aliquam at, molestie in
-quam. Aenean rhoncus vehicula hendrerit.
+High-energy physics experiments, particularly those at the Large Hadron Collider (LHC)~\cite{LHCMachine}, are at the forefront of exploring the fundamental interactions of the universe.
+In recent years, the field has increasingly integrated deep learning methods to address diverse challenges such as event reconstruction, anomaly detection, and data generation~\cite{Albertsson:2018maf}
+As a result, the field is rapidly evolving, with new methods continuously being developed and applied.
+
+This thesis contributes to the growing synergy between collider physics and machine learning.
+It encapsulates many projects undertaken over the past four years, ranging from jet tagging to forward simulation.
+Three main themes consistently emerge throughout this thesis: Graph neural networks (particularly transformers), deep generative models, and high-energy physics jets.
+
+The thesis is structured as follows.
+
+\Cref{ch:sm} provides the necessary foundation in the theoretical principles and the Standard Model required to understand the subsequent chapters.
+
+\Cref{ch:lhc_atlas_detector} offers an overview of the LHC and the ATLAS detector, with specific details on jet reconstruction and flavour tagging.
+
+\Cref{ch:deep_learning} introduces the basics of deep learning and neural networks, which underpin the methods used in this thesis.
+
+\Cref{ch:gnns} explores the theory and motivation behind graph neural networks, the role of inductive biases, and highlights how the popular transformer architecture is a special case of a message-passing neural network.
+
+\Cref{ch:generative_models} discusses the theory and background of deep generative models, with extra details on normalizing flow and diffusion models, which are used in this thesis.
+
+The subsequent chapters present the main contributions of this thesis, with specific contributions from the author highlighted.
+
+\Cref{ch:spice} presents a comprehensive study on various graph neural networks for flavour tagging in the ATLAS detector.
+This chapter underscores the contributions made towards developing a new state-of-the-art flavour tagger employed by the ATLAS collaboration.
+The author developed and optimized all GN++ and Spice models discussed, and produced all plots and comparative studies, including those against GN1.
+For the \texttt{Salt} repository, which handles the training and deployment of the new flavour tagging tools such as GN2, the author contributed backend code for neural network construction, including the transformer architecture, and numerous inference functions, and model exporting.
+Additional contributions from the author involved optimizing the training pipeline to support sparse data representation, enhancing training speed, and enabling switchable backends for attention operations.
+
+\Cref{ch:neutrino_unfolding} presents a study using of normalizing flows for reconstructing neutrino momenta.
+It introduces a novel method for estimating the true neutrino momentum distribution from observed data, with comparisons to traditional techniques.
+This chapter is based on the author's publications~\cite{Nu2Flows,NuFlows1}, with the author being the primary contributor to all aspects, except for data generation.
+The author developed all code, the training pipeline, evaluation metrics, and all associated plots and tables.
+
+\Cref{ch:jet_generation} describes several novel methods for the forward simulation of high-energy physics jets.
+These jets are represented as point clouds, and generated using transformer neural networks and the diffusion framework.
+These methods are applied to tasks such as anomaly detection and full-event generation.
+This chapter draws from various of the author's publications~\cite{PCJedi,PCDroid,EpicJedi,Drapes,PIPPIN}, with the author being the primary developer of the \pcjedi and \pcdroid models.
+The author's contributions included model and training pipeline development, various evaluation metrics, and the creation of all plots.
+For the anomaly detection tasks, the author developed and trained all template generation models and performed evaluations for the low-level study.
+For the full-event simulation model, the author contributed code and assisted in writing the publication.
+
+\Cref{ch:foundation_models} explores the development of a foundation model for physics data.
+It focuses on creating and optimizing a self-supervised learning regime capable of producing generalizable and meaningful representations of particle physics jets without the need for labelled data.
+This chapter is based on the author's publications~\cite{MPM,MPM2}.
+The author contributed code, project infrastructure, and assisted in writing the publication for the initial MPM study.
+For the follow-up study discussed in the latter half of this chapter, the author was the primary contributor, developing all models, pre-training pipelines, fine-tuning pipelines, evaluation metrics, and all plots.
+
+Finally, \Cref{ch:conclusion} provides concluding remarks and discusses potential future work.

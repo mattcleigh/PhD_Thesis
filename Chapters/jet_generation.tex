@@ -204,7 +204,7 @@ In the case of top jets, stable particles from the $b$-quark decay are sometimes
     \label{fig:kinematics_top}
 \end{figure}
 
-Crucial to the study of large-radius jets are the substructure variables $\tau_{21}$, $\tau_{32}$, and $\Dtwo$, described in \Cref{sec:jet_substructure}\footnote{These variables are already normalized by the jet's total $\pt$, thus relative versions are unnecessary.}.
+Crucial to the study of large-radius jets are the substructure variables $\tau_{21}$, $\tau_{32}$, and $\Dtwo$, described in \Cref{sec:fat_jets}\footnote{These variables are already normalized by the jet's total $\pt$, thus relative versions are unnecessary.}.
 The subjettiness ratios $\tau_{21}$, $\tau_{32}$ in particular are often used to distinguish the mostly tree-pronged top jets from the one-pronged gluon jets.
 
 Calculated for the generated particle cloud and compared to \pythia simulations, these variables are illustrated in \Cref{fig:substructure_gluon,fig:substructure_top}.
@@ -315,7 +315,7 @@ Additionally, all five jet types in JetNet150 are used ($q,\,g,\,t,\,W,\,Z$).
 
 \subsection{Model Architecture}
 
-The general \pcdroid architecture and the training process is shown in \cref{fig:droid_arch_train}.
+The general \pcdroid architecture and the training process is shown in \Cref{fig:droid_arch_train}.
 
 \pcdroid incorporates an additional MLP compared to \pcjedi.
 The context vector is expanded to include the jet azimuthal angle ($\phi$), the number of constituents (which was previously only implicitly included in the input set size), and the jet type (PID).
@@ -420,7 +420,7 @@ A wide variety of integration solvers are tested for \pcdroid.
 The trade-off between the quality of generated jets and the number of neural function evaluations (NFE) is studied to determine the optimal solver and step size.
 The comparison focuses on the FPND, $\mathrm{W}_1^m$, and $\mathrm{W}1^{\tau{32}}$ metrics.
 For \pcjedi, the results using the Euler-Maruyama sampler at 200 NFE are used.
-From \cref{fig:metrics_vs_steps-30}, most solvers are observed to saturate around 100 NFE.
+From \Cref{fig:metrics_vs_steps-30}, most solvers are observed to saturate around 100 NFE.
 \pcdroid outperforms MPGAN with as few as 20 steps for most solvers.
 Although no method is clearly superior, the LMS solver generally performs best across most metrics and is thus used at 100 NFE for all \pcdroid results in the following sections.
 
@@ -460,7 +460,7 @@ Focus is on top jets due to their complex substructure, which has proven challen
     \label{fig:hlvs-30}
 \end{figure}
 
-The generation performance is summarized in~\cref{tab:30_table} for gluon and top jets.
+The generation performance is summarized in \Cref{tab:30_table} for gluon and top jets.
 The $\mathrm{W_1^P}$ score is derived from the marginal distributions of the constituent kinematics.
 Particularly in FPND, \pcdroid surpasses all other methods in all metrics, reaching the intra MC-MC comparison limits in the subjettiness ratios for gluons and $\mathrm{W_1^{\Dtwo}}$ for both jet types.
 
@@ -505,7 +505,7 @@ Instead of conventional message passing, EPiC layers pool information from all n
 It is essentially a repeated implementation of a deep set and shares similarities with the CAE-1 model.
 In EPiC-GAN, a kernel-density estimator (KDE) models the number of constituents, which is a conditional parameter for generation.
 
-A quantitative comparison of the performance of \pcdroid and all other models is provided in \cref{tab:perf-150}.
+A quantitative comparison of the performance of \pcdroid and all other models is provided in \Cref{tab:perf-150}.
 \pcdroid with the self-attention network shows superior performance in all metrics across all jet types wherever there is notable separation between models.
 Where performance is saturated, the CAE-1 or CAE-16 models are comparable to the transformer model.
 
@@ -556,7 +556,7 @@ Where performance is saturated, the CAE-1 or CAE-16 models are comparable to the
 \subsubsection{Conditional Adherence}
 
 It is important to test the claim that \pcdroid is actually a contidiional generative model.
-The difference between the generated point cloud kinematics and the target conditions for mass and \pt is examined, as shown in Figure \ref{fig:obedience}.
+The difference between the generated point cloud kinematics and the target conditions for mass and \pt is examined, as shown in \Cref{fig:obedience}.
 
 The exact jet kinematics from the simulation are used for the \textit{conditional kinematics}, while the \textit{point cloud kinematics} are recalculated from the trimmed jet constituents.
 These different approaches result in minor discrepancies between the variables, even for the \pythia dataset.
@@ -607,7 +607,7 @@ Here, \pcdroid denotes the conditional model, where $N_{const}$ and the jet kine
 The other two rows represent scenarios where either flow is used to initially sample these variables before passing them to the diffusion model.
 There is minimal difference in performance when shifting to unconditional generation.
 
-\begin{figure}[b!]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.49\linewidth]{Figures/jet_generation/droid/150/flow_quality_t.pdf}
     \includegraphics[width=0.49\linewidth]{Figures/jet_generation/droid/150/flow_quality_g.pdf}
@@ -711,7 +711,7 @@ Events are instead categorized based on these decays into all-hadronic ($0\ell$)
 All parton and reco-level objects are defined by their four-momenta and type.
 Jets are not individually expressed as sets and receive additional labels based on whether they pass $b$- or $\tau$-jet identification criteria.
 Reconstructed electrons and muons must have $|\eta| < 2.5$ and $\pt > 15~\GeV$ and are also described by their charge.
-Missing transverse momentum \ptmiss is calculated from all visible particles.
+Missing transverse momentum \ptmiss is calculated from all visible particles and is defined as the negative vector sum of all transverse momenta.
 
 Only events with 2-16 jets and 0-2 leading leptons are considered.
 Truth matching partons to jets is done using a $\Delta R < 0.4$ criterion.
@@ -914,7 +914,7 @@ This limit is where signal presence is too low compared to the natural fluctuati
     \label{fig:drapes_hlv}
 \end{figure}
 
-The performance of \drapes~(LLV) with varying signal amounts is shown in \cref{fig:drapes_llv}.
+The performance of \drapes~(LLV) with varying signal amounts is shown in \Cref{fig:drapes_llv}.
 When using low-level features, the supervised benchmark yields an $SI=23.5$ at $r_b=1000$, significantly higher than the supervised benchmark using high-level features, which has an $SI=13.5$.
 This increase in performance demonstrates the potential sensitivity enhancements for searches operating on low-level features.
 
