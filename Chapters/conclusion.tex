@@ -2,45 +2,49 @@
 \label{ch:conclusion}
 
 This thesis introduced novel methods that utilized deep learning techniques to address various challenges in high-energy physics.
-The work has demonstrated the potential of using state-of-the-art machine learning techniques, such as diffusion models, transformers, and normalizing flows.
+The work has demonstrated the benefits of using state-of-the-art machine learning techniques, such as diffusion models, transformers, and normalizing flows.
 
 \Cref{ch:spice} presented several architecture modifications to the existing flavour tagging model used by the ATLAS collaboration, GN1.
 Specifically, the Spice model utilized the transformer and demonstrated significant improvements over GN1 in terms of $b$- and $c$-tagging performance.
 It has since been integrated into the ATLAS software framework, forming the new GN2 tagger, which is being actively used in the ATLAS experiment.
 The code repository for continuously updating GN2, known as \texttt{Salt}, is available for the broader community to contribute to and use.
-Many working groups within ATLAS now use either \texttt{Salt} or GN2 even those that operate outside the flavour tagging domain.
-Ongoing work is focused on further improving the model's performance by adopting the latest trends in transformer design coming from the wider machine-learning community.
-Recent additions include reducing the model's memory and time complexity by incorporating highly compressed representations of the input data and efficient attention mechanisms~\cite{FlashAttentionFastMemoryEfficient}.
-These additions have proved crucial for the ongoing studies for GN3, the proposed tagger, which also incorporates particle flow information, increasing the cardinality of the input set from an average of 10 to around 100.
+Many working groups within ATLAS now use either \texttt{Salt} or GN2 including those that operate outside the flavour tagging domain.
+Ongoing work is focused on further improving the model's performance by adopting the latest trends in transformer design in the wider machine-learning community.
+Recent additions include reducing the model's memory and time complexity by adding support for highly compressed representations of the input data and efficient attention mechanisms~\cite{FlashAttentionFastMemoryEfficient}.
+GN3, the next tagger undergoing development, incorporates particle flow information.
+This increasing the cardinality of the input set from an average of 10 to around 100, making the support for efficient training and inference even more critical.
 
 \Cref{ch:neutrino_unfolding} presented a novel method for neutrino unfolding using normalizing flows.
 The \vvflows method significantly improved the reconstruction of neutrino kinematics and overall event reconstruction, offering a promising alternative to traditional analytical techniques.
-This thesis considered only final states with one or two neutrinos.
-Work is continuing on this project to extend it to final states with more neutrinos, swapping out the normalizing flow for a diffusion model, and testing the method for detecting massive non-interacting BSM particles.
+This thesis considered final states with one or two neutrinos.
+There is ongoing work to not only extend it to final states with more neutrinos but to also produce a model which can generalize to any number of neutrinos.
+This requires swapping out the normalizing flow for a set diffusion model like those presented in \Cref{ch:jet_generation,ch:foundation_models}.
 
 \Cref{ch:jet_generation} presented novel methods for the conditional generation of the particle cloud representation of high-energy physics jets.
-These methods were based on the diffusion framework, and \pcdroid specifically saturated many of the metrics used by the wider community to evaluate generative models on jets.
-\pcdroid performed the showering and hadronization steps typically done by tools such as \pythia and \herwig.
+These methods were based on the diffusion framework.
+\pcdroid performed the showering and hadronization steps typically done by tools such as \pythia and \herwig and saturated many of the metrics used by the community to evaluate generative models on jets.
 The model was then extended to full-event generation, showing it could replicate the response and reconstruction steps typically handled by \delphes.
-Future work focuses on moving towards a high-quality simulated dataset using \geant.
 Datasets produced with \delphes tend to be overly idealized and do not model the many intricacies of a full detector simulation.
-
+Future work focuses on moving towards a high-quality simulated dataset using \geant.
 The generative models developed in this chapter were applied to a template-based anomaly detection task.
-While they proved effective for template generation, the high dimensionality of the point clouds made anomaly detection, which required training a CWoLa model, infeasible for the desired levels of signal injection.
+While they proved effective for template generation, the high dimensionality of the point clouds made anomaly detection, which required training a CWoLa model, infeasible at low signal strengths.
+This seems to be a limitation of the CWoLa method, so one avenue is to explore other anomaly detection methods that make use of the template generator that does not require training on noisy labels.
 
 \Cref{ch:foundation_models} detailed the development of a foundation model for physics data, introducing self-supervised learning regimes capable of generalizable and meaningful representations of particle physics jets without labelled data.
 The proposed methods, MPM and SSFM, demonstrated promising results and are still being developed.
 While the field and theory of foundation models remain relatively nascent, significant progress is being made, particularly in optimal fine-tuning strategies such as low-rank adaption~\cite{LoRALowRankAdaptation} and specialized tokens~\cite{ParameterEfficientTuningSpecial}.
-Efforts are also directed towards extending the model's applicability to full events rather than single jets.
-
-Ongoing work also is being done to integrate the pre-training step into the GN2 pipeline.
-This pretraining would be done on actual data, and it is hypothesized that it would mitigate modelling errors in the training set that adversely affect the model's performance.
+Efforts are also directed towards extending the model's applicability to full events with more involved topologies, rather than individual jets.
+Work is also being done to integrate the pre-training step into the GN2 pipeline.
+This pre-training will be done on actual data, and it is hypothesized that it will mitigate modelling errors in the training set that adversely affect the model's performance.
 
 Moreover, the pre-trained models provide an interesting opportunity for a comprehensive data-driven search for new physics operating on low-level data.
 While the tests in \Cref{ch:jet_generation} failed to detect small amounts of signal injected into the data, the results from \Cref{ch:foundation_models} showed that pre-training greatly improved the model's sensitivity to even the lowest levels of signal.
 One can envision an anomaly detection pipeline in which the SSFM model is trained on a real data sample, producing both the pre-trained CWoLa classifier and a pre-trained generator for the template generation.
 
-A notable critique of the research presented in this thesis is that, aside from the findings in \Cref{ch:spice}, is the reliance on parametrized simulation tools like \delphes to generate training data.
-The use of \delphes was a necessary step because, at the start of this research, there were very few high-quality datasets that were machine learning-friendly.
+A potential shortcoming of the research presented in this thesis is that, aside from the findings in \Cref{ch:spice}, there is an overreliance on parametrized simulation tools like \delphes to generate training data.
+The use of \delphes was necessary because there were very few high-quality datasets at the start of this research.
+Several datasets had to be made explicitly for the research presented in this thesis, such as the ones used in \Cref{ch:neutrino_unfolding}.
+Many of the other datasets, such as the JetNet and LHCO datasets used in \Cref{ch:jet_generation}, and the JetClass dataset used in \Cref{ch:foundation_models}, are frequently used in the machine-learning/HEP community, but are not based on full detector simulations.
+This is more of a critique of the current state of the field.
 However, this trend is changing, and efforts are being made to release full-simulation datasets from the CMS and ATLAS experiments publicly.
 Future work will undoubtedly benefit from the use of higher-quality data.
