@@ -1,0 +1,659 @@
+% Preface
+
+\newglossaryentry{LHC}{
+    name=LHC,
+    description={Large Hadron Collider, a high-energy particle accelerator used for exploring fundamental interactions in physics},
+    first={Large Hadron Collider (LHC)},
+    text={LHC}
+}
+
+\newglossaryentry{ATLAS}{
+    name=ATLAS,
+    description={One of the main experiments at the LHC},
+    first={ATLAS},
+    text={ATLAS}
+}
+
+\newglossaryentry{pp}{
+    name={$pp$},
+    description={Proton-proton, Refers to proton-proton collisions, the primary collision type at the LHC},
+    first={proton-proton ($pp$)},
+    text={$pp$}
+}
+
+\newglossaryentry{GN++}{
+    name=GN++,
+    description={A custom graph neural network, with dedicated edge, node, and global updates, built for flavour tagging in ATLAS},
+    first={GN++},
+    text={GN++}
+}
+
+\newglossaryentry{GN1}{
+    name=GN1,
+    description={A graph neural network based flavour tagger released by ATLAS in 2022},
+    first={GN1},
+    text={GN1}
+}
+
+\newglossaryentry{GN2}{
+    name=GN2,
+    description={A transformer based flavour tagger, developed in this thesis, which is currently used by the ATLAS Collaboration},
+    first={GN2},
+    text={GN2}
+}
+
+\newglossaryentry{Spice}{
+    name=Spice,
+    description={A transformer model for flavour tagging},
+    first={Spice},
+    text={Spice}
+}
+
+\newglossaryentry{Salt}{
+    name=\texttt{Salt},
+    description={A repository for the continual development for transformer based models in ATLAS},
+    first={\texttt{Salt}},
+    text={\texttt{Salt}}
+}
+
+\newglossaryentry{PCJedi}{
+    name=PCJedi,
+    description={Particle Cloud Jet Diffusion, a deep generative model for high-energy physics jets},
+    first={Point Cloud Jet Diffusion (PCJedi)},
+    text={PCJedi}
+}
+
+\newglossaryentry{PCDroid}{
+    name=PCDroid,
+    description={Particle Cloud Diffusion of reconstructed objects with improved denoising, a deep generative model for high-energy physics jets and the successor to the PCJedi model},
+    first={PCDroid},
+    text={PCDroid}
+}
+
+\newglossaryentry{MPM}{
+    name=MPM,
+    description={Masked Particle Modelling, a pre-training strategy for high energy physics data based on a denoising autoencoder},
+    first={Masked Particle Modelling (MPM)},
+    text={MPM}
+}
+
+\newglossaryentry{MPM2}{
+    name=MPM2,
+    description={Masked Particle Modelling version-2, an improved version of the MPM pre-training strategy},
+    first={Masked Particle Modelling Version-2 (MPM2)},
+    text={MPM2}
+}
+
+% Standard Model of Particle Physics
+
+\newglossaryentry{SM}{
+    name=SM,
+    description=The Standard Model of particle physics,
+    first={Standard Model (SM)},
+    text={SM}
+}
+
+\newglossaryentry{QFT}{
+    name=QFT,
+    description={Quantum Field Theory},
+    first={Quantum Field Theory (QFT)},
+    text={QFT}
+}
+
+\newglossaryentry{GSW}{
+    name=GSW,
+    description={The Glashow-Weinberg-Salam model, developed to unify the electromagnetic and weak forces},
+    first={Glashow-Weinberg-Salam model (GSW)},
+    text={GSW}
+}
+
+\newglossaryentry{QED}{
+    name=QED,
+    description={Quantum Electrodynamics, a complete description of the electromagnetic force},
+    first={Quantum Electrodynamics (QED)},
+    text={QED}
+}
+
+\newglossaryentry{QCD}{
+    name=QCD,
+    description={Quantum Chromodynamics, a renormalizable QFT describing quarks, gluons, and their interactions via the strong force},
+    first={Quantum Chromodynamics (QCD)},
+    text={QCD}
+}
+
+\newglossaryentry{CKM}{
+    name=CKM,
+    description={Cabibbo-Kobayashi-Maskawa matrix, describes quark mixing between weak and mass eigenstates},
+    first={Cabibbo-Kobayashi-Maskawa (CKM)},
+    text={CKM}
+}
+
+\newglossaryentry{PMNS}{
+    name=PMNS,
+    description={Pontecorvo-Maki-Nakagawa-Sakata matrix, describes lepton mixing},
+    first={Pontecorvo-Maki-Nakagawa-Sakata (PMNS)},
+    text={PMNS}
+}
+
+\newglossaryentry{EWSB}{
+    name=EWSB,
+    description={Electroweak Symmetry Breaking},
+    first={Electroweak Symmetry Breaking (EWSB)},
+    text={EWSB}
+}
+
+\newglossaryentry{CERN}{
+    name=CERN,
+    description={The European Organization for Nuclear Research},
+    first={European Organization for Nuclear Research (CERN)},
+    text={CERN}
+}
+
+\newglossaryentry{CMS}{
+    name=CMS,
+    description={Compact Muon Solenoid, a collider experiment at the LHC},
+    first={CMS},
+    text={CMS}
+}
+
+\newglossaryentry{GUTs}{
+    name=GUTs,
+    description={Grand Unified Theories, predict that all forces in the Standard Model are unified at high energies},
+    first={Grand Unified Theories (GUTs)},
+    text={GUTs}
+}
+
+% LHC and ATLAS
+
+\newglossaryentry{LHCb}{
+    name=LHCb,
+    description={A collider experiment at the LHC focusing on measuring the properties of B mesons and other particles containing b-quarks},
+    first={LHCb},
+    text={LHCb}
+}
+
+\newglossaryentry{ALICE}{
+    name=ALICE,
+    description={A collider experiment at the LHC investigating the properties of quark-gluon plasma},
+    first={ALICE},
+    text={ALICE}
+}
+
+\newglossaryentry{IPs}{
+    name=IPs,
+    description={Interaction points within the LHC where particle collisions occur},
+    first={interaction points (IPs)},
+    text={IPs}
+}
+
+\newglossaryentry{Linac}{
+    name=Linac,
+    description={Linear Accelerator, a stage in the CERN accelerator complex that accelerates particles from rest},
+    first={Linear Accelerator (Linac)},
+    text={Linac}
+}
+
+\newglossaryentry{PSB}{
+    name=PSB,
+    description={Proton Synchrotron Booster, a stage in the CERN accelerator complex that increases particle energy},
+    first={Proton Synchrotron Booster (PSB)},
+    text={PSB}
+}
+
+\newglossaryentry{PS}{
+    name=PS,
+    description={Proton Synchrotron, a stage in the CERN accelerator complex that accelerates particles to higher energies},
+    first={Proton Synchrotron (PS)},
+    text={PS}
+}
+
+\newglossaryentry{SPS}{
+    name=SPS,
+    description={Super Proton Synchrotron, a stage in the CERN accelerator complex that accelerates particles before injection into the LHC},
+    first={Super Proton Synchrotron (SPS)},
+    text={SPS}
+}
+
+\newglossaryentry{ID}{
+    name=ID,
+    description={The innermost sub-detector of ATLAS, comprising the Pixel Detector, SCT, and TRT, used for tracking charged particles},
+    first={Inner Detector (ID)},
+    text={ID}
+}
+
+\newglossaryentry{SCT}{
+    name=SCT,
+    description={Semi-Conductor Tracker, a sub-detector within the ATLAS Inner Detector composed of silicon microstrip layers},
+    first={Semi-Conductor Tracker (SCT)},
+    text={SCT}
+}
+
+\newglossaryentry{TRT}{
+    name=TRT,
+    description={Transition Radiation Tracker, the outermost sub-detector of the ATLAS Inner Detector, used for tracking and particle identification},
+    first={Transition Radiation Tracker (TRT)},
+    text={TRT}
+}
+
+\newglossaryentry{IBL}{
+    name=IBL,
+    description={Insertable B-Layer, an additional pixel layer added to the ATLAS Inner Detector between Run 1 and Run 2},
+    first={Insertable B-Layer (IBL)},
+    text={IBL}
+}
+
+\newglossaryentry{ECal}{
+    name=ECal,
+    description={Electromagnetic Calorimeter, an ATLAS calorimeter system specialized for measuring the energy of electrons and photons},
+    first={Electromagnetic Calorimeter (ECal)},
+    text={ECal}
+}
+
+\newglossaryentry{EMEC}{
+    name=EMEC,
+    description={Liquid Argon Electromagnetic End-Cap, part of the ATLAS Electromagnetic Calorimeter covering forward regions},
+    first={Liquid Argon Electromagnetic End-Cap (EMEC)},
+    text={EMEC}
+}
+
+\newglossaryentry{HCal}{
+    name=HCal,
+    description={Hadronic Calorimeter, an ATLAS calorimeter system designed to measure the energy of hadrons, also known as the Tile Calorimeter},
+    first={Hadronic Calorimeter (HCal)},
+    text={HCal}
+}
+
+\newglossaryentry{MS}{
+    name=MS,
+    description={Muon Spectrometer, the outermost sub-detector of ATLAS, providing triggering information, identification, and momentum measurements for muons},
+    first={Muon Spectrometer (MS)},
+    text={MS}
+}
+
+\newglossaryentry{SP}{
+    name=SP,
+    description={Space points, three-dimensional points reconstructed from clustered hits in the ATLAS Inner Detector},
+    first={\textit{space points} (SP)},
+    text={SP}
+}
+
+\newglossaryentry{PV}{
+    name=PV,
+    description={Primary vertex, a vertex produced by the proton-proton collision in a bunch crossing, typically the hard scatter vertex},
+    first={\textit{primary vertex} (PV)},
+    text={PV}
+}
+
+\newglossaryentry{PFlow}{
+    name=PFlow,
+    description={Particle Flow, an algorithm used in ATLAS event reconstruction to combine information from the Inner Detector and calorimeters},
+    first={Particle Flow (PFlow)},
+    text={PFlow}
+}
+
+\newglossaryentry{JVT}{
+    name=JVT,
+    description={Jet Vertex Tagger, a tool in ATLAS that uses associated tracks to discriminate against jets originating from pileup interactions},
+    first={Jet Vertex Tagger (JVT)},
+    text={JVT}
+}
+
+\newglossaryentry{D2obs}{ % Using D2obs as the name for LaTeX compatibility
+    name=$\Dtwo$,
+    description={The $\Dtwo$ observable ($\sfrac{e_3(\beta)}{e_2(\beta)^3}$), derived from energy correlation functions, commonly used to separate 1-prong and 2-prong jets},
+    first=$\Dtwo$,
+    text=$\Dtwo$
+}
+
+\newglossaryentry{EFPs}{
+    name=EFPs,
+    description={Energy Flow Polynomials, a set of basis features sensitive to the underlying substructure of different jet types},
+    first={Energy Flow Polynomials (EFPs)},
+    text={EFPs}
+}
+
+\newglossaryentry{DIPS}{
+    name=DIPS,
+    description={A flavour tagger used by ATLAS based on the deep sets architecture},
+    first={DIPS},
+    text={DIPS}
+}
+
+\newglossaryentry{DL1d}{
+    name=DL1d,
+    description={A combined flavour tagger used by ATLAS, incorporating the outputs of DIPS with other algorithms},
+    first={DL1d},
+    text={DL1d}
+}
+
+% Deep Learning
+
+\newglossaryentry{ML}{
+    name=ML,
+    description={Machine Learning, a field that focuses on the development and training of models capable of learning from data},
+    first={Machine Learning (ML)},
+    text={ML}
+}
+
+\newglossaryentry{HEP}{
+    name=HEP,
+    description={High Energy Physics, the field of physics that studies the fundamental constituents of matter and the interactions between them},
+    first={High Energy Physics (HEP)},
+    text={HEP}
+}
+
+\newglossaryentry{iid}{
+    name=i.i.d.,
+    description={independent and identically distributed, refers to data samples drawn from the same distribution independently of each other, a common assumption in machine learning training datasets},
+    first={independent and identically distributed (i.i.d.)},
+    text={i.i.d.}
+}
+
+\newglossaryentry{MLP}{
+    name=MLP,
+    description={Multi-Layer Perceptron, arguably the simplest form of a deep neural network, also referred to as a dense network, fully connected network, or sometimes confusingly as a feed-forward neural network (FFN)},
+    first={Multi-Layer Perceptron (MLP)},
+    text={MLP}
+}
+
+\newglossaryentry{FFN}{
+    name=FFN,
+    description={Feed-Forward Neural Network, a term that can be used to describe any neural network without loops in the computational graph; sometimes used confusingly to refer to a Multi-Layer Perceptron},
+    first={feed-forward neural network (FFN)},
+    text={FFN}
+}
+
+\newglossaryentry{ReLU}{
+    name=ReLU,
+    description={Rectified Linear Unit, a common non-linear activation function used for hidden layers in modern neural networks, defined as $\max(0, x)$},
+    first={ReLU},
+    text={ReLU}
+}
+
+\newglossaryentry{SGD}{
+    name=SGD,
+    description={Stochastic Gradient Descent, an iterative optimization algorithm used for training deep neural networks by adjusting parameters in the direction of the negative gradient calculated over a random subset (mini-batch) of the data},
+    first={stochastic gradient descent (SGD)},
+    text={SGD}
+}
+
+\newglossaryentry{Adam}{
+    name=Adam,
+    description={A common variant of stochastic gradient descent that combines momentum and adaptive learning rates, used for training deep neural networks},
+    first={Adam},
+    text={Adam}
+}
+
+\newglossaryentry{BatchNorm}{
+    name=BatchNorm,
+    description={Batch Normalization, a type of normalization layer widely used within neural networks to help stabilize training by targeting activations with a mean of zero and unit variance},
+    first={batch normalization (BatchNorm)},
+    text={BatchNorm}
+}
+
+\newglossaryentry{LayerNorm}{
+    name=LayerNorm,
+    description={Layer Normalization, a type of normalization layer used within neural networks that normalizes activations across the feature dimension},
+    first={layer normalization (LayerNorm)},
+    text={LayerNorm}
+}
+
+\newglossaryentry{PreNorm}{
+    name=PreNorm,
+    description={Pre-normalization, a setup for residual blocks where the input to the learnable layer is normalized before applying the transformation; helps prevent exploding variance in very deep networks},
+    first={pre-normalization (PreNorm)},
+    text={PreNorm}
+}
+
+% Graph Neural Networks and Variants
+
+\newglossaryentry{GNN}{
+    name=GNN,
+    description={Graph Neural Network, a type of deep learning model designed to handle graph-structured data, allowing information to flow through the network in a manner that mirrors the graph's organization},
+    firstplural={Graph Neural Networks (GNNs)},
+    first={Graph Neural Network (GNN)},
+    text={GNN}
+}
+
+\newglossaryentry{CNN}{
+    name=CNN,
+    description={Convolutional Neural Network, a class of deep neural networks commonly used for analyzing visual imagery, which applies convolutional operations to exploit spatial structure in the data},
+    first={Convolutional Neural Network (CNN)},
+    text={CNN},
+    firstplural={Convolutional Neural Networks (CNNs)}
+}
+
+\newglossaryentry{GCN}{
+    name=GCN,
+    description={Graph Convolutional Network, a variant of graph neural networks that extends the convolution operation from grid-like data to graph-structured data},
+    first={Graph Convolutional Network (GCN)},
+    text={GCN}
+}
+
+\newglossaryentry{GAT}{
+    name=GAT,
+    description={Graph Attention Network, a type of graph neural network that incorporates attention mechanisms to weigh the importance of neighboring nodes during message passing},
+    first={Graph Attention Network (GAT)},
+    text={GAT},
+    firstplural={Graph Attention Networks (GATs)}
+}
+
+% Transformer Architecture Components
+
+\newglossaryentry{NLP}{
+    name=NLP,
+    description={Natural Language Processing, a field of machine learning that focuses on the modeling and understanding of human language},
+    first={Natural Language Processing (NLP)},
+    text={NLP}
+}
+
+\newglossaryentry{TE}{
+    name=TE,
+    description={Transformer Encoder, a variant of the GN Block that operates on a set with no persistent edge or global features, applying self-attention for message passing followed by an MLP for node updates},
+    first={Transformer Encoder (TE)},
+    text={TE}
+}
+
+\newglossaryentry{CV}{
+    name=CV,
+    description={Computer Vision, a field of machine learning that focuses on enabling computers to interpret and understand visual information},
+    first={Computer Vision (CV)},
+    text={CV}
+}
+
+\newglossaryentry{TD}{
+    name=TD,
+    description={Transformer Decoder, a component that includes both self-attention and cross-attention mechanisms, allowing one set to be conditioned on another},
+    first={Transformer Decoder (TD)},
+    text={TD}
+}
+
+\newglossaryentry{GNBlock}{
+    name=GN Block,
+    description={Graph Network Block, a basic building block of a graph neural network, consisting of a message passing step and a node update step},
+    first={Graph Network Block (GN Block)},
+    text={GN Block}
+}
+
+\newglossaryentry{NLNN}{
+    name=NLNN,
+    description={Non-Local Neural Network, a variant of the GN Block that captures long-range dependencies in data, conceptually similar to the transformer encoder},
+    first={Non-Local Neural Network (NLNN)},
+    text={NLNN}
+}
+
+\newglossaryentry{CA}{
+    name=CA,
+    description={Cross-Attention, a mechanism that enables conditioning the update of one set on another, creating a one-way bipartite graph between two sets},
+    first={Cross-Attention (CA)},
+    text={CA}
+}
+
+% Attention Mechanisms
+
+\newglossaryentry{SDPA}{
+    name=SDPA,
+    description={Scaled Dot-Product Attention, the core attention mechanism used in transformers, where messages between nodes are weighted based on the dot product of query and key projections},
+    first={Scaled Dot-Product Attention (SDPA)},
+    text={SDPA}
+}
+
+\newglossaryentry{MHA}{
+    name=MHA,
+    description={Multi-Headed Attention, an extension of attention where multiple attention operations are performed in parallel with different learned projections, effectively creating a multi-graph on the set},
+    first={Multi-Headed Attention (MHA)},
+    text={MHA}
+}
+
+\newglossaryentry{MHSA}{
+    name=MHSA,
+    description={Multi-Headed Self-Attention, a specific type of multi-headed attention where the query, key, and value projections all come from the same set of nodes},
+    first={Multi-Headed Self-Attention (MHSA)},
+    text={MHSA}
+}
+
+% Positional Encodings
+
+\newglossaryentry{APE}{
+    name=APE,
+    description={Absolute Positional Encoding, a technique that integrates sequence positions into node attributes by adding a unique position-dependent tensor to each node before processing by a transformer},
+    first={Absolute Positional Encoding (APE)},
+    text={APE}
+}
+
+\newglossaryentry{RPE}{
+    name=RPE,
+    description={Relative Positional Encoding, a technique that encodes relative positions between elements in a sequence by biasing the attention matrix, serving as edge information in the graph perspective},
+    first={Relative Positional Encoding (RPE)},
+    text={RPE}
+}
+
+% Other Components
+
+\newglossaryentry{GLU}{
+    name=GLU,
+    description={Gated Linear Unit, a network layer involving the element-wise multiplication of two linear projections, one of which is activated, commonly used in modern transformer architectures},
+    first={Gated Linear Unit (GLU)},
+    text={GLU}
+}
+
+\newglossaryentry{ParT}{
+    name=ParT,
+    description={A model developed for jet identification, which uses a transformer architecture to process particle clouds},
+    first={Particle Transformer (ParT)},
+    text={ParT}
+}
+
+% Generative Modelling
+
+\newglossaryentry{PGM}{
+    name=PGM,
+    description={Probabilistic Generative Model, a class of models that either aim to learn the underlying probability distribution of a dataset or at least facilitate means to generate new samples from the learned distribution},
+    first={Probabilistic Generative Model (PGM)},
+    firstplural={Probabilistic Generative Models (PGMs)},
+    text={PGM}
+}
+
+\newglossaryentry{NF}{
+    name=NF,
+    description={Normalizing Flow, a type of generative model that learns a complex distribution by transforming a simple base distribution through a series of invertible transformations},
+    first={Normalizing Flow (NF)},
+    text={NF},
+    firstplural={Normalizing Flows (NFs)}
+}
+
+\newglossaryentry{GAN}{
+    name=GAN,
+    description={Generative Adversarial Network, a type of Probabilistic Generative Model that permits sampling from a density, based on a two-player min-max game between a generator and a discriminator},
+    first={Generative Adversarial Network (GAN)},
+    firstplural={Generative Adversarial Networks (GANs)},
+    text={GAN}
+}
+
+\newglossaryentry{VAE}{
+    name=VAE,
+    description={Variational Autoencoder, an older Probabilistic Generative Model that became popular for generative tasks, unsupervised learning, and variational inference, and is an example of a latent variable model},
+    first={Variational Autoencoder (VAE)},
+    firstplural={Variational Autoencoders (VAEs)},
+    text={VAE}
+}
+
+\newglossaryentry{ODE}{
+    name=ODE,
+    description={Ordinary Differential Equation, used in Continuous Normalizing Flows and Diffusion Models to define a continuous transformation process; numerical ODE solvers are used for transforming samples},
+    first={ordinary differential equation (ODE)},
+    firstplural={ordinary differential equations (ODEs)},
+    text={ODE}
+}
+
+\newglossaryentry{CNF}{
+    name=CNF,
+    description={Continuous Normalizing Flow, a type of Normalizing Flow that defines a continuous transformation process using an ordinary differential equation, where each infinitesimal transformation depends on the current state and time},
+    first={Continuous Normalizing Flow (CNF)},
+    firstplural={Continuous Normalizing Flows (CNFs)},
+    text={CNF}
+}
+
+\newglossaryentry{SDE}{
+    name=SDE,
+    description={Stochastic Differential Equation, used in score-based generative modelling to describe the forward-process where noise is progressively added to data samples},
+    first={stochastic differential equation (SDE)},
+    firstplural={stochastic differential equations (SDEs)},
+    text={SDE}
+}
+
+\newglossaryentry{Sm}{
+    name=Sm,
+    description={Score Matching, the main objective of a score-based generative model, which involves approximating the score function $\nabla_{\x_t} \log p_t(\x_t)$},
+    first={score matching (Sm)},
+    text={Sm}
+}
+
+\newglossaryentry{DSm}{
+    name=DSm,
+    description={Denoising Score Matching, an objective for training score-based models that uses the conditional score function $\nabla_{\x_t} \log p_{0t}(\x_t|\x_0)$, which is tractable},
+    first={denoising score matching (DSm)},
+    text={DSm}
+}
+
+\newglossaryentry{CFM}{
+    name=CFM,
+    description={Conditional Flow Matching, an alternative framework for constructing Continuous Normalizing Flows that arrives at an equivalent training objective to score-based models},
+    first={Conditional Flow Matching (CFM)},
+    text={CFM}
+}
+
+\newglossaryentry{EDM}{
+    name=EDM,
+    description={Elucidating the Design Space of Diffusion-Based Generative Models, a diffusion framework where the diffusion schedule is constructed to simplify the form of the probability flow ODE},
+    first={EDM},
+    text={EDM}
+}
+
+\newglossaryentry{EMA}{
+    name=EMA,
+    description={Exponential Moving Average},
+    first={exponential moving average (EMA)},
+    text={EMA}
+}
+
+\newglossaryentry{CosEnc}{
+    name=CosEnc,
+    description={Cosine Encoding, a method used for vector embedding scalar variables, involving a layer that outputs a cosine functions with varying increasing frequency},
+    first={Cosine Encoding (CosEnc)},
+    text={CosEnc}
+}
+
+\newglossaryentry{GPU}{
+    name=GPU,
+    description={Graphics Processing Unit, a specialized processor designed to accelerate graphics rendering and parallel computations},
+    first={Graphics Processing Unit (GPU)},
+    text={GPU}
+}
+
+\newglossaryentry{CPU}{
+    name=CPU,
+    description={Central Processing Unit, the primary component of a computer that performs most of the processing inside a computer},
+    first={Central Processing Unit (CPU)},
+    text={CPU}
+}

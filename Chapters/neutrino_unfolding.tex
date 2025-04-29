@@ -8,7 +8,7 @@ MC generators use theoretical assumptions to approximate $p_\text{gen} \approx p
 Expensive detector simulations allow us to sample from the conditional distribution $p_\text{sim}(\y|\x)$.
 This allows an estimation of the data distribution through the marginalization,
 \begin{equation}
-    \int p_\text{sim}(\y|\x) p_\text{MC}(\x) \diff\x = p_\text{MC}(\y) \approx p_\text{data}(\y).
+    \int p_\text{sim}(\y|\x) p_\text{gen}(\x) \diff\x = p_\text{MC}(\y) \approx p_\text{data}(\y).
 \end{equation}
 If one has access to the reverse process $p_\text{unfold}(\x|\y)$, then one can use it to \textit{unfold} the data by,
 \begin{equation}

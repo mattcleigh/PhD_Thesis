@@ -1,11 +1,13 @@
 % Bibliographies
 \newcommand{\includewithbib}[1]{
-    \begin{refsection}
-        \include{#1}
-        \printbibliography[heading=none]
-    \end{refsection}
+	\begin{refsection}
+		\include{#1}
+		\printbibliography[heading=none]
+	\end{refsection}
 }
 
+% Ensure that the glossaries are black
+% \renewcommand*{\glstextformat}[1]{\textcolor{black}{#1}}
 
 % ATLAS
 \newcommand{\pythia}{\textsc{Pythia}\xspace}

@@ -1,11 +1,11 @@
 \chapter{Deep Learning Basics}
 \label{ch:deep_learning}
 
-Deep learning has revolutionized the field of collider physics, and the performance gain observed in many algorithms used in the ATLAS experiment has been substantial.
+Deep learning has revolutionized the field of collider physics, and the performance gain observed in many algorithms used in the \Gls{ATLAS} experiment has been substantial.
 One of the most successful stories has been deep learning based algorithms for flavour tagging, covered in \Cref{sec:flavour_tagging}.
-However, despite the enthusiastic integration of ML tools and techniques in HEP, the swift pace of advancements presents a unique challenge.
-Researchers often find themselves in a situation where, by the time a newly developed ML tool is implemented and fully integrated into experiments, the technology has already progressed, leading to newer methodologies that render previous tools obsolete.
-In addition, experimentalists in HEP favour tools with greater, robustness, and domain adaptation.
+However, despite the enthusiastic integration of \Gls{ML} tools and techniques in \Gls{HEP}, the swift pace of advancements presents a unique challenge.
+Researchers often find themselves in a situation where, by the time a newly developed \Gls{ML} tool is implemented and fully integrated into experiments, the technology has already progressed, leading to newer methodologies that render previous tools obsolete.
+In addition, experimentalists in \Gls{HEP} favour tools with greater, robustness, and domain adaptation.
 The final point is relevant as most models are trained on simulated data.
 
 This chapter provides a brief introduction to deep learning, focusing on the core concepts and techniques that are relevant to the rest of the thesis.
@@ -40,7 +40,7 @@ Discriminative models can also be probabilistic, where they model the conditiona
 Probabilistic models which permit sampling from this distribution can also be considered generative models, which are covered in \Cref{ch:generative_models}.
 
 Fitting or training a supervised learning model typically requires a training set $\mathcal{D}$ containing of $N$ observations and their paired targets $\mathcal{D} = \{(x_i, y_i)\}_{i=1}^N$.
-These samples are usually assumed to be independent and identically distributed (i.i.d.) from the joint\footnote{Non i.i.d. data can sometimes be used by incorporating the appropriate weights during training}.
+These samples are usually assumed to be \Gls{iid} from the joint\footnote{Non \Gls{iid} data can sometimes be used by incorporating the appropriate weights during training}.
 A supervised learning algorithm $f$, probabilistic or not, is selected out of some hypothesis space $\mathcal{H}$ to minimize some measure of empirical risk $\mathcal{R}$ over the training set.
 \begin{equation}
     f = \argmin_{f \in \mathcal{H}} \frac{1}{N} \sum_{i=1}^N \mathcal{R}(f, (x_i, y_i)).
@@ -53,7 +53,7 @@ For a neural network $f_{\theta}$, the hypothesis space $\mathcal{H}$ is the set
 \section{Network Design}
 
 A single network layer is any function parametrized by a set of variables $\theta$ that can takes in a set of input tensors and returns a set of output tensors (both could be sets of size one).
-There are very few limits on what exactly this function can be, but there are some core design principles ML engineers have to rely on when designing a network to solve a specific task.
+There are very few limits on what exactly this function can be, but there are some core design principles \Gls{ML} engineers have to rely on when designing a network to solve a specific task.
 These principles are called inductive biases~\cite{InductiveBiases1, InductiveBiases2}, and they are the assumptions made to allow a learning algorithm to favour one solution over another.
 Inductive biases do not have to be explicitly defined.
 For example, fitting a linear regression model explicitly assumes that the relationship between the input and output is linear, but doing so using mean squared error implicitly assumes that the relationship is corrupted by Gaussian noise with constant variance.
@@ -78,12 +78,12 @@ Inductive biases can also be understood in terms of the bias-variance trade-off,
 
 \subsection{The Multi-Layer Perceptron}
 
-The Multi-Layer Perceptron (MLP) is arguably the simplest form of a deep neural network.
-It is also referred to as a dense network, fully connected network, or sometimes confusingly as a feed-forward neural network (FFN)\footnote{A term which can be used to describe any neural network without loops in the computational graph.}.
-In an MLP, there is a single input and single output both of which are rank-1 tensors, but can have differing numbers of features.
-A minimal working example of an MLP is a series of affine transformations\footnote{Often called a linear layer, but the operation almost always includes a bias term.}, each parametrized by a weight matrix $\W$ and bias vector $\bias$, followed by a non-linear activation function $\sigma$.
-The depth of the MLP is the number of intermediate representations in the computational graph between the input and output.
-A minimal MLP with two hidden layers can be written as
+The \Gls{MLP} is arguably the simplest form of a deep neural network.
+It is also referred to as a dense network, fully connected network, or sometimes confusingly as a \Gls{FFN}\footnote{A term which can be used to describe any neural network without loops in the computational graph.}.
+In an \Gls{MLP}, there is a single input and single output both of which are rank-1 tensors, but can have differing numbers of features.
+A minimal working example of an \Gls{MLP} is a series of affine transformations\footnote{Often called a linear layer, but the operation almost always includes a bias term.}, each parametrized by a weight matrix $\W$ and bias vector $\bias$, followed by a non-linear activation function $\sigma$.
+The depth of the \Gls{MLP} is the number of intermediate representations in the computational graph between the input and output.
+A minimal \Gls{MLP} with two hidden layers can be written as
 \begin{align}
     \ba_0 & = \x,                                        \\
     \ba_1 & = \sigma_0(\W_0 \ba_0 + \bias_0),            \\
@@ -95,12 +95,12 @@ The parameters of this network are is the full set of weights and biases from ea
 Each layer can arbitrarily resize the input tensor based on the shapes of the weight matrix and bias vector.
 
 Activation functions exist to introduce non-linearities in the computational graph and are applied elementwise to the tensors.
-As the composition of affine transformations is itself an affine transformation, without activation functions, the entire MLP could be reparametrized as a single affine transformation, no matter its depth, greatly hindering its expressive power.
+As the composition of affine transformations is itself an affine transformation, without activation functions, the entire \Gls{MLP} could be reparametrized as a single affine transformation, no matter its depth, greatly hindering its expressive power.
 With these induced non-linearities, MLPs can approximate any continuous function between real valued tensors~\cite{ApproximationSuperpositionsSigmoidal, ApproximatingContinuousFunctions, UniversalApproximationDeep}, given enough hidden units and the right activation functions.
 
 The activation function in the output layer is typically chosen to match the expected range of the target variable.
 Historically, the sigmoid function was used as the primary activation in the hidden layers, due to its analogy with biological activation.
-However, it can be shown that even the simplest function that breaks linearity is sufficient, and the ReLU~\cite{ReLU} function $\text{ReLU}(x) = \max(0, x)$ has become the popular choice for hidden layers in modern networks.
+However, it can be shown that even the simplest function that breaks linearity is sufficient, and the \Gls{ReLU}~\cite{ReLU} function $\text{ReLU}(x) = \max(0, x)$ has become the popular choice for hidden layers in modern networks.
 Other common choices for hidden layer activations are shown in \Cref{fig:activations}.
 
 \begin{figure}
@@ -119,8 +119,8 @@ Training or fitting a deep neural network is an optimization problem where the b
 \end{equation}
 For generalization, $x_i \in \mathcal{D}$ may also include the target if present.
 Due to the size of the parameter space and the non-linearity of the model, the $\theta^*$ cannot be found analytically.
-The most common method for training deep neural networks is mini-batch stochastic gradient descent (SGD)~\cite{Perceptron} or one of its many variants.
-SGD is an iterative optimization algorithm that attempts to minimize the loss over a dataset by adjusting the parameters of the model in the direction of the negative gradient of the loss calculated over a random subset of the data.
+The most common method for training deep neural networks is mini-batch \Gls{SGD}~\cite{Perceptron} or one of its many variants.
+\Gls{SGD} is an iterative optimization algorithm that attempts to minimize the loss over a dataset by adjusting the parameters of the model in the direction of the negative gradient of the loss calculated over a random subset of the data.
 An outline of the basic training algorithm is shown in \Cref{alg:gradient_descent}.
 Here $\mathcal{L}(\theta, b)$ is the average loss over a mini-batch of size $B$,
 \begin{equation}
@@ -150,7 +150,7 @@ Once the entire training set has been processed, this is considered one epoch.
 Training continues until some stopping criterion is met, such as a saturation of the loss.
 Typically, models are trained for many epochs and the training set is shuffled between each epoch to prevent correlated updates which may hinder convergence.
 Ideally we would have $B=N$, this is called batch gradient descent, but this is often infeasible due to memory constraints.
-So instead we use a noisy estimate of the gradient, by using a subset of the training set and true SGD uses $B=1$.
+So instead we use a noisy estimate of the gradient, by using a subset of the training set and true \Gls{SGD} uses $B=1$.
 
 The learning rate $\eta$ is a crucial hyperparameter of the training algorithm, however it is common to modify it during training.
 Many large networks require a warm-up phase~\cite{SGDRStochasticGradient} where the learning rate is slowly increased from zero to its maximal value.
@@ -200,7 +200,7 @@ This is typically performed using the statistics of the training set.
 Variables with long tails are also transformed to have a more Gaussian distribution.
 This can be done by taking the logarithm of variables with large dynamic ranges, or by using more advanced techniques like a quantile transformation.
 Within the network itself, normalization layers $L_{\text{norm}}$ are interleaved between others.
-Methods such as batch normalization (BatchNorm)~\cite{BatchNorm} or layer normalization (LayerNorm)~\cite{LayerNorm} are widely used and both have been shown to be greatly effective, with the latter seen as essential for transformer neural networks~\cite{Attention}.
+Methods such as batch normalization (BatchNorm)~\cite{BatchNorm} or \Gls{LayerNorm}~\cite{LayerNorm} are widely used and both have been shown to be greatly effective, with the latter seen as essential for transformer neural networks~\cite{Attention}.
 
 Another feature used to stabilize training is the manual clipping of the gradients before applying the parameter update.
 This can be done based on some maximal value, but is more commonly done by scaling the gradient such that their combined norm does not exceed some threshold~\cite{WhyGradientClipping}.
@@ -222,13 +222,13 @@ If the input and output of the layer have different dimensions, the residual pat
 The addition of two signal paths means that $a_{i+1}$ will have a larger variance than $a_i$.
 This can cause a deeper network to become unstable, especially in the early stages of training.
 One method to circumvent this is the inclusion of a normalization layer after the residual block, as was done in the original transformer architecture~\cite{Attention}, which is referred to as post-normalization.
-However, this was shown to be detrimental in very deep networks and recent methods use pre-normalization (PreNorm)~\cite{PreLN}, where the input to the learnable layer is normalized.
-With a PreNorm residual block one can prevent an exploding variance problem by scaling the residual path by a small coefficient, such as $\frac{1}{\sqrt{2}}$~\cite{StyleGAN2}.
+However, this was shown to be detrimental in very deep networks and recent methods use \Gls{PreNorm}~\cite{PreLN}, where the input to the learnable layer is normalized.
+With a \Gls{PreNorm} residual block one can prevent an exploding variance problem by scaling the residual path by a small coefficient, such as $\frac{1}{\sqrt{2}}$~\cite{StyleGAN2}.
 Recent methods initialize this coefficient to zero, such that the block behaves like an identity function, but allow it to be learned during training~\cite{ReZero, SkipInit, Fixup}.
 This was extended to the LayerScale method~\cite{GoingDeeper}, where a fully learnable tensor $\mathbf{L}_\text{scale}$ matching the output shape of the layer is used to scale the residual path.
 Initialized to zero, the network will learn the optimal scaling during training.
 
-A PreNorm residual block with LayerScale follows,
+A \Gls{PreNorm} residual block with LayerScale follows,
 \begin{equation}
     \ba_{i+1} = \ba_i + \mathbf{L}_\text{scale} \otimes f( L_{\text{norm}}(\ba_i) ),
 \end{equation}
@@ -237,7 +237,7 @@ Such a layer structure can be applied in many types of networks, from MLPs~\cite
 
 \section{Generalization}
 
-Generalization in the context of ML refers to the ability of a model to perform well on new, unseen data.
+Generalization in the context of \Gls{ML} refers to the ability of a model to perform well on new, unseen data.
 This is in most cases the primary goal of training such a model.
 As neural networks are highly flexible, it is possible that they can ``memorize'' the training set, achieving a very low loss during training, but not matching that performance on new data.
 This phenomenon is called overfitting, and it is a common problem in deep learning.
@@ -259,7 +259,7 @@ Confusingly, increasing the size of the network can also help prevent overfittin
 This is known as the double descent phenomenon~\cite{UnderstandingDoubleDescent}, whereas the effective model capacity grows, more solutions become accessible, and the model becomes a self ensemble.
 
 Domain shift is a problem which is similar to overfitting, but occurs when the underlying distribution of the training and test datasets differ.
-This is a significant issue in HEP, where models are trained on simulated samples, in order to have access to ground truth labels, but must be applied to real data.
+This is a significant issue in \Gls{HEP}, where models are trained on simulated samples, in order to have access to ground truth labels, but must be applied to real data.
 Domain adaptation~\cite{UnsupervisedDomainAdaptation} and adversarial training~\cite{EnhancingGeneralizationHigh} are methods to address this.
 
 Finally, unwanted biases in the training set can lead to skewed predictions.

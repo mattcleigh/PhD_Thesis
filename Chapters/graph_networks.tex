@@ -1,27 +1,27 @@
 \chapter{Graph Neural Networks}
 \label{ch:gnns}
 
-The philosophy behind graph neural networks (GNNs) is rooted in the idea that nature is best understood when broken down into compositional elements.
+The philosophy behind \Glspl{GNN} is the idea that a system is best understood when broken down into compositional elements.
 By understanding these elements and the rules governing their interactions, we can gain insights into the system as a whole.
 This reductionist approach is used in many areas of science, and indeed is the basis for all of particle physics.
 
 Graphs are a way to represent explicitly structured data, encompassing entities and their pairwise relationships.
-GNNs are a type of deep learning model designed to handle this structure, allowing information to flow through the network in a manner that mirrors the graph's organization.
+\Glspl{GNN} are a type of deep learning model designed to handle this structure, allowing information to flow through the network in a manner that mirrors the graph's organization.
 
-This chapter explores the foundational principles of GNNs, how they operate, and their limitations.
-It also delves into the most successful GNN variant to date, the transformer model, which is utilized extensively in the subsequent chapters of this thesis.
+This chapter explores the foundational principles of \Glspl{GNN}, how they operate, and their limitations.
+It also delves into the most successful \Gls{GNN} variant to date, the transformer model, which is utilized extensively in the subsequent chapters of this thesis.
 This chapter follows the notation and formalism of~\textcite{RelationalInductiveBiases}.
 
 \section{Learning Relations}
 
 Relational reasoning~\cite{SimpleNeuralNetwork} is the development of rules that describe how the properties of entities modify the relations between them, and how in turn, the relations modify the properties of the entities.
-GNNs employ relational reasoning to complete tasks by directly manipulating the rules, entities, and relations of a system.
+\Glspl{GNN} employ relational reasoning to complete tasks by directly manipulating the rules, entities, and relations of a system.
 Rules may be reused across different entities within the system, allowing for more efficient learning and greater generalization.
 
-An example of successful relational reasoning being used in deep learning outside GNNs is in image processing tasks.
+An example of successful relational reasoning being used in deep learning outside \Glspl{GNN} is in image processing tasks.
 An image is typically represented as a rank-3 tensor using the pixel values as the tensor elements.
 This tensor has shape $(H, W, C)$, where $H$ and $W$ describe the image resolution, and $C$ is the number color channels.
-If one wanted to process this tensor with an MLP, it must first be flattened to a have of shape $H \times W \times C$.
+If one wanted to process this tensor with an \Gls{MLP}, it must first be flattened to a have of shape $H \times W \times C$.
 Within each affine layer, every element of the input tensor is connected to every element of the output tensor.
 While this leads to a flexible model, it also destroys the spatial structure of the image and no reusable relationships or rules are used.
 
@@ -56,7 +56,7 @@ Multiple sets of edges are allowed to exist between nodes $\{\mathcal{E}^1, \mat
 Each of the edge $\edge_i$, node $\x_i$, and global $\u$ attributes can also be encoded as any type of representation, even graphs themselves.
 In most use cases dealt with in this thesis, each of $\x_i$, $\edge_k$, and $\u$ are real valued tensors.
 It is also common for all the nodes and edges to share same dimensionality, imposing an equivalence between the elements of the set.
-This simplifies the design of models operating on the graph as it allows operations on the individual elements to be parameterized with standard building blocks, such as affine layers, MLPs, and CNNs.
+This simplifies the design of models operating on the graph as it allows operations on the individual elements to be parameterized with standard building blocks, such as affine layers, \Glspl{MLP}, and \Glspl{CNN}.
 
 Representing a graph in code requires tuple or dictionary of real valued tensors $(\x, \edge, \u)$.
 Here, $\x \in \mathbb{R}^{N \times d}$, $\edge \in \mathbb{R}^{N \times N \times d_e}$, and $\u \in \mathbb{R}^{1 \times d_u}$, where $d$, $d_e$, and $d_u$ are the dimensionality of the node, edge, and global features respectively.
@@ -64,7 +64,7 @@ The edge matrix is typically ordered such that $\edge_{ij}$ is the edge from nod
 To represent the existence or absence of an edge between two nodes, a binary adjacency matrix $\mathbf{A} \in \{0, 1\}^{N \times N}$ can be used where $\sum{\mathbf{A}} = N^e$.
 Alternatively, one could use a sparse tensor representation, which is more memory efficient but can complicate the implementation of the model.
 
-Almost all GNNs operate by facilitating message passing between the nodes of the graph.
+Almost all \Glspl{GNN} operate by facilitating message passing between the nodes of the graph.
 In this framework each node sends messages to their neighbours.
 These messages are then aggregated and used to update the node's attributes.
 Exact details of how this is done can vary between models, but the core idea is the same.
@@ -133,8 +133,8 @@ Finally, there are edge-level tasks which predict properties or even the existen
 \subsection{Interconnectivity}
 
 When constructing a graph representation it is crucial to consider its interconnectivity, i.e. which pairs of nodes have edges between them.
-GNNs propagate information along edges, so the structure of the graph can have a significant impact on the model's performance.
-Interconnectivity is closely tied to two key issues in GNNs: over-squashing~\cite{OverSquashing} and the over-smoothing~\cite{OverSmoothing}.
+\Glspl{GNN} propagate information along edges, so the structure of the graph can have a significant impact on the model's performance.
+Interconnectivity is closely tied to two key issues in \Glspl{GNN}: over-squashing~\cite{OverSquashing} and the over-smoothing~\cite{OverSmoothing}.
 
 The inductive bias of locality can be imposed in a graph by only connecting nodes close to each other in some metric space.
 However, limiting the connections of each node to its local neighbourhood can also mean that long term dependencies may get lost.
@@ -150,17 +150,17 @@ This is known as graph rewiring and can be focussed around bottlenecks in the gr
 There are however downsides to graph rewiring.
 First, it means loosening the locality inductive bias.
 The extreme case of this is a fully connected graph, where edges exist between all pairs of nodes in both directions and locality is completely lost.
-Secondly, is that it exacerbates the other issue with GNNs, over-smoothing.
+Secondly, is that it exacerbates the other issue with \Glspl{GNN}, over-smoothing.
 This refers to the phenomenon where all node features across the graph converge towards the same constant value as the number of message passing steps increases.
-This one of the reasons that the depth of most GNNs is notably shallower than other deep learning models, as with every round of message passing each node aggregates information from its neighbours, diluting the original information.
+This one of the reasons that the depth of most \Glspl{GNN} is notably shallower than other deep learning models, as with every round of message passing each node aggregates information from its neighbours, diluting the original information.
 There are many proposed solutions to this issue, such as residual connections~\cite{DeepGCNs}, normalization layers~\cite{PairNorm}, and regularization~\cite{DirichletEnergyConstrained}.
 Finally, there is a computational cost to increasing the number of edges in the graph.
 Many models are looking to find way to minimize the interconnectivity while preserving model quality~\cite{GeneratingLongSequences}.
 
 \subsubsection{When is an Inductive Bias Holding You Back?}
 
-As previously mentioned, one of the key inductive biases leading to the success of CNNs is the locality of the convolutional kernel.
-However, the state-of-the-art models in computer vision are GNNs operating on fully connected graphs of image patches~\cite{VisionTransformer}, demonstrating that locality in images is not always useful.
+As previously mentioned, one of the key inductive biases leading to the success of \Glspl{CNN} is the locality of the convolutional kernel.
+However, the state-of-the-art models in computer vision are \Glspl{GNN} operating on fully connected graphs of image patches~\cite{VisionTransformer}, demonstrating that locality in images is not always useful.
 This makes intuitive sense, as the content of an image is not always localized; objects can be spread out across multiple patches, and they may be obscured, only visible in physically separated regions of the image.
 
 This extends to the example of the chemical compound in \Cref{fig:chemical}.
@@ -169,16 +169,16 @@ However, long range dependencies do exist in chemistry.
 The function of one part of a protein may be altered by the presence of a ligand on the other side of the molecule.
 Constraining the message passing graph to match the physical graph may limit the model from learning these relationships.
 
-The GNNs that work well in these cases are equipped with all the tools needed to combat over-smoothing mentioned in the previous section, as well as the attention mechanism~\cite{Attention}.
+The \Glspl{GNN} that work well in these cases are equipped with all the tools needed to combat over-smoothing mentioned in the previous section, as well as the attention mechanism~\cite{Attention}.
 Attention refers to the learnable process of weighting the incoming messages before aggregation.
-It allows the GNN to ``pay more attention'' to specific connections within the graph.
+It allows the \Gls{GNN} to ``pay more attention'' to specific connections within the graph.
 
 The fact that the state-of-the-art models in computer vision disregard the locality inductive bias raises the point that perhaps we might actually not know what is best for the model.
-These models, as shown in \Cref{fig:benchmarks}, however require much more data and computational resources than CNNs.
+These models, as shown in \Cref{fig:benchmarks}, however require much more data and computational resources than \Glspl{CNN}.
 This raises the point that with enough data, a large enough model, and sufficient training time, enforcing what relationships are important may not be necessary, and it is better to let the model learn these rules itself.
 It also raises whether the message passing graph and the input data graph should be tied together at all.
 Models such as the perceiver~\cite{Perceiver} project input information onto a completely different latent graph for message passing.
-Recent work for GNNs in computer vision has shown that they require extra, fully learnable nodes not tied to any image patch~\cite{VisionTransformersNeed}.
+Recent work for \Glspl{GNN} in computer vision has shown that they require extra, fully learnable nodes not tied to any image patch~\cite{VisionTransformersNeed}.
 
 \begin{figure}
     \centering
@@ -201,15 +201,15 @@ Recent work for GNNs in computer vision has shown that they require extra, fully
 \section{The Graph Network Block}
 \label{sec:gn_block}
 
-The Graph Network Block (GN Block)~\cite{RelationalInductiveBiases} is a useful building block for constructing deep learning models that operate on graph-structured data.
-It offers a framework that generalizes to many other existing graph-based models, such as graph convolutional networks (GCNs)~\cite{GCN}, graph attention networks (GATs)~\cite{GraphAttentionNetworks}, deep sets~\cite{DeepSets}, and even transformers~\cite{Attention}.
-A GN Block is defined as a series of operations that update the node, edge, and global attributes via the exchange and aggregation of information according to the structure of the graph.
-The GN Block does not change the cardinality of the features present, it only updates their attributes,
+The \Gls{GNBlock}~\cite{RelationalInductiveBiases} is a useful building block for constructing deep learning models that operate on graph-structured data.
+It offers a framework that generalizes to many other existing graph-based models, such as \Glspl{GCN}~\cite{GCN}, \Glspl{GAT}~\cite{GraphAttentionNetworks}, deep sets~\cite{DeepSets}, and even transformers~\cite{Attention}.
+A \Gls{GNBlock} is defined as a series of operations that update the node, edge, and global attributes via the exchange and aggregation of information according to the structure of the graph.
+The \Gls{GNBlock} does not change the cardinality of the features present, it only updates their attributes,
 \begin{equation}
     \text{GN}(\mathcal{N}, \mathcal{E}, \u) = (\mathcal{N}', \mathcal{E}', \u').
 \end{equation}
 The GN block is composed of three sub-blocks involving three update functions, $\phi^x$, $\phi^e$, and $\phi^u$, and three aggregation functions, $\rho^{e \to x}$, $\rho^{e \to u}$, and $\rho^{x \to u}$.
-Given an input graph $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$ the GN Block proceeds as follows.
+Given an input graph $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$ the \Gls{GNBlock} proceeds as follows.
 
 \begin{enumerate}
     \item \textbf{Edge Block:} The edges are updated using the current edge attributes, the attributes of the sender and receiver nodes, and the global attribute.
@@ -230,7 +230,7 @@ Given an input graph $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$ the GN Block
           \end{equation}
     \item \textbf{Global Block:} All edge information and node information across the graph is aggregated,
           \begin{alignat}{2}
-              \bar\x    & = \rho^{x \to u}(\mathcal{N}') &  & = \rho^{x \to u}(\{\x_i\}_{i=1}^{N})        \\
+              \bar\x    & = \rho^{x \to u}(\mathcal{N}') &  & = \rho^{x \to u}(\{\x_i'\}_{i=1}^{N})       \\
               \bar\edge & = \rho^{e \to u}(\mathcal{E}') &  & = \rho^{e \to u}(\{\edge_k'\}_{k=1}^{N^e}),
           \end{alignat}
           and used to update the global attribute,
@@ -239,29 +239,29 @@ Given an input graph $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$ the GN Block
           \end{equation}
 \end{enumerate}
 
-The GN Block describes a basic graph to graph transformation which can be composed to form a deeper model.
+The \Gls{GNBlock} describes a basic graph to graph transformation which can be composed to form a deeper model.
 To make the block learnable, each of the update or aggregation functions may be parameterized by a separate neural network.
 The only requirement for any of the aggregation functions is that they are permutation invariant and may accept a variable number of arguments.
 This structure also lends itself to the different types of tasks performed on graph type data.
-For example, the final GN Block in the stack may only contain an edge block for an edge-level task.
+For example, the final \Gls{GNBlock} in the stack may only contain an edge block for an edge-level task.
 
-It is important to investigate exactly what inductive biases are being imposed by the GN Block.
+It is important to investigate exactly what inductive biases are being imposed by the \Gls{GNBlock}.
 First, it is clear that the updates to the graph do not depend on the order of the nodes.
 Formally, the node and edge updates $(\mathcal{N}, \mathcal{E}) \rightarrow (\mathcal{N}', \mathcal{E}')$ are permutation equivariant to the node set, and the global update $U \rightarrow U'$ is permutation invariant.
-The GN Block applies the same update and aggregation functions to all nodes and edges in the graph.
+The \Gls{GNBlock} applies the same update and aggregation functions to all nodes and edges in the graph.
 This reflects the relational inductive bias which seeks to learn general rules that apply to all entities in the system while also adhering to the equivalence of the elements within the set.
-Furthermore, as the GN Block only prescribes the rules for how the features of a graph are updated; it is agnostic to the structure and size of the input graph.
+Furthermore, as the \Gls{GNBlock} only prescribes the rules for how the features of a graph are updated; it is agnostic to the structure and size of the input graph.
 This allows the same model to be applied to input sets with varying cardinality or connectivity.
 This is a crucial feature for many applications, such as in collider physics where the number of particles in an event can vary.
 Finally, information flow between elements of the set can follow two paths.
 Either, the information propagates along the edges of the graph, or it is aggregated into the global attribute, then redistributed to the nodes.
 This allows for the model to learn both local and long-range interactions.
 
-Almost all GNNs variants facilitate message passing can be thought of as some specialization of the GN Block depending on the forms of the $\phi$ and $\rho$ functions and the existence of edge, node, and global features.
-A full GN Block is shown in \Cref{fig:full_gn_block}.
-A basic implementation, where all graph attributes are tensors, can be done using MLPs for each of the update functions, and summation for the aggregation functions.
+Almost all \Glspl{GNN} variants facilitate message passing can be thought of as some specialization of the \Gls{GNBlock} depending on the forms of the $\phi$ and $\rho$ functions and the existence of edge, node, and global features.
+A full \Gls{GNBlock} is shown in \Cref{fig:full_gn_block}.
+A basic implementation, where all graph attributes are tensors, can be done using \Glspl{MLP} for each of the update functions, and summation for the aggregation functions.
 This creates the update shown in \Cref{alg:gn_block}, where the square brackets denote tensor concatenation.
-Even the deep set, which has no pairwise interactions between the nodes can be seen as a reduced form of a GN Block, as shown in \Cref{fig:deep_set}.
+Even the deep set, which has no pairwise interactions between the nodes can be seen as a reduced form of a \Gls{GNBlock}, as shown in \Cref{fig:deep_set}.
 Here the operations are simply,
 \begin{align}
     \x_i' & = \text{MLP}_v\left(\left[\x_i, \u\right]\right),           \\
@@ -269,7 +269,7 @@ Here the operations are simply,
 \end{align}
 
 \begin{algorithm}
-    \caption{Basic GN Block using MLPs}
+    \caption{Basic \Gls{GNBlock} using \Glspl{MLP}}
     \label{alg:gn_block}
     \begin{algorithmic}[1]
         \State \textbf{Input:} Graph attributes $\mathcal{G} = (\mathcal{N}, \mathcal{E}, \u)$
@@ -292,7 +292,7 @@ Here the operations are simply,
     \begin{subfigure}[b]{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{Figures/graph_networks/full_gn.pdf}
-        \caption{Full GN Block}
+        \caption{Full \Gls{GNBlock}}
         \label{fig:full_gn_block}
     \end{subfigure}
     \begin{subfigure}[b]{0.49\textwidth}
@@ -301,30 +301,30 @@ Here the operations are simply,
         \caption{Deep Set}
         \label{fig:deep_set}
     \end{subfigure}
-    \caption{Examples of different GN Block implementations \subref{fig:full_gn_block} A full GN Block has persistent edge and global features. \subref{fig:deep_set} A deep set only applies pooling to the node features to produce a global feature. Adapted from \textcite{RelationalInductiveBiases}.}
+    \caption{Examples of different \Gls{GNBlock} implementations \subref{fig:full_gn_block} A full \Gls{GNBlock} has persistent edge and global features. \subref{fig:deep_set} A deep set only applies pooling to the node features to produce a global feature. Adapted from \textcite{RelationalInductiveBiases}.}
 \end{figure}
 
 \section{Transformers are Graph Networks}
 \label{sec:transformers}
 
 It is hard to overstate the impact of the transformer model~\cite{Attention} on deep learning.
-Originally designed for NLP sequence-to-sequence tasks, transformers have since become the dominant model in many areas of deep learning.
+Originally designed for \Gls{NLP} sequence-to-sequence tasks, transformers have since become the dominant model in many areas of deep learning.
 They marked such an improvement that research in other sequence-based models, such as recursive neural networks, almost ceased entirely.
-They also marked a massive leap in commercializing deep learning for NLP.
+They also marked a massive leap in commercializing deep learning for \Gls{NLP}.
 Starting in 2018, OpenAI began releasing the GPT~\cite{GPT} series of transformer models, arguably triggering a boom around large language models that continues to this day.
 In 2019, Google announced that they were using the transformer-based BERT model~\cite{BERT} to power their search engine and transformers for their translation service.
-In 2020, transformers were adapted to work on image data~\cite{VisionTransformer}, marking the point where transformers took the crown in computer vision benchmarks from CNNs as shown in \Cref{fig:benchmarks}.
+In 2020, transformers were adapted to work on image data~\cite{VisionTransformer}, marking the point where transformers took the crown in computer vision benchmarks from \Glspl{CNN} as shown in \Cref{fig:benchmarks}.
 Even image generation tasks that used to be dominated by UNets~\cite{Unet, DiffusionBeatsGANS} are now being performed by transformers~\cite{DIT, SD3}.
 Transformers have become so ubiquitous that they are now considered the default choice for many deep learning tasks, regardless of the data type.
 
 There are many variants for the transformer model, but they all share the same basic features.
 These models do not natively run on sequences, but on sets, and must actually be adapted to work on data with an inherent order.
 Two main types of transformers are described, the transformer encoder and the transformer decoder.
-The transformer encoder (TE) is a variant of the GN Block called a non-local neural network (NLNN)~\cite{NonlocalNeuralNetworks} as shown in \Cref{fig:transformer}.
+The \Gls{TE} is a variant of the \Gls{GNBlock} called a \Gls{NLNN}~\cite{NonlocalNeuralNetworks} as shown in \Cref{fig:transformer}.
 This function operates on a pure set, with no persistent edge or global features.
-It involves and message passing step equipped with an attention mechanism, followed by a node update step using an MLP\@.
+It involves and message passing step equipped with an attention mechanism, followed by a node update step using an \Gls{MLP}\@.
 
-The jargon of transformers differs slightly from that of GNNs.
+The jargon of transformers differs slightly from that of \Glspl{GNN}.
 Nodes are called tokens in many research papers on transformers.
 The term attention is also used more broadly in transformers, not just referring to the means of weighting and aggregation, it is sometimes used to refer to the entire message passing step.
 Furthermore, saying that a node attends to another is equivalent to saying that the node receives a message from another.
@@ -352,31 +352,31 @@ The adjacency matrix in a graph is also called the attention mask in a transform
 \begin{figure}
     \centering
     \includegraphics[width=0.49\textwidth]{Figures/graph_networks/nonlocal.pdf}
-    \caption{NLNN / Transformer Encoder}
+    \caption{\Gls{NLNN} / Transformer Encoder}
     \label{fig:transformer}
 \end{figure}
 
 \subsection{Transformer Attention is Just Message Passing}
 \label{sec:attention}
 
-There are many of ways to parameterize the message passing step in a GNN, and the one used in the transformer is the scaled dot-product attention (SDPA).
-In SDPA, the message passed between nodes is a linear projection of the sender node attributes.
+There are many of ways to parameterize the message passing step in a \Gls{GNN}, and the one used in the transformer is the \Gls{SDPA}.
+In \Gls{SDPA}, the message passed between nodes is a linear projection of the sender node attributes.
 This means that each node sends out the same message to all of its neighbours called its \textit{value}, $\vert_{i} = \mathbf{W}^v \x_i$.
 The message weight is based on a dot product between additional linear projections of the sender node, called they \textit{key} $\k_{i} = \mathbf{W}^k \x_i$, and the receiver node, called the \textit{query} $\q_{j} = \mathbf{W}^q \x_j$.
-Aggregation is simply a weighted mean of the incoming messages, where a softmax operation is applied to the attention logits to ensure that they sum to one.
+Aggregation is simply a weighted mean of the incoming messages, where a softmax operation is applied over the dot products to ensure that they sum to one.
 To prevent the gradients from exploding, the attention logits are scaled by the square root of the dimensionality of the key and value tensors $d_k$.
 
-In the framing of the GN Block, SDPA factorizes the edge update into a tuple containing a scalar expressing the message weight $\alpha_k'(\x_{s_k}, \x_{r_k})$ and a vector function for calculating the message content $\mathbf{v}_k'(\x_{s_k})$.
+In the framing of the \Gls{GNBlock}, \Gls{SDPA} factorizes the edge update into a tuple containing a scalar expressing the message weight $\alpha_k'(\x_{s_k}, \x_{r_k})$ and a vector function for calculating the message content $\mathbf{v}_k'(\x_{s_k})$.
 Only $\alpha_k'$ depends on the pairwise interaction of both the sender and receiver nodes.
 The pooling operation $\rho^{e \to x}$ normalizes over the receiver weights before aggregating the messages.
 The block can be written as,
 \begin{equation}
     \begin{aligned}
         \edge_k'             & = \phi^e(\edge_k, \x_{s_k}, \x_{r_k}, \u)
-        = ( a_k', \mathbf{v}_k' )                                                                                                                           \\
+        = ( \alpha_k', \mathbf{v}_k' )                                                                                                                      \\
                              & = \left( \exp \left( \frac{1}{d_k} \mathbf{W}^q \x_{s_k} \cdot \mathbf{W}^k \x_{r_k} \right), \mathbf{W}^v \x_{s_k} \right), \\
         \mathbf{\bar\edge}_i & = \rho^{e \to x}(E_i)                                                                                                        \\
-                             & = \frac{\sum_{k: r_k = i} a_k' \mathbf{v}_k'}{\sum_{k: r_k = i} a_k'},
+                             & = \frac{\sum_{k: r_k = i} \alpha_k' \mathbf{v}_k'}{\sum_{k: r_k = i} \alpha_k'},
     \end{aligned}
 \end{equation}
 for learnable weight matrices $\mathbf{W}^k \in \mathbb{R}^{d \times d_k}$, $\mathbf{W}^q \times \mathbb{R}^{d \times d_k}$, and $\mathbf{W}^x \in \mathbb{R}^{d \times d_v}$.
@@ -386,7 +386,7 @@ Furthermore, it allows us to extend to two forms, self-attention and cross-atten
 \begin{equation}
     \label{eq:attention}
     \begin{aligned}
-        \text{Attention}(\X_R, \X_S)
+        \text{SDPA}(\X_R, \X_S)
          & = \text{softmax}\left(\frac{(\X_S \mathbf{W}^q) (\X_R \mathbf{W}^k)^T}{d_k} + \mathbf{B}\right) \X_S \mathbf{W}^v, \\
          & = \text{softmax}\left(\frac{\mathbf{Q} \mathbf{K}^T}{d_k} + \mathbf{B}\right) \mathbf{V}.
     \end{aligned}
@@ -408,8 +408,8 @@ Finally, the bias term $\mathbf{B}$ is a matrix of shape $(N_R, N_S)$ which can 
     \label{fig:bipartite}
 \end{figure}
 
-Transformers typically extend this operation to multi-headed attention (MHA), as shown in \Cref{fig:mha}.
-This is where SDPA is performed $H$ times in parallel with different matrices $\mathbf{W}^q$, $\mathbf{W}^k$, $\mathbf{W}^v$, and $\mathbf{B}$.
+Transformers typically extend this operation to \Gls{MHA}, as shown in \Cref{fig:mha}.
+This is where \Gls{SDPA} is performed $H$ times in parallel with different matrices $\mathbf{W}^q$, $\mathbf{W}^k$, $\mathbf{W}^v$, and $\mathbf{B}$.
 The output of each head is concatenated and then mixed using a final linear layer,
 \begin{equation}
     \begin{aligned}
@@ -421,8 +421,8 @@ The output of each head is concatenated and then mixed using a final linear laye
          & \text{MHA}(\X_R, \X_S) = \text{Concat}(\text{Head}_1, \ldots, \text{Head}_H) \mathbf{W}^o.
     \end{aligned}
 \end{equation}
-In MHA, many types of messages are passed between the nodes and one can think of this as constructing a multi-graph on the set.
-Both self- and cross-attention can be multi-headed where multi-headed self-attention (MHSA) is defined as,
+In \Gls{MHA}, many types of messages are passed between the nodes and one can think of this as constructing a multi-graph on the set.
+Both self- and cross-attention can be multi-headed where \Gls{MHSA} is defined as,
 \begin{equation}
     \text{MHSA}(\X) = \text{MHA}(\X, \X).
 \end{equation}
@@ -436,19 +436,19 @@ Both self- and cross-attention can be multi-headed where multi-headed self-atten
 
 \subsubsection{Implementing Multi-Headed Attention}
 
-The dot product in the SDPA layer necessitates that the dimensions of key and query tensors are equal.
-Additionally, the majority of SDPA implementations do not resize, resulting in $\mathbf{Q}$, $\mathbf{K}$, and $\mathbf{V}$ all having the same shape.
-When extending to MHA, it is standard to split the dimensionality equally by the number of heads $H$.
-This means that a single MHA function is typically parameterized by four square matrices corresponding to $4d^2$ learnable parameters with the number of heads $H$ being the sole hyperparameter of the block.
+The dot product in the \Gls{SDPA} layer necessitates that the dimensions of key and query tensors are equal.
+Additionally, the majority of \Gls{SDPA} implementations do not resize, resulting in $\mathbf{Q}$, $\mathbf{K}$, and $\mathbf{V}$ all having the same shape.
+When extending to \Gls{MHA}, it is standard to split the dimensionality equally by the number of heads $H$.
+This means that a single \Gls{MHA} function is typically parameterized by four square matrices corresponding to $4d^2$ learnable parameters with the number of heads $H$ being the sole hyperparameter of the block.
 
 To enhance the model's expressivity, one can replace linear projections with affine transformations by including bias terms. However, it is important to note that the bias of the key operation is entirely redundant~\cite{RoleBiasTerms}.
 
 Key to the success of transformers is the ease of implementation.
-While many variants of GN Block block variants require custom libraries and are challenging to implement from scratch, MHA can be implemented in PyTorch using standard linear algebra operations, as demonstrated in \Cref{code:attention}.
+While many of the message passing variants require custom libraries and are challenging to implement from scratch, \Gls{MHA} can be implemented in PyTorch using standard linear algebra operations, as demonstrated in \Cref{code:attention}.
 All heads are computed in parallel using smart reshaping of the tensors.
 This significantly simplifies the process of designing, building, testing, and exporting models.
 
-While the message passing operation is considerably simpler than using MLPs for each stage as described in \Cref{alg:gn_block}, it is possible to enhance the model's expressivity by scaling either the model dimension or the number of heads.
+While the message passing operation is considerably simpler than using \Glspl{MLP} for each stage as described in \Cref{alg:gn_block}, it is possible to enhance the model's expressivity by scaling either the model dimension or the number of heads.
 Self-attention requires $O(N^2)$ many operations, where $N$ is the number of nodes in the set.
 Its memory usage however is $O(N)$, as there exist algorithms that perform the update without ever needing to manifest the full attention matrix~\cite{SelfattentionDoesNot, FlashAttentionFastMemoryEfficient}.
 
@@ -456,7 +456,7 @@ Its memory usage however is $O(N)$, as there exist algorithms that perform the u
     \centering
     \scriptsize
     \begin{minted}{python}
-    class Attention(nn.Module):
+    class MHA(nn.Module):
         def __init__(self, dim: int, num_heads: int):
             super().__init__()
             self.NH = num_heads
@@ -483,8 +483,8 @@ Its memory usage however is $O(N)$, as there exist algorithms that perform the u
 
 % \subsubsection{Efficiency of Scaled Dot-Product Attention}
 
-% SDPA stands out as an exceptionally efficient method for expressive message passing in fully connected graphs.
-% To illustrate this, we can start by examining the simplest GNN variant, the GCN~\cite{GCN}, and identify its limitations.
+% \Gls{SDPA} stands out as an exceptionally efficient method for expressive message passing in fully connected graphs.
+% To illustrate this, we can start by examining the simplest \Gls{GNN} variant, the GCN~\cite{GCN}, and identify its limitations.
 
 % A single GCN layer, without normalization factors, can be expressed as,
 % \begin{equation}
@@ -509,7 +509,7 @@ Its memory usage however is $O(N)$, as there exist algorithms that perform the u
 %     \text{aggregate}: (N, N, d) & \rightarrow (N, d).
 % \end{align}
 
-% The basic GN Block in \Cref{alg:gn_block} does this by concatenating the sender and receiver node attributes before passing them through an MLP\@.
+% The basic \Gls{GNBlock} in \Cref{alg:gn_block} does this by concatenating the sender and receiver node attributes before passing them through an MLP\@.
 % The operations and dimensions of the tensors of such a block are,
 % \begin{align}
 %     \text{concatenate}: (N, d) & \rightarrow (N, N, 2d) \\
@@ -542,7 +542,7 @@ Its memory usage however is $O(N)$, as there exist algorithms that perform the u
 % \end{align}
 % While the other parts of the update do require $O(N^2)$ operations, crucially the input and output of the learnable layers dependent is only $O(N)$.
 
-% The argument made here is that one will struggle to find a more simple and efficient way to parameterize the message passing step in a GNN that does not lead to over-smoothing when fully connected.
+% The argument made here is that one will struggle to find a more simple and efficient way to parameterize the message passing step in a \Gls{GNN} that does not lead to over-smoothing when fully connected.
 % The philosophy of the transformer is similar to the philosophy of composing MLPs from linear layers, in that the composition of simple, highly parameterized functions, is what provides expressivity.
 % By and large the most complex component of the operation is the softmax function, but there exist algorithms to calculate this online without having to express the full attention matrix~\citetemp{FlashAttention}.
 % Contrary to popular claims, self-attention with these mechanisms is non $O(N^2)$ in memory complexity~\citetemp{MemoryComplexity}.
@@ -553,14 +553,14 @@ Its memory usage however is $O(N)$, as there exist algorithms that perform the u
 
 There are numerous transformer variants, too many to cover in this thesis.
 Common similarities exist among them, though terminology can be ambiguous and overlapping.
-A single transformer block generally includes two types of sub-blocks: MHA for message passing and FFN/MLP layers for the node update.
+A single transformer block generally includes two types of sub-blocks: \Gls{MHA} for message passing and \Gls{FFN}/\Gls{MLP} layers for the node update.
 These sub-blocks combine and repeat to form the larger transformer block.
-MHA layers can be configured as self-attention or cross-attention, and are typically stacked with FFN layers in series~\cite{Attention}, but sometimes in parallel~\cite{Palm}.
+\Gls{MHA} layers can be configured as self-attention or cross-attention, and are typically stacked with FFN layers in series~\cite{Attention}, but sometimes in parallel~\cite{Palm}.
 Another distinguishing feature is the use of residual connections and normalization layers with various configuration options to stabilize training and prevent over-smoothing.
 Due to the wide range of transformer variants, empirical performance is often the guide for best practices.
 
-Most transformer layers use an MLP with a single hidden layer that expands the node attributes' dimensionality by a factor of $M$.
-However, modern transformers use Gated Linear Units (GLU)~\cite{GLU}, a network layer involving the element-wise multiplication of two linear projections, one of which is activated~\cite{SwiGLU},
+Most transformer layers use an \Gls{MLP} with a single hidden layer that expands the node attributes' dimensionality by a factor of $M$.
+However, modern transformers use \Gls{GLU}~\cite{GLU}, a network layer involving the element-wise multiplication of two linear projections, one of which is activated~\cite{SwiGLU},
 \begin{equation}
     \text{FFN}_\text{SwiGLU}(\x_i) = \mathbf{W}_3(\text{Swish}(\mathbf{W}_1 \x_i + \mathbf{b}_1) \otimes (\mathbf{W}_2 \x_i + \mathbf{b}_2)) + \mathbf{b}_3.
 \end{equation}
@@ -569,27 +569,28 @@ Notably, while attention mechanisms are key to transformers' success, the majori
 
 Residual connections are typically used to circumvent each sub-block.
 The original transformer used a PostNorm configuration, where layer normalizations were applied after each residual connection~\cite{Attention}.
-This was found to excessively squash the signal; therefore, contemporary transformers often utilize the PreNorm configuration~\cite{PreLN}.
+This was found to excessively squash the signal; therefore, contemporary transformers often utilize the \Gls{PreNorm} configuration~\cite{PreLN}.
 Extra normalization within the sub-blocks is also common.
+
 
 \subsubsection{Transformer Encoder}
 
-A single PreNorm TE Block is shown in \Cref{fig:transformer_blocks}.
+A single PreNorm \Gls{TE} block is shown in \Cref{fig:transformer_blocks}.
 The update is given by,
 \begin{equation}
     \begin{aligned}
-        \X & \leftarrow \X + \text{MSHA}(L_\text{norm}(\X)), \\
+        \X & \leftarrow \X + \text{MHSA}(L_\text{norm}(\X)), \\
         \X & \leftarrow \X + \text{FFN}(L_\text{norm}(\X)).
     \end{aligned}
 \end{equation}
-A full TE is composed of many TE Blocks stacked in series forming a permutation equivariant set to set transformation.
-For many tasks, the TE is the main feature extractor.
+A full \Gls{TE} is composed of many \Gls{TE} Blocks stacked in series forming a permutation equivariant set to set transformation.
+For many tasks, the \Gls{TE} is the main feature extractor.
 
 \subsubsection{Transformer Decoder}
 
-To condition the update of one set on another, a cross-attention (CA) block, can be utilized.
-For a more expressive operation, the layer can include both self-attention and cross-attention, creating a transformer decoder (TD) block, as shown in \Cref{fig:transformer_blocks}.
-The update of a TD block is written as,
+To condition the update of one set on another, a \Gls{CA} block, can be utilized.
+For a more expressive operation, the layer can include both self-attention and cross-attention, creating a \Gls{TD} block, as shown in \Cref{fig:transformer_blocks}.
+The update of a \Gls{TD} block is written as,
 \begin{equation}
     \begin{aligned}
         \X_R & \leftarrow \X_R + \text{MHSA}(L_\text{norm}(\X_R)),      \\
@@ -597,7 +598,7 @@ The update of a TD block is written as,
         \X_R & \leftarrow \X_R + \text{FFN}(L_\text{norm}(\X_R)).
     \end{aligned}
 \end{equation}
-The TE and TD are typically combined to create a set-to-set transformation that first extracts features from the input set, and the conditions the output set on these features.
+The \Gls{TE} and \Gls{TD} are typically combined to create a set-to-set transformation that first extracts features from the input set, and the conditions the output set on these features.
 This set-to-set transformation is the basis of many generative of sequence-to-sequence models.
 
 \begin{figure}
@@ -610,20 +611,20 @@ This set-to-set transformation is the basis of many generative of sequence-to-se
 \subsection{Edge Attributes, Biases, and Sequences}
 \label{sec:edge_biases_sequences}
 
-When viewing the transformer as a GNN, the inclusion of edge information becomes intuitive.
+When viewing the transformer as a \Gls{GNN}, the inclusion of edge information becomes intuitive.
 For message passing on a single graph, if not represented sparsely, edge information is stored in a tensor $\edge \in \mathbb{R}^{N \times N \times d_e}$.
-In the SDPA operation in \Cref{eq:attention}, the attention matrix defined by,
+In the \Gls{SDPA} operation in \Cref{eq:attention}, the attention matrix defined by,
 \begin{equation}
     \mathbf{A} = \text{softmax}\left( \frac{\mathbf{Q} \mathbf{K}^T}{d_k} + \mathbf{B} \right),
 \end{equation}
 which has the shape $(N, N)$ for self-attention.
-Extending this to MHA it gains an extra dimension $(N, N, H)$ aligning with the required shape of the edge tensor and making it the only valid candidate in the entire operation.
+Extending this to \Gls{MHA} it gains an extra dimension $(N, N, H)$ aligning with the required shape of the edge tensor and making it the only valid candidate in the entire operation.
 The query and key tensors $\mathbf{Q}$ and $\mathbf{K}$ stem from projections of the input, but $\mathbf{B}$ must have shape which is at least broadcastable to $(N, N, H)$.
 Consequently, edge information can be integrated into a transformer through the bias term in the attention operation, a practice used in various scenarios.
 
-The Particle Transformer (ParT)~\cite{ParticleTransformerJet} uses a TE to embed a set of particles, defined by their kinematics.
-For each pair of particles, specific edge features are constructed using Lund Plane variables~\cite{LundJetPlane}.
-The model uses an MLP to embed these edge features into a tensor of shape $(N, N, H)$, which becomes the attention bias in each of the TE Blocks.
+The \Gls{ParT}~\cite{ParticleTransformerJet} uses a \Gls{TE} to embed a set of particles, defined by their kinematics.
+For each pair of particles, specific edge features are constructed using physically motivated interaction terms~\cite{LundJetPlane}.
+The model uses an \Gls{MLP} to embed these edge features into a tensor of shape $(N, N, H)$, which becomes the attention bias in each of the \Gls{TE} Blocks.
 
 The bias tensor is commonly set to negative infinity for specific node pairs and all heads, forcing the attention weight to zero after the softmax operation and eliminating the message weight. This allows the transformer to function on non-fully connected graphs without changing any of the underlying matrix operations.
 It is also one of the main mechanisms for adapting the transformer to work on sequences, where the nodes are presented in a specific order.
@@ -631,30 +632,30 @@ By configuring the bias matrix as a lower triangular matrix with above-diagonal 
 This technique, known as a causal masking, is used extensively in generative models as it lends itself to autoregressive sampling.
 Causal masking allows for highly efficient training, as each stage of the autoregressive generation can be computed in a single forward pass.
 Although generation requires sequential model execution, the training speed-up is a substantial benefit.
-Many sequence generating models are called ``decoder only'', however in the presented framework, these models are TE models with a causal attention mask.
+Many sequence generating models are called ``decoder only'', however in the presented framework, these models are \Gls{TE} models with a causal attention mask.
 
 While a causal mask is sufficient for a transformer to grasp order~\cite{TransformerLanguageModels}, it is often complemented by \textit{positional encoding}.
-Absolute positional encoding (APE) integrates sequence positions into node attributes.
+\Gls{APE} integrates sequence positions into node attributes.
 A unique tensor $\mathbf{p}_i \in \mathbb{R}^{d}$ is constructed for each possible observed position $i$ and is added to the node attributes before the first transformer block, $\x_i \leftarrow \x_i + \mathbf{p}_i$.
 Originally, fixed sinusoidal functions of varying frequencies encoded these positions, but recent models make $\mathbf{p}_i$ fully learnable~\cite{GPT}.
-In images, APE, often termed spatial encoding, involves encoding and adding the 2D coordinates of a patch to its representation~\cite{VisionTransformer}.
+In images, \Gls{APE}, often termed spatial encoding, involves encoding and adding the 2D coordinates of a patch to its representation~\cite{VisionTransformer}.
 
-APE is limited in capturing relative positions, necessitating the use of relative positional encoding (RPE)~\cite{SelfAttentionRelativePosition}.
-RPE biases the attention matrix, serving as edge information, with various implementations.
+\Gls{APE} is limited in capturing relative positions, necessitating the use of \Gls{RPE}~\cite{SelfAttentionRelativePosition}.
+\Gls{RPE} biases the attention matrix, serving as edge information, with various implementations.
 $B$ can be parameterized as a learnable Toeplitz matrix, ALiBi~\cite{ALIBI} fixes the elements of this matrix to be simply $B_{ij} = m\times(i - j)$, for a fixed per-head scalar $m$, and rotary-positional-encoding rotates the query and key tensors by a fixed amount before the attention operation~\cite{RoFormerEnhancedTransformer}.
 
 \subsection{Global Attributes and Conditioning Graph Updates}
 \label{sec:global_attributes}
 
 Global attributes are used to condition updates or can be used as outputs for graph-level tasks.
-In \Cref{alg:gn_block}, the global attributes are updated by summing the node attributes which is then passed through an MLP\@.
-However, a CA block provides a more expressive pooling operation, even when the cardinality of the receiving set is one.
+In \Cref{alg:gn_block}, the global attributes are updated by summing the node attributes which is then passed through an \Gls{MLP}\@.
+However, a \Gls{CA} block provides a more expressive pooling operation, even when the cardinality of the receiving set is one.
 This is known as class-attention~\cite{GoingDeeper}, and is utilized in vision transformers for image classification.
-These models typically have several TE layers for feature extraction, followed by a few CA layers to repeatedly pool the features into a single global attribute which is used for classification.
+These models typically have several \Gls{TE} layers for feature extraction, followed by a few \Gls{CA} layers to repeatedly pool the features into a single global attribute which is used for classification.
 
 Global information can be redistributed to augment the message passing step by including them as inputs in the FFN layer~\cite{PCJedi}.
 More effectively, they can be used to perform adaptive normalization~\cite{FiLMVisualReasoning} and residual gating for each sub-block, a technique used in many state-of-the-art generative models~\cite{SD3, DIT, flux2024github}.
-This is shown for a TE block in \Cref{fig:adaptive_gating} and can be written for a single sub-block $f$ as,
+This is shown for a \Gls{TE} block in \Cref{fig:adaptive_gating} and can be written for a single sub-block $f$ as,
 \begin{equation}
     \begin{aligned}
          & [\boldsymbol{\alpha}, \boldsymbol{\beta}, \boldsymbol{\gamma}] \leftarrow \text{MLP}(\u)                                          \\

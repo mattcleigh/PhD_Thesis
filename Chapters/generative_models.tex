@@ -1,20 +1,20 @@
 \chapter{Probabilistic Generative Models}
 \label{ch:generative_models}
 
-Probabilistic generative models (PGMs) are a class of models that either aim to learn the underlying probability distribution of a dataset or at least facilitate means to generate new samples indistinguishable from the data.
-It is worth highlighting that there is conflicting terminology and many overlapping definitions in the field of PGMs~\cite{DiscriminativeVsGenerative, MachineLearningDiscriminative}, so terms in this thesis will be explicity defined.
+\Glspl{PGM} are a class of models that either aim to learn the underlying probability distribution of a dataset or at least facilitate means to generate new samples indistinguishable from the data.
+It is worth highlighting that there is conflicting terminology and many overlapping definitions in the field of \Glspl{PGM}~\cite{DiscriminativeVsGenerative, MachineLearningDiscriminative}, so terms in this thesis will be explicitly defined.
 
-Given a training set of i.i.d samples $\mathcal{D} = \{\x_i\}_{i=1}^N$, it is assumed that the data is generated from some unknown probability density $p_\X(\x): \mathcal{X} \rightarrow \mathbb{R}$ over a random variable $\X \in \mathcal{X}$.
-A PGM with parameters $\theta$ can be fit using $\mathcal{D}$, and would allow for the generation of new samples following a close approximation of $p_\X(\x)$, denoted as $p_{\theta}(\x)$.
+Given a training set of \Gls{iid} samples $\mathcal{D} = \{\x_i\}_{i=1}^N$, it is assumed that the data is generated from some unknown probability density $p_\X(\x): \mathcal{X} \rightarrow \mathbb{R}$ over a random variable $\X \in \mathcal{X}$.
+A \Gls{PGM} with parameters $\theta$ can be fit using $\mathcal{D}$, and would allow for the generation of new samples following a close approximation of $p_\X(\x)$, denoted as $p_{\theta}(\x)$.
 
-There exist many types of PGMs; some models such as Normalizing Flows (NFs)~\cite{VariationalInferenceNormalizing} provide an explicit functional form for the density $p_{\theta}(\x)$, while others like Generative Adversarial Networks (GANs)~\cite{GenerativeAdversarialNetworks} implicitly learn the density but only permit sampling from it.
+There exist many types of \Glspl{PGM}; some models such as Normalizing Flows (NFs)~\cite{VariationalInferenceNormalizing} provide an explicit functional form for the density $p_{\theta}(\x)$, while others like \Glspl{GAN}~\cite{GenerativeAdversarialNetworks} implicitly learn the density but only permit sampling from it.
 
 It is often more interesting to consider the conditional distribution $p_{\X}(\x|\con)$, where $\con$ is some context variable.
-A conditional PGM can be used to generate samples from the conditional distribution, $p_{\theta}(\x|\con)$.
+A conditional \Gls{PGM} can be used to generate samples from the conditional distribution, $p_{\theta}(\x|\con)$.
 Supervised learning can also be described in this framework, and thus so too can any classification or regression task.
 In contrast to the notation in \Cref{sec:supervised_learning}, $\x$ is the target variable, and $\con$ is the input.
 
-This section covers the theory behind the PGMs used elsewhere in this thesis, namely the NFs and diffusion models used in \Cref{ch:neutrino_unfolding,ch:jet_generation,ch:foundation_models}.
+This section covers the theory behind the \Glspl{PGM} used elsewhere in this thesis, namely the NFs and diffusion models used in \Cref{ch:neutrino_unfolding,ch:jet_generation,ch:foundation_models}.
 These models are nominally used to generate continuous data.
 Generative models for explicitly discrete data, such as the autoregressive models used in text generation~\cite{GPT2}, are omitted.
 An overview of the models described in this chapter is presented in \Cref{fig:generative_models}.
@@ -30,13 +30,13 @@ An overview of the models described in this chapter is presented in \Cref{fig:ge
 \section{Older PGMs}
 
 The field of generative models has undergone a rapid evolution in the past decade.
-At the start of this thesis, applications PGMs in HEP mainly involved Variational Autoencoders~\cite{AutoEncodingVariationalBayes} (VAEs) and GANs~\cite{GenerativeAdversarialNetworks}.
+At the start of this thesis, applications \Glspl{PGM} in HEP mainly involved \Glspl{VAE}~\cite{AutoEncodingVariationalBayes} and \Glspl{GAN}~\cite{GenerativeAdversarialNetworks}.
 These older models produced impressive results in select domains, but the generation quality and fine control seen today in the state-of-the-art text-to-image~\cite{SD3, Dalle, Imagen,flux2024github} and text-to-video~\cite{ImagenVideo} models would have been inconceivable a few years ago.
-While it is remarkable how quickly the focus on VAEs and GANs has moved on, it is still important to highlight them here for historical context and to better understand the strengths of the models that have replaced them.
+While it is remarkable how quickly the focus on \Glspl{VAE} and \Glspl{GAN} has moved on, it is still important to highlight them here for historical context and to better understand the strengths of the models that have replaced them.
 
 \subsection{Variational Autoencoders}
 
-VAEs were introduced in 2013~\cite{AutoEncodingVariationalBayes} and quickly became a popular model for generative tasks, unsupervised learning, and variational inference.
+\Glspl{VAE} were introduced in 2013~\cite{AutoEncodingVariationalBayes} and quickly became a popular model for generative tasks, unsupervised learning, and variational inference.
 A VAE is an example of a latent variable model.
 Here, a random latent variable is introduced $\Z \in \mathcal{Z}$ which is marginalized over to obtain the distribution of the data,
 \begin{equation}
@@ -51,7 +51,7 @@ The standard choice for modelling the likelihood is to use a parametrized Gaussi
     p_\X(\x|\z) \approx p_{\theta}(\x|\z) = \mathcal{N}(\x; G_{\theta}(\z), \sigma^2 I),
 \end{equation}
 where $G_{\theta}$ is a neural network called the decoder.
-VAEs introduce an additional parametrized distribution to approximate the posterior which is also taken to be Gaussian with a diagonal covariance matrix,
+\Glspl{VAE} introduce an additional parametrized distribution to approximate the posterior which is also taken to be Gaussian with a diagonal covariance matrix,
 \begin{equation}
     p_\Z(\z|\x) \approx q_\phi(\z|\x) = \mathcal{N}(\z; \boldsymbol{\mu}_\phi(\x), \boldsymbol{\Sigma}_\phi(\x)).
 \end{equation}
@@ -66,7 +66,7 @@ Practically, this involves minimizing two terms, the reconstruction loss and the
 where $\beta$ is a hyperparameter that balances the two terms~\cite{BetaVAE}.
 
 Typically, the dimensionality of the latent space is much lower than that of the data space, so the information bottleneck means the model is forced to learn a compressed representation.
-VAEs are simple to train but have several limitations.
+\Glspl{VAE} are simple to train but have several limitations.
 The bottleneck means that high-frequency detail is dropped, resulting in low-quality samples.
 The model is also sensitive to the tuning of $\beta$, often leading to a collapse into one of two regimes.
 Either the prior loss dominates, all samples are encoded to the same Gaussian, and all information is lost, or the reconstruction loss dominates.
@@ -75,15 +75,15 @@ In the latter case, the learned posterior $q_\phi(\z)$ is non-Gaussian, and extr
 Conditional information can be injected into the VAE simply by combining the context variable with both the inputs to the encoder and decoder.
 The compression of the latent means that it should only store orthogonal information to the context variable, which is useful for disentanglement~\cite{cVAE}.
 
-VAEs were never particularly good at generating high-quality samples, but attempts were still made in HEP to use them for fast simulation of detector responses~\cite{VariationalAutoencodersJet, GraphVariationalAutoencoder, ParticlebasedFastJet}.
+\Glspl{VAE} were never particularly good at generating high-quality samples, but attempts were still made in HEP to use them for fast simulation of detector responses~\cite{VariationalAutoencodersJet, GraphVariationalAutoencoder, ParticlebasedFastJet}.
 They were also used for anomaly detection~\cite{VariationalAutoencodersAnomalous, DeepSetVAE, MassiveIssueAnomaly}.
 These applications produced mixed results, and the field has moved on to more powerful models.
 
 \subsection{Generative Adversarial Networks}
 \label{sec:gan}
 
-Until recently, GANs were the state-of-the-art generative models for producing high-quality samples, most notably demonstrated in generating high-resolution images~\cite{StyleGAN2, StyleGAN3}.
-GANs are based on a two-player min-max game between a generator $G_\theta(\z)$ and a discriminator $D_\phi(\x)$, each a neural network with parameters $\theta$ and $\phi$ respectively.
+Until recently, \Glspl{GAN} were the state-of-the-art generative models for producing high-quality samples, most notably demonstrated in generating high-resolution images~\cite{StyleGAN2, StyleGAN3}.
+\Glspl{GAN} are based on a two-player min-max game between a generator $G_\theta(\z)$ and a discriminator $D_\phi(\x)$, each a neural network with parameters $\theta$ and $\phi$ respectively.
 These networks compete in a zero-sum game in which one network's loss is the other's gain.
 
 The generator takes a random latent sample $\z \sim p_\Z(\z)$ and returns a synthetic sample $\hat{\x} = G_\theta(\z) \in \mathcal{X}$.
@@ -92,32 +92,32 @@ The generator aims to fool the discriminator into thinking the generated samples
 Given powerful enough networks, the unique Nash equilibrium of this game is a generator that reproduces the true data distribution and a uniform discriminator output for all samples.
 
 This game has many variations which define different loss terms.
-The most widely used is the original non-saturating GAN~\cite{GenerativeAdversarialNetworks}.
+The most widely used is the original non-saturating \Gls{GAN}~\cite{GenerativeAdversarialNetworks}.
 This loss requires two passes through each network, one to update the discriminator and one to update the generator.
 \begin{align}
     \mathcal{L}_{\text{D}}(\phi)   & = -\mathbb{E}_{\x \sim \mathcal{D}}[\log D_{\phi}(\x)] - \mathbb{E}_{\z \sim p_\Z(\z)}\log(1 - D_{\phi}(G_{\theta}(\z))], \\
     \mathcal{L}_{\text{G}}(\theta) & = -\mathbb{E}_{\z \sim p_\Z(\z)}[\log D_{\phi}(G_{\theta}(\z))].
 \end{align}
-Other variants that use different loss derivations exist, such as the Wasserstein GAN~\cite{WGAN1} and the Geometric GAN~\cite{GeometricGAN}.
+Other variants that use different loss derivations exist, such as the Wasserstein \Gls{GAN}~\cite{WGAN1} and the Geometric \Gls{GAN}~\cite{GeometricGAN}.
 There is plenty of literature on which variants are best suited for different tasks and which converge to the desired Nash equilibrium~\cite{WhichTrainingMethods}.
 
-The main drawback of GANs is that they are challenging to train.
+The main drawback of \Glspl{GAN} is that they are challenging to train.
 Often, mode collapse occurs, where the generator exploits a weakness in the discriminator and produces the same samples repeatedly.
 Many tricks are required to stabilize training~\cite{WhichTrainingMethods}, such as minibatch discrimination~\cite{ProGAN} and gradient penalties~\cite{WGAN}.
-Another drawback to GANs is that it is challenging to produce a conditional generator $G_\theta(\x|\con)$.
+Another drawback to \Glspl{GAN} is that it is challenging to produce a conditional generator $G_\theta(\x|\con)$.
 Simply concatenating the context variable to both the generator and discriminator inputs leads to mixed results, and the generator is prone to ignoring the context variable~\cite{cGAN}.
 
-In HEP, GANs have mainly been trialled as a method for fast simulation~\cite{MPGAN, GAPT, CaloGAN, EPICGAN}.
-However, the main issue is that GANs tend not to cover the full data distribution.
-Furthermore, fast simulation requires conditional generation, as detector response depends on the properties of the incoming particle, making GANs not optimal for this task.
+In HEP, \Glspl{GAN} have mainly been trialled as a method for fast simulation~\cite{MPGAN, GAPT, CaloGAN, EPICGAN}.
+However, the main issue is that \Glspl{GAN} tend not to cover the full data distribution.
+Furthermore, fast simulation requires conditional generation, as detector response depends on the properties of the incoming particle, making \Glspl{GAN} not optimal for this task.
 
 \section{Normalizing Flows}
 \label{sec:flows}
 
 NFs are a popular tool for both variational inference~\cite{VariationalInferenceNormalizing, NormalizingFlowsProbabilistic}
 and density estimation~\cite{NICENonlinearIndependent}.
-Like GANs and VAEs, they prescribe a method to train a transformation from a simple latent distribution into one that matches the data.
-However, unlike GANs and VAEs, NFs allow for explicit likelihood evaluation, making them much easier to train and well-suited for density estimation.
+Like \Glspl{GAN} and \Glspl{VAE}, they prescribe a method to train a transformation from a simple latent distribution into one that matches the data.
+However, unlike \Glspl{GAN} and \Glspl{VAE}, NFs allow for explicit likelihood evaluation, making them much easier to train and well-suited for density estimation.
 
 At the core of NFs is the change of variables formula.
 Given two random variables $\X$ and $\Z$ with equal dimensionality $d$ related by a diffeomorphism $f: \mathcal{X} \rightarrow \mathcal{Z}$, the probability densities $p_\X(\x)$ and $p_\Z(\z)$ are related by,
@@ -308,13 +308,13 @@ Alternatively one could parametrize the layer inversely, choosing efficient samp
 
 \subsection{Continuous Normalizing Flows}
 
-Whereas in a standard NF, the transformation is composed of a fixed number of sub-transformations or flow layers, a continuous normalizing flow (CNF)~\cite{NeuralODE} defines a continuous process where each infinitesimal transformation depends on the current state of the data and the time index.
-This leads to an ordinary differential equation (ODE) of variable $\x_t \in \mathbb{R}^d$ indexed by $t \in [0, 1]$ defined by a smooth time-varying vector field $u(\x_t, t)$\footnote{The notation $u_t(\x_t)$ and $u(\x_t, t)$ are used interchangeably.},
+Whereas in a standard NF, the transformation is composed of a fixed number of sub-transformations or flow layers, a \Gls{CNF}~\cite{NeuralODE} defines a continuous process where each infinitesimal transformation depends on the current state of the data and the time index.
+This leads to an \Gls{ODE} of variable $\x_t \in \mathbb{R}^d$ indexed by $t \in [0, 1]$ defined by a smooth time-varying vector field $u(\x_t, t)$\footnote{The notation $u_t(\x_t)$ and $u(\x_t, t)$ are used interchangeably.},
 \begin{equation}
     \label{eq:cnf}
     \diff \x_t = u_t(\x_t) \diff t.
 \end{equation}
-Given $\x_0 \sim p_0$, the vector field creates a pushforward $p_t = [\phi_t]_\# p_0$, where $\phi_t$ is the solution of the ODE,
+Given $\x_0 \sim p_0$, the vector field creates a pushforward $p_t = [\phi_t]_\# p_0$, where $\phi_t$ is the solution of the \Gls{ODE},
 \begin{equation}
     \label{eq:cnf_pushforward}
     \x_t = \phi_t(\x_0) = \x_0 + \int_0^t u_s(\x_s) \diff s.
@@ -324,7 +324,7 @@ The time-dependant density $p_t(\x_t)$ must satisfy the continuity equation,
     \label{eq:cnf_continuity}
     \frac{\partial p_t}{\partial t} = -\nabla \cdot (u_t p_t).
 \end{equation}
-The velocity field $u_t$ is said to be the \textit{probability flow} ODE~\cite{ScoreBasedGenerativeModeling} and $p_t$ is the \textit{probability path} generated by $u_t$.
+The velocity field $u_t$ is said to be the \textit{probability flow} \Gls{ODE}~\cite{ScoreBasedGenerativeModeling} and $p_t$ is the \textit{probability path} generated by $u_t$.
 The induced log-likelihood of the pushforward is given by,
 \begin{equation}
     \label{eq:cnf_loglikelihood}
@@ -338,31 +338,31 @@ This relationship was proven in \textcite{NeuralODE}.
 To make this model generative, one can set the end-points of the probability path to be the data distribution $p_1 = p_\X$ at $t=1$ and the latent distribution $p_0 = p_\Z$ at $t=0$.
 A neural network is then used to learn the velocity field $u_\theta(\x, t): \mathbb{R}^d \times \mathbb{R}_{+} \rightarrow \mathbb{R}^d$ allowing one to interpolate between the two via \Cref{eq:cnf_pushforward}.
 
-Like any flow, the CNF can be trained by maximizing the log-likelihood of the data,
+Like any flow, the \Gls{CNF} can be trained by maximizing the log-likelihood of the data,
 \begin{equation}
     \label{eq:cnf_loss}
     \mathcal{L}(\theta) = \mathbb{E}_{\x \sim \mathcal{D}}\left[\log p_0(\x) - \int_0^1 (\nabla \cdot u_\theta(\x_t, t)) \diff t\right].
 \end{equation}
-Once the transformation is defined, any numerical ODE solver can transform samples from the data space to the latent space and back again.
+Once the transformation is defined, any numerical \Gls{ODE} solver can transform samples from the data space to the latent space and back again.
 This introduces an extra level of complexity when evaluating the model.
-A single trained model can have a wide range of behaviour depending on the choice of ODE solver, the number of integration steps, or the use of adaptive step sizes.
+A single trained model can have a wide range of behaviour depending on the choice of \Gls{ODE} solver, the number of integration steps, or the use of adaptive step sizes.
 With fewer steps, truncation errors during generation can lead to a loss of sample quality, but with more steps, the computational cost of generation increases.
 
-CNFs are highly expressive models, but are slow to train.
+\Glspl{CNF} are highly expressive models, but are slow to train.
 The loss requires calculating the divergence of the vector field, which is slow to compute in many libraries\footnote{Libraries with advanced automatic differentiation, like JAX\cite{JAX}, can alleviate this issue to a degree}.
 Some practical models for low dimensions utilise the Hutchinson trace estimator~\cite{FFJORD},  approximating the trace of the Jacobian with a single Monte Carlo sample.
-Even with these optimizations, a single training iteration still requires a full numerical integration of the ODE and subsequent backpropagation through each step, making CNFs impractical for high-dimensional data.
+Even with these optimizations, a single training iteration still requires a full numerical integration of the \Gls{ODE} and subsequent backpropagation through each step, making \Glspl{CNF} impractical for high-dimensional data.
 
 
 \section{Diffusion Models}
 
 Over the past four years, diffusion models have emerged as the standard for generating high-dimensional data.
-Their impact on the landscape of PGMs has been profound.
+Their impact on the landscape of \Glspl{PGM} has been profound.
 They have elevated the field from method papers on two-dimensional toy datasets to commercially viable high-resolution text-to-image models which are now flooding the internet.
-This significant advancement is primarily due to the exceptionally straightforward training of diffusion models, especially compared to CNFs and GANs.
+This significant advancement is primarily due to the exceptionally straightforward training of diffusion models, especially compared to \Glspl{CNF} and \Glspl{GAN}.
 Their training process is largely stable, with fixed supervised targets.
 Furthermore, diffusion models allow for seamless incorporation of contextual generation, enabling fine control over the generated samples.
-Finally, the quality of the samples drawn from a diffusion model outperforms all other PGMs.
+Finally, the quality of the samples drawn from a diffusion model outperforms all other \Glspl{PGM}.
 
 Diffusion models emerged in 2015~\cite{DeepUnsupervisedLearning}, where the authors were inspired by non-equilibrium statistical physics.
 There are three main components to this type of model.
@@ -374,10 +374,10 @@ Generation involves taking a sample of pure noise, typically $\normal$,  and rep
 This defines the final component, the \textit{sampling procedure}, a single trained model can be sampled in many ways, which present trade-offs between speed and quality.
 Between 2015 and 2019, the method was largely overlooked, then
 In 2020, it was revisited, improved, and applied successfully to images in the form of the Diffusion Probabilistic Models (DDPM)~\cite{DDPM}.
-The true research frenzy began in 2021 when diffusion models officially dethroned GANs as the state-of-the-art for conditional image generation~\cite{DiffusionBeatsGANS}.
+The true research frenzy began in 2021 when diffusion models officially dethroned \Glspl{GAN} as the state-of-the-art for conditional image generation~\cite{DiffusionBeatsGANS}.
 
 Many competing, overlapping, and sometimes equivalent frameworks are used to define diffusion models.
-They are described through the lens of Markov chains trained via variational inference~\cite{DDPM, DDIM}, score-based models with Langevin Dynamics~\cite{ScoreBasedGenerativeModeling, ElucidatingDesignSpace}, and flow matching with CNFs~\cite{BuildingNormalizingFlows, FlowMatchingGenerative, FlowStraightFast}.
+They are described through the lens of Markov chains trained via variational inference~\cite{DDPM, DDIM}, score-based models with Langevin Dynamics~\cite{ScoreBasedGenerativeModeling, ElucidatingDesignSpace}, and flow matching with \Glspl{CNF}~\cite{BuildingNormalizingFlows, FlowMatchingGenerative, FlowStraightFast}.
 These models share similar training objectives but differ in the mathematical derivations.
 Many attempts have been made to unify these models under a framework~\cite{CM2, ElucidatingDesignSpace, UnderstandingDiffusionModels, StochasticInterpolants, FlowStraightFast}.
 Since no single framework has emerged as the standard, no attempt is made to unify them here.
@@ -388,13 +388,13 @@ Focus is placed on two frameworks that are used directly in the projects of this
 \label{sec:score_based}
 
 Score-based generative modelling~\cite{ScoreMatching, ScoreBasedGenerativeModeling} is a framework that envelops many diffusion models such as DDPM~\cite{DDPM}.
-The forward-process involves progressively applying Gaussian perturbations to a data sample in the continuous such that it can be modelled as an SDE,
+The forward-process involves progressively applying Gaussian perturbations to a data sample in the continuous such that it can be modelled as an \Glspl{SDE},
 \begin{equation}
     \label{eq:sde}
     \diff \x_t = \underbrace{f(\x_t, t)}_{\mathclap{\text{drift}}} \diff t + \underbrace{g(t)}_{\mathclap{\text{diffusion}}} \diff \w_t,
 \end{equation}
 where $\w_t$ is the standard Wiener process (Brownian motion) and $f: \mathbb{R}^d \times \mathbb{R}_{+} \rightarrow \mathbb{R}^d$, $g: \mathbb{R}_{+} \rightarrow \mathbb{R}$ are the drift and diffusion functions respectively, and $t \in [0, T]$ is the time index.
-At $t=0$, the sample is uncorrupted\footnote{Note that the time index in diffusion models is typically inverted compared to CNFs}.
+At $t=0$, the sample is uncorrupted\footnote{Note that the time index in diffusion models is typically inverted compared to \Glspl{CNF}}.
 Note that if $|g(t)| > 0$ the data signal is progressively corrupted.
 
 While the forward-process is non-learnable, it is not quick to solve without numerical integration.
@@ -417,28 +417,28 @@ Using the transition kernel defined in \Cref{eq:gaussian_kernel}, one is able to
     \x_t = s(t)\x_0 + \sigma(t) \z \quad \text{where} \quad \z \sim \normal \quad \text{and} \quad \x_0 \sim p_0(\x).
 \end{equation}
 
-Remarkably, the SDE in \Cref{eq:sde} has an exact inverse~\cite{ReversetimeDiffusionEquation} which can be used to define the reverse-process,
+Remarkably, the \Glspl{SDE} in \Cref{eq:sde} has an exact inverse~\cite{ReversetimeDiffusionEquation} which can be used to define the reverse-process,
 \begin{equation}
     \label{eq:reverse_sde}
     \diff \x_t = \left[ f(\x_t, t) - g(t)^2 \score \right] \diff t + g(t) \diff \bar\w_t,
 \end{equation}
 where $\bar\w_t$ is a Wiener process with opposing sign and time flows from $T \rightarrow 0$.
-The only unknown term in \Cref{eq:reverse_sde}, $\score$, is referred to as the score function and thus approximating it, called score matching (SM), is the main objective of a score-based generative model.
+The only unknown term in \Cref{eq:reverse_sde}, $\score$, is referred to as the score function and thus approximating it, \Gls{Sm}, is the main objective of a score-based generative model.
 
-One naive approach to perform SM is to use direct regression via mean-squared-error which results in the loss function,
+One naive approach to perform \Gls{Sm} is to use direct regression via mean-squared-error which results in the loss function,
 \begin{equation}
     \label{eq:naive_loss}
-    \mathcal{L}_{SM}(\theta) =
+    \mathcal{L}_{Sm}(\theta) =
     \mathbb{E}_{t \sim \unitime}
     \mathbb{E}_{\x_t \sim p_t(\x_t)}
     \left|\left|S_\theta(\x_t, t) - \score\right|\right|^2,
 \end{equation}
 where $S_\theta$ is a neural network with trainable parameters $\theta$.
 However, this loss is not practical as it requires the calculation of the very term it is trying to approximate.
-One can instead use the denoising score matching (DSM) objective~\cite{ScoreMatching, SlicedScoreMatching} where the conditional score function $\cscore$ is approximated,
+One can instead use the \Gls{DSm} objective~\cite{ScoreMatching, SlicedScoreMatching} where the conditional score function $\cscore$ is approximated,
 \begin{equation}
     \label{eq:denoising_loss}
-    \mathcal{L}_{DSM}(\theta) =
+    \mathcal{L}_{DSm}(\theta) =
     \mathbb{E}_{t \sim \unitime}
     \mathbb{E}_{\x_0 \sim \mathcal{D}}
     \mathbb{E}_{\x_t \sim p_{0t}(\x_t|\x_0)}
@@ -446,7 +446,7 @@ One can instead use the denoising score matching (DSM) objective~\cite{ScoreMatc
 \end{equation}
 This replacement is valid because after taking all expectations, the gradients of the two loss functions are equivalent with respect to the model parameters~\cite{ScoreBasedGenerativeModeling},
 \begin{equation}
-    \nabla_{\theta} \mathcal{L}_{SM}(\theta) = \nabla_{\theta} \mathcal{L}_{DSM}(\theta).
+    \nabla_{\theta} \mathcal{L}_{Sm}(\theta) = \nabla_{\theta} \mathcal{L}_{DSm}(\theta).
 \end{equation}
 This replacement is useful because the conditional score function does have a tractable form due to the transition kernel in \Cref{eq:gaussian_kernel},
 \begin{equation}
@@ -469,7 +469,7 @@ It is convenient to precondition the network output as,
 yielding the final loss function,
 \begin{equation}
     \label{eq:noise_loss}
-    \mathcal{L}_{DSM}(\theta) =
+    \mathcal{L}_{DSm}(\theta) =
     \mathbb{E}_{t \sim \unitime}
     \mathbb{E}_{\x_0 \sim \mathcal{D}}
     \mathbb{E}_{\z \sim \normal}
@@ -480,29 +480,29 @@ Here, $\gamma(t) > 0$ is introduced as a reweighting factor to balance the loss 
 Note that by setting $\gamma(t) = \sigma(t)^2$ the loss is uniformly weighted and this often corresponds to good perceptual quality of the generated samples~\cite{VariationalPerspectiveDiffusionBased, VariationalDiffusionModels, ImprovedDenoisingDiffusion}.
 Alternatively, one can use specific weighting schemes to allow training on the maximum likelihood objective~\cite{UnderstandingDiffusionModels}.
 
-Once the model is trained, one can define the sampling procedure, which starts from samples drawn from $p_Z=\mathcal{N}(0, \sigma(T) \mathbb{I})$ and numerically integrates the reverse SDE in \Cref{eq:reverse_sde} from $t: T \rightarrow 0$ to obtain samples matching $p_0$.
+Once the model is trained, one can define the sampling procedure, which starts from samples drawn from $p_Z=\mathcal{N}(0, \sigma(T) \mathbb{I})$ and numerically integrates the reverse \Glspl{SDE} in \Cref{eq:reverse_sde} from $t: T \rightarrow 0$ to obtain samples matching $p_0$.
 The integration can be done using the Euler-Maruyama method or stochastic Runge-Kutta methods~\cite{NumericalSolutionStochastic}.
-Like CNFs, the generation quality is highly sensitive to the number of integration steps as each step requires another forward pass through the neural network.
-The high computational cost of generating a sample with a diffusion model is the main drawback of this approach compared to single-pass methods like NFs and GANs.
+Like \Glspl{CNF}, the generation quality is highly sensitive to the number of integration steps as each step requires another forward pass through the neural network.
+The high computational cost of generating a sample with a diffusion model is the main drawback of this approach compared to single-pass methods like NFs and \Glspl{GAN}.
 
-As a method to speed up generation, \textcite{ScoreBasedGenerativeModeling} proved the existence of the probability flow ODE whose solutions share the same marginal densities $p_t(\x_t)$ as the SDE.
-For the SDE defined in \Cref{eq:sde} it is given by,
+As a method to speed up generation, \textcite{ScoreBasedGenerativeModeling} proved the existence of the probability flow \Gls{ODE} whose solutions share the same marginal densities $p_t(\x_t)$ as the \Glspl{SDE}.
+For the \Glspl{SDE} defined in \Cref{eq:sde} it is given by,
 \begin{equation}
     \label{eq:probability_flow}
     \diff \x_t = \left[f(\x_t, t) - \frac{1}{2} g(t)^2 \score\right] \diff t.
 \end{equation}
-Empirically, the probability flow ODE provides a larger tolerance to truncation errors, allowing for fewer integration steps and, thus, faster generation.
-In addition, it enables the use of more advanced ODE solvers, provides deterministic encoding, and allows for log-likelihood computation via \Cref{eq:cnf_loglikelihood}, indicating the strong connection between score-based models and CNFs.
-Furthermore, while the probability flow ODE was initially introduced as an alternative method for generation, \textcite{ElucidatingDesignSpace} showed that the entire training objective of a score-based model can be derived purely from an ODE perspective.
+Empirically, the probability flow \Gls{ODE} provides a larger tolerance to truncation errors, allowing for fewer integration steps and, thus, faster generation.
+In addition, it enables the use of more advanced \Gls{ODE} solvers, provides deterministic encoding, and allows for log-likelihood computation via \Cref{eq:cnf_loglikelihood}, indicating the strong connection between score-based models and \Glspl{CNF}.
+Furthermore, while the probability flow \Gls{ODE} was initially introduced as an alternative method for generation, \textcite{ElucidatingDesignSpace} showed that the entire training objective of a score-based model can be derived purely from an \Gls{ODE} perspective.
 
 \subsection{Conditional Flow Matching}
 \label{sec:cfm}
 
-Conditional Flow Matching (CFM)~\cite{BuildingNormalizingFlows, FlowMatchingGenerative, FlowStraightFast} is an alternative framework which arrives at an equivalent training objective to score-based models and can be seen as a method to construct CNFs without the need for numerical integration during training.
+\Gls{CFM}~\cite{BuildingNormalizingFlows, FlowMatchingGenerative, FlowStraightFast} is an alternative framework which arrives at an equivalent training objective to score-based models and can be seen as a method to construct \Glspl{CNF} without the need for numerical integration during training.
 The derivation shares many parallels with score-based models, and abundant literature argues their equivalence~\cite{CM2, StochasticInterpolants}.
-However, they approach the problem without using SDEs, and like \textcite{ElucidatingDesignSpace}, directly target the probability flow ODE, arguably yielding a more straightforward derivation.
+However, they approach the problem without using \Glspl{SDE}, and like \textcite{ElucidatingDesignSpace}, directly target the probability flow \Gls{ODE}, arguably yielding a more straightforward derivation.
 
-Like CNFs, the goal of CFM is to learn the velocity field $u_t(\x_t)$ that induces the time-dependent density $p_t(\x_t)$ adhering to the boundary conditions $p_1 = p_\X$ and $p_0 = p_\Z$\footnote{Note again that the time index is inverted compared to score-based models.}.
+Like \Glspl{CNF}, the goal of \Gls{CFM} is to learn the velocity field $u_t(\x_t)$ that induces the time-dependent density $p_t(\x_t)$ adhering to the boundary conditions $p_1 = p_\X$ and $p_0 = p_\Z$\footnote{Note again that the time index is inverted compared to score-based models.}.
 One can express this density as a marginal over a conditional probability path which propagates from a single data sample,
 \begin{equation}
     \label{eq:conditional_path}
@@ -547,7 +547,7 @@ Therefore, the flow matching (FM) loss,
     \mathbb{E}_{\x_t \sim p_t(\x_t)}
     \left|\left|u_\theta(\x_t) - u_t(\x_t)\right|\right|^2,
 \end{equation}
-and the CFM loss,
+and the \Gls{CFM} loss,
 \begin{equation}
     \label{eq:cfm_loss}
     \mathcal{L}_{CFM}(\theta) =
@@ -581,7 +581,7 @@ Under the linear interpolation scheme \Cref{eq:cfm_loss} simplifies even further
 \end{equation}
 which is the most common form of the loss used in practice.
 
-Once the network is trained, one can sample from the model by integrating the conditional vector field from noise sample to the data sample as with any CNF.
+Once the network is trained, one can sample from the model by integrating the conditional vector field from noise sample to the data sample as with any \Gls{CNF}.
 
 \subsection{Diffusion Models in Practice}
 
@@ -589,28 +589,28 @@ The training step for most diffusion models is essentially the same.
 One samples a time index $t$, a data point $\x \sim p_\X$, and a latent variable $\z \sim p_\Z$.
 They are then mixed to get the partially noised sample $\x_t = s(t)\x + \sigma(t)\z$ using predefined scaling factors and passed along with the time index to a neural network.
 The network is trained to predict the noise, data point, or velocity field directly.
-A trained network defines the ODE or SDE, which can be used to generate samples via numerical integration.
+A trained network defines the \Gls{ODE} or \Glspl{SDE}, which can be used to generate samples via numerical integration.
 Specifics in this process depend on the choice of framework, the network architecture, and the hyperparameters used.
 
-Over the past four years, some best practices have emerged for training and sampling from diffusion models, such as using slow moving offline networks, targeted time sampling, time encoding, and more advanced ODE solvers.
+Over the past four years, some best practices have emerged for training and sampling from diffusion models, such as using slow moving offline networks, targeted time sampling, time encoding, and more advanced \Gls{ODE} solvers.
 
 \subsubsection{Diffusion Frameworks}
 \label{sec:diffusion_frameworks}
 
 Three diffusion frameworks are used in the various projects within this thesis.
-The first uses the SM objective by~\textcite{GenerativeModelingEstimating} with trigonometric interpolations~\cite{StochasticInterpolants, ImprovedDenoisingDiffusion}, which is referred to as SM-TI.
-The second follows the work by~\textcite{ElucidatingDesignSpace} often referred to as EDM diffusion.
-The third is the CFM framework by~\textcite{FlowMatchingGenerative, FlowStraightFast, BuildingNormalizingFlows}.
+The first uses the \Gls{Sm} objective by~\textcite{GenerativeModelingEstimating} with trigonometric interpolations~\cite{StochasticInterpolants, ImprovedDenoisingDiffusion}, which is referred to as \Gls{Sm}-TI.
+The second follows the work by~\textcite{ElucidatingDesignSpace} often referred to as \Gls{EDM} diffusion, named so after the title of the paper in which the method was introduced, ``Elucidating the Design Space of Diffusion-Based Generative Models''.
+The third is the \Gls{CFM} framework by~\textcite{FlowMatchingGenerative, FlowStraightFast, BuildingNormalizingFlows}.
 The main differences in the hyperparameters used in each framework are briefly summarized in \Cref{tab:diffusion_frameworks}.
 
-In SM-TI, the diffusion schedule is chosen to be a cosine and sine function such that the total power of $\x_t$, assuming that the training set was standardized, is constant across the schedule.
+In \Gls{Sm}-TI, the diffusion schedule is chosen to be a cosine and sine function such that the total power of $\x_t$, assuming that the training set was standardized, is constant across the schedule.
 The network predicts the noise added to the data with the training objective
 $\mathbb{E}_{\x, \z, t} \lambda(t) \left|\left| z_\theta(\x_t, t) - \z\right|\right|^2$.
-This is then used to approximate the score function, which is used in either the reverse SDE or the probability flow ODE to generate samples.
+This is then used to approximate the score function, which is used in either the reverse \Glspl{SDE} or the probability flow \Gls{ODE} to generate samples.
 
-In EDM, the diffusion schedule is constructed to simplify the form of the probability flow ODE as much as possible.
+In \Gls{EDM}, the diffusion schedule is constructed to simplify the form of the probability flow \Gls{ODE} as much as possible.
 Noise is added at a linearly increasing rate to a signal that is kept constant, $\x_t = \x_0 + t\z$.
-This results in an ODE with straighter trajectories, which is beneficial for the numerical integration during sampling as it reduces the truncation errors.
+This results in an \Gls{ODE} with straighter trajectories, which is beneficial for the numerical integration during sampling as it reduces the truncation errors.
 The time domain extends to $t_\text{max}$, which also determines the latent distribution's variance and is typically set to be $t_\text{max} = 80$.
 The objective is to predict the data itself, with the loss $\mathbb{E}_{\x, \z, t} \lambda(t) \left|\left| x_\theta(\x_t, t) - \x\right|\right|^2$.
 The actual network is preconditioned such that
@@ -619,13 +619,13 @@ The actual network is preconditioned such that
 \end{equation}
 where $f_\theta$ is the neural network and $(c_\text{skip}, c_\text{in}, c_\text{out}, c_\text{noise})$ are scaling factors.
 These factors are manually selected such that the training objective and the network's inputs have unit variance across all values of $t \in [0, t_\text{max}]$.
-One can take steps towards the estimated data sample during integration with any ODE.
-While the training objective in EDM diffusion was derived without the need for an SDE, the authors also showed that using a stochastic sampler can improve the quality of the generated samples if enough integration steps are taken.
+One can take steps towards the estimated data sample during integration with any \Gls{ODE}.
+While the training objective in \Gls{EDM} diffusion was derived without the need for an \Glspl{SDE}, the authors also showed that using a stochastic sampler can improve the quality of the generated samples if enough integration steps are taken.
 
-The CFM framework follows the derivation in \Cref{sec:cfm}, where the diffusion schedule is a basic linear interpolation between the noise and the data and the network target is simply the difference between the two.
-CFM has arguably the simplest to implement training loop, which is shown in \Cref{code:cfm}.
+The \Gls{CFM} framework follows the derivation in \Cref{sec:cfm}, where the diffusion schedule is a basic linear interpolation between the noise and the data and the network target is simply the difference between the two.
+\Gls{CFM} has arguably the simplest to implement training loop, which is shown in \Cref{code:cfm}.
 This model generated the samples in \Cref{fig:cm_samples}, which includes double-moon and four-box datasets.
-One of the main benefits of the CNF framework is that the latent distribution does not have to be Gaussian, and the theory holds for any arbitrary distributions.
+One of the main benefits of the \Gls{CNF} framework is that the latent distribution does not have to be Gaussian, and the theory holds for any arbitrary distributions.
 The bottom row of \Cref{fig:cm_samples} has the model interpolating from the double-moon distribution to the four-box distribution.
 
 \begin{figure}
@@ -645,13 +645,13 @@ The bottom row of \Cref{fig:cm_samples} has the model interpolating from the dou
             ut = self.mlp(xt, self.cos_enc(t))         # Predict velocity
             return (ut - (x0 - x1)).square().mean()    # MSE loss
     \end{minted}
-    \caption{A simple implementation of the CFM framework in PyTorch. The model is trained to predict the velocity field $u_t(\x_t)$ that interpolates between noise $\x_1$ and data $\x_0$ at time $t$.}
+    \caption{A simple implementation of the \Gls{CFM} framework in PyTorch. The model is trained to predict the velocity field $u_t(\x_t)$ that interpolates between noise $\x_1$ and data $\x_0$ at time $t$.}
     \label{code:cfm}
 \end{figure}
 
 A natural question arises regarding which of these models performs better.
 Research on this topic is ongoing, and the community has yet to reach a consensus.
-However, the CFM framework with the linear interpolation diffusion schedule is now used by the majority of commercial diffusion models for text-to-image synthesis.
+However, the \Gls{CFM} framework with the linear interpolation diffusion schedule is now used by the majority of commercial diffusion models for text-to-image synthesis.
 This includes models such as Stable Diffusion 3~\cite{SD3} and Flux~\cite{flux2024github}, indicating a practical preference for this framework.
 
     {
@@ -663,7 +663,7 @@ This includes models such as Stable Diffusion 3~\cite{SD3} and Flux~\cite{flux20
             \resizebox{\textwidth}{!}{
                 \begin{tabular}{cccc}
                     \toprule
-                                                 & \textbf{SM-TI}                                        & \textbf{EDM}                               & \textbf{CFM}           \\
+                                                 & \textbf{Sm-TI}                                        & \textbf{EDM}                               & \textbf{CFM}           \\
                     \midrule
                     time index $t$               & $t \in [0, 1]$                                        & $t \in [0, t_{max}]$                       & $t \in [0, 1]$         \\
                     signal rate $s(t)$           & $\cos(\frac{t\pi}{2})$                                & $1$                                        & $1 - t$                \\
@@ -671,7 +671,7 @@ This includes models such as Stable Diffusion 3~\cite{SD3} and Flux~\cite{flux20
                     latent distribution          & $\normal$                                             & $\mathcal{N}(0, t_\text{max}^2\mathbb{I})$ & $\normal$              \\
                     training target              & noise - $\z$                                          & data - $\x$                                & velocity - $(\x - \z)$ \\
                     $\frac{\diff \x_t}{\diff t}$ & $- \frac{\pi}{2}\tan(\frac{\pi t}{2})(\x_t - \score)$ & $- t \score$                               & $u_t(\x_t)$            \\
-                    sampling                     & SDE or ODE                                            & SDE or ODE                                 & ODE                    \\
+                    sampling                     & \Glspl{SDE} or \Gls{ODE}                              & \Glspl{SDE} or \Gls{ODE}                   & \Gls{ODE}              \\
                     \bottomrule
                 \end{tabular}
             }
@@ -681,43 +681,43 @@ This includes models such as Stable Diffusion 3~\cite{SD3} and Flux~\cite{flux20
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.99\textwidth]{Figures/generative_models/cm_samples.pdf}
-    \caption{The transformation of Gaussian samples into a double-moon distribution (top) and a four-box distribution (middle), and the interpolation between the two (bottom). The model was trained using the CNF framework generated with Heun's method~\cite{heun} for 64 steps. Each column shows the samples at a different time index $t$, the black lines trace back to the samples in the previous column. The rightmost column shows the full paths traced by each sample from the base distribution.}
+    \caption{The transformation of Gaussian samples into a double-moon distribution (top) and a four-box distribution (middle), and the interpolation between the two (bottom). The model was trained using the \Gls{CNF} framework generated with Heun's method~\cite{heun} for 64 steps. Each column shows the samples at a different time index $t$, the black lines trace back to the samples in the previous column. The rightmost column shows the full paths traced by each sample from the base distribution.}
     \label{fig:cm_samples}
 \end{figure}
 
 
 \subsubsection{Conditional Verses Unconditional Paths}
 
-One of the claims of both EDM and CFM is that they lead to straighter trajectories than SM-TI, allowing for faster sampling as fewer steps are needed in the numerical integration.
-This is indeed the case, as shown by \Cref{fig:vp_vs_cfm}, where the SM-TI model results in paths with very high curvature, especially at the end of the schedule.
+One of the claims of both \Gls{EDM} and \Gls{CFM} is that they lead to straighter trajectories than \Gls{Sm}-TI, allowing for faster sampling as fewer steps are needed in the numerical integration.
+This is indeed the case, as shown by \Cref{fig:vp_vs_cfm}, where the \Gls{Sm}-TI model results in paths with very high curvature, especially at the end of the schedule.
 Note that none of the paths are completely straight.
 This is because all frameworks were derived using a similar technique to overcome the intractable marginal density (velocity) by using the conditional density (conditional velocity) as a proxy.
 This means tension exists between the actual training target and what the model approximates, and this discrepancy is highlighted in \Cref{fig:oned_oned}.
 In the latter case, the model was trained to interpolate between samples drawn from the same distribution, meaning that an optimal model would be $u_t(\x_t) = 0$
-So, even if the conditional paths are straight, as with EDM and CFM, the marginal paths are not.
+So, even if the conditional paths are straight, as with \Gls{EDM} and \Gls{CFM}, the marginal paths are not.
 This discrepancy results in a few considerations for training.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.45\textwidth]{Figures/generative_models/fm.png}
     \includegraphics[width=0.45\textwidth]{Figures/generative_models/vp.png}
-    \caption{The marginal paths generated interpolating between a Gaussian and a double-moon distribution learned by using the CFM schedule (left) and the SM-TI schedule (right).}
+    \caption{The marginal paths generated interpolating between a Gaussian and a double-moon distribution learned by using the \Gls{CFM} schedule (left) and the \Gls{Sm}-TI schedule (right).}
     \label{fig:vp_vs_cfm}
 \end{figure}
 
 Using conditional paths as a proxy training target results in unbiased updates with high variance.
-While diffusion models are not at risk of collapsing like GANs, gradient updates are highly stochastic, and convergence is slow.
+While diffusion models are not at risk of collapsing like \Glspl{GAN}, gradient updates are highly stochastic, and convergence is slow.
 Almost all diffusion models are trained with two copies of the network: an online-network and an offline-network.
-The online-network is updated using standard gradient descent, while the offline network is updated using the exponential moving average (EMA) of the online network.
+The online-network is updated using standard gradient descent, while the offline network is updated using the exponential moving average \Gls{EMA} of the online network.
 The offline-network is always used for sampling.
 This common trick could be applied to any deep learning task~\cite{Adam}, but it is ubiquitous in diffusion models.
 
-Note that predicting the marginal velocity for CFM is significantly harder in the middle of the schedule than at the endpoints.
+Note that predicting the marginal velocity for \Gls{CFM} is significantly harder in the middle of the schedule than at the endpoints.
 This is because the optimal prediction for the marginal velocity at $t=0$ is a vector pointing towards the mean of $p_1$, and the optimal prediction at $t=1$ points towards the mean of $p_0$.
-Similarly, at $t=t_0$ in EDM, $f_\theta$ should be the identity function, and at $t=t_\text{max}$, the ideal denoiser returns the mean of the training set.
+Similarly, at $t=t_0$ in \Gls{EDM}, $f_\theta$ should be the identity function, and at $t=t_\text{max}$, the ideal denoiser returns the mean of the training set.
 Therefore, it is common to use non-uniform sampling for the time index during training to target the time steps where the most information can be gained.
 These are typically based on empirical results and are not derived from the theory.
-For EDM, $\log(t) \sim \mathcal{N}(-1.2, 1.2)$ was chosen after a hyperparameter search and for CFM it was found that logit-normal sampling,
+For \Gls{EDM}, $\log(t) \sim \mathcal{N}(-1.2, 1.2)$ was chosen after a hyperparameter search and for \Gls{CFM} it was found that logit-normal sampling,
 \begin{equation}
     t \sim \frac{1}{\sqrt{2\pi}}\frac{1}{t(1-t)}\exp\left(-\frac{(\text{logit}(t))^2}{2}\right),
 \end{equation}
@@ -729,7 +729,7 @@ where $\text{logit}(t) = \log\left(\frac{t}{1-t}\right)$, was the most effective
     \includegraphics[width=0.49\textwidth]{Figures/generative_models/oned.png}
     \includegraphics[width=0.49\textwidth]{Figures/generative_models/oned2.png}
     \includegraphics[width=0.49\textwidth]{Figures/generative_models/oned2_marginal.png}
-    \caption{(left) The conditional paths used to train a CFM, and (right) the marginal paths generated by the model. The top row shows a model interpolating between a two-box distribution and a Gaussian distribution, and the bottom row shows a model interpolating between samples drawn from the same three-box distribution.}
+    \caption{(left) The conditional paths used to train a \Gls{CFM}, and (right) the marginal paths generated by the model. The top row shows a model interpolating between a two-box distribution and a Gaussian distribution, and the bottom row shows a model interpolating between samples drawn from the same three-box distribution.}
     \label{fig:oned_oned}
 \end{figure}
 
@@ -754,10 +754,10 @@ In all models, the network needs to take in time information.
 This can be done by simply combining the time scalar $t$ to the noisy data point $\x_t$ when it is passed to the network.
 However, it is much more beneficial to perform some encoding beforehand, in order to maximize the sensitivity of the model to small changes in time.
 This is most commonly done using trigonometric functions, such as the positional encoding used in transformers~\cite{Attention}, or random Fourier features~\cite{FourierFeaturesLet}.
-However, in the projects used throughout this thesis, optimal performance was found using a basic cosine-encoding (CosEnc)~\cite{ImplicitQuantileNetworks}.
+However, in the projects used throughout this thesis, optimal performance was found using a basic \Gls{CosEnc}~\cite{ImplicitQuantileNetworks}.
 This layer takes a scalar $t$ and returns an output tensor of length $d$, where each element is the output of a cosine function with exponentially increasing frequency.
 The lowest frequency is set such that the layer will not have duplicate outputs.
-For parameters $t_\text{min}$, $t_\text{max}$, and $d$ the CosEnc layer is given by,
+For parameters $t_\text{min}$, $t_\text{max}$, and $d$ the \Gls{CosEnc} layer is given by,
 \begin{equation}
     \label{eq:cosine_encoding}
     \text{CosEnc}(t) =
@@ -781,13 +781,13 @@ Interestingly enough, one does not even have to train a conditional model to per
     \nabla_{\x_t} \cdot \log p(\x_t | \con) = \nabla_{\x_t} \cdot \log p(\x_t) + \nabla_{\x_t} \cdot \log p(\con | \x_t).
 \end{equation}
 Thus, one only needs a second time-dependent classifier for the conditioning information.
-Gradients with respect to this model can be used to modify the update rule for the ODE or the velocity field to perform conditional generation.
+Gradients with respect to this model can be used to modify the update rule for the \Gls{ODE} or the velocity field to perform conditional generation.
 This is often referred to as \textit{guidance} in the diffusion literature~\cite{DiffusionBeatsGANS}.
 
 \subsubsection{Sampling}
 
-As previously discussed, various numerical integration techniques can be employed with either the reverse SDE or the probability flow ODE to sample from a diffusion model.
-Beyond the conventional numerical integration methods, such as Euler, Heun, and Linear Multi-Step methods~\cite{heun}, a novel domain has emerged, focusing on developing efficient integration methods tailored to specific diffusion schedules.
+As previously discussed, various numerical integration techniques can be employed with either the reverse \Glspl{SDE} or the probability flow \Gls{ODE} to sample from a diffusion model.
+Beyond the conventional numerical integration methods, such as Euler's, Heun's, and Linear Multi-Step methods~\cite{heun}, a novel domain has emerged, focusing on developing efficient integration methods tailored to specific diffusion schedules.
 Notable examples include DDIM~\cite{DDIM}, DPM-Solver~\cite{DPMSolverFastODE}, DPM-Solver++~\cite{DPMSolverFastSolver}, UniPC~\cite{UniPC}, and DPM-Solver-2M~\cite{DPMSolverFastSolver}.
 These samplers are adaptable to both stochastic and ordinary differential equations.
 

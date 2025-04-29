@@ -14,8 +14,10 @@
 \usepackage{mathpazo}
 \usepackage[style=numeric-comp, sorting=custom, date=year, backend=biber, giveninits=true, maxnames=3, minnames=1, backref=false]{biblatex}
 \usepackage{csquotes}
-\usepackage[subrefformat=parens, labelfont=up]{subcaption}\usepackage{amsmath}
-\usepackage{hyperref}
+\usepackage[subrefformat=parens, labelfont=up]{subcaption}
+\usepackage{amsmath}
+\usepackage[pdfpagelabels, plainpages=false]{hyperref}
+\usepackage[nogroupskip, toc, acronym, numberedsection=false]{glossaries}
 \usepackage{cleveref}
 \usepackage{booktabs}
 \usepackage{multirow}
@@ -31,10 +33,16 @@
 \usepackage{placeins}
 \usepackage{xspace}
 \usepackage{textpos}
+\usepackage{enumitem}
+\makeglossaries
+
 % \usepackage{makecell}
 
 \input{bibmacros.tex}
 \input{definitions.tex}
+\input{glossary.tex}
+
+\captionsetup{labelformat=empty}
 
 \addbibresource{bibliography.bib}
 
@@ -65,6 +73,7 @@
 }
 
 \begin{document}
+\pagenumbering{roman}
 
 % Format for preface pages
 \frontmatter
@@ -74,31 +83,38 @@
 \include{Preface/declaration}
 \include{Preface/abstract}
 \include{Preface/acknowledgements}
-
 \tableofcontents
 
 % Reset page numbering and headers
 \mainmatter
 \pagestyle{thesis}
+\pagenumbering{arabic}
+\renewcommand{\thepage}{\arabic{page}}
 
-\include{Chapters/introduction}
-\include{Chapters/standard_model}
-\include{Chapters/lhc_atlas_detector}
-\include{Chapters/deep_learning}
-\include{Chapters/graph_networks}
-\include{Chapters/generative_models}
+% \include{Chapters/introduction}
+
+% \include{Chapters/standard_model}
+% \include{Chapters/lhc_atlas_detector}
+% \include{Chapters/deep_learning}
+% \include{Chapters/graph_networks}
+% \include{Chapters/generative_models}
 \include{Chapters/flavour_tagging}
-\include{Chapters/neutrino_unfolding}
-\include{Chapters/jet_generation}
-\include{Chapters/foundation_models}
-\include{Chapters/conclusion}
+% \include{Chapters/neutrino_unfolding}
+% \include{Chapters/jet_generation}
+% \include{Chapters/foundation_models}
+% \include{Chapters/conclusion}
+
+% Include all glossary terms even if not used
+\glsaddall
+\printglossary[title=Glossary and Abbreviations]
+
 
 \printbibliography{}
 
 \appendix
 
-\include{Appendices/neutrino}
-\include{Appendices/jet_generation}
-\include{Appendices/foundation_models}
+% \include{Appendices/neutrino}
+% \include{Appendices/jet_generation}
+% \include{Appendices/foundation_models}
 
 \end{document}
