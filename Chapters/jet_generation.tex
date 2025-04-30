@@ -2,7 +2,7 @@
 \label{ch:jet_generation}
 
 An incredible amount of computing resources is required to keep up with the demands for simulated events at the LHC experiments.
-Accurate Monte Carlo (MC) simulations are crucial, as they serve as the foundation for hypothesis tests that compare physics models with collision data.
+Accurate MC simulations are crucial, as they serve as the foundation for hypothesis tests that compare physics models with collision data.
 There is growing interest in utilizing fast surrogate models for event and detector simulations.
 Deep generative models have shown great success in the wider field of machine learning, most notably for image generation, and have reached a point where they are showing promise in improving the fidelity and speed of fast simulation approaches.
 In addition to fast simulation, accurate generative models on collider data can also be used for template-based anomaly detection or the inverse problem of unfolding.
@@ -30,10 +30,11 @@ Additional figures and tables for this section can be found in \Cref{app:jet_gen
 
 A practical initial task for developing a generative model for collider data is generating individual particle physics jets.
 These collimated showers of hadrons produce electrically charged and neutral particles within a cone originating from the interaction point.
-Jet formation involves transitioning from colour-charged partons, explainable via perturbative QCD, to a collection of colour-singlet hadrons, leptons, and photons interacting with the detector material.
-While both regimes are well understood, the transition between them is not and continues to be a focal point of ongoing research.
+Jet formation in particle physics bridges two distinct regimes: on one end, high-energy partons emerge from the interaction, where the small QCD coupling constant allows their dynamics to be described via perturbative QCD.
+As these partons evolve, they transition into a collection of frozen-out colour-singlet hadrons, leptons, and photons, interacting with the detector material at an energy scale where QCD can no longer be treated perturbatively.
+Importantly, there is no first-principles physical theory that fully describes the complete evolution of a jet from its initial high-energy state to its final detection, requiring phenomenological models and empirical approaches to connect these regimes.
 
-Parton showers are iteratively constructed using a Markovian algorithm that stochastically transitions an $n$-parton state to an $(n+1)$-parton state.
+Parton showers are iteratively simulated using a Markovian algorithm that stochastically transitions an $n$-parton state to an $(n+1)$-parton state.
 Eventually, these states are mapped to a collection of colour-singlet hadrons in a process called hadronization.
 The showering and hadronization processes require dedicated tools such as \pythia~\cite{Pythia8}, \sherpa~\cite{Sherpa}, and \herwig~\cite{Herwig}.
 The final set of hadrons, along with any leptons or photons, are referred to as the jet constituents or particle cloud.
@@ -53,7 +54,7 @@ Since the task involves set generation, the model must be based on a permutation
 
 \subsection{Diffusion Schedule}
 
-\pcjedi uses the score matching diffusion framework~\cite{ScoreBasedGenerativeModeling} along with the SM-TI schedule, covered in \Cref{sec:diffusion_frameworks}.
+\pcjedi uses the score matching diffusion framework~\cite{ScoreBasedGenerativeModeling} along with the Sm-TI schedule, covered in \Cref{sec:diffusion_frameworks}.
 
 The limits of the diffusion schedule are defined by hyperparameters $\sigma_\text{max}<1$ and $\sigma_\text{min}>0$, giving the following expressions for the signal and noise levels,
 \begin{align}
@@ -95,7 +96,7 @@ The coefficient $\sfrac{4f(t)^2}{\sigma(t)^2}$ ensures that loss corresponds to 
 However, this can lead to unstable training, so many models in CV use the ``simple'' objective with no extra coefficient in front of the loss.
 Hyperparameter $\alpha$ allows the introduction of a small amount of likelihood loss to the training objective~\cite{ImprovedDenoisingDiffusion}.
 
-\subsection{Data}
+\subsection{Datasets}
 \label{sec:jetgen_data}
 
 The open dataset JetNet30~\cite{MPGAN} forms the foundation for these experiments.
@@ -654,7 +655,7 @@ The full \pcdroid model, while approximately 250 times slower than EPiC-GAN, ach
 \subsection{Diffusion with EPiC Layers}
 
 Collaboration with the research group responsible for the EPiC-GAN model led to the integration of the diffusion model with their EPiC layers~\cite{EpicJedi}.
-In this study, experiments using the conditional flow matchinng (CFM) framework to describe the diffusion process proved significantly more efficient than the SM-TI framework employed in \pcjedi.
+In this study, experiments using the conditional flow matchinng (CFM) framework to describe the diffusion process proved significantly more efficient than the Sm-TI framework employed in \pcjedi.
 This research, conducted concurrently with the development of \pcdroid, is only compared to the \pcjedi model.
 
 Utilizing these layers achieves approximately a seven-fold increase in generation speed over the transformer.
@@ -702,7 +703,7 @@ A novel method called Particles Into Particles with Permutation Invariant Networ
 PIPPIN frames the problem as a set-to-set generative task and extends the work of \pcdroid to encompass more of the simulation pipeline.
 PIPPIN comprises a transformer encoder to encode the partons, a multiplicity predictor to estimate the number of reconstructed objects, and a \pcdroid style generator that conditionally generates all reconstructed objects.
 
-\subsection{Data}
+\subsection{Datasets}
 
 A custom dataset of $\ttbar$ events is produced.
 The configuration matches the setup described in \Cref{sec:nu_data} except without any constraints on the decay channels of the top quarks or the W bosons.
@@ -829,7 +830,7 @@ The complete application of this method to the unfolding problem remains a subje
 \label{sec:drapes}
 
 As explained in \Cref{sec:sm_limitations}, there is reason to believe that the current understanding of physics as described by the Standard Model (SM) is incomplete.
-However, despite extensive analyses optimized for various beyond the standard model (BSM) signal, no statistically significant evidence of new physics has been found.
+However, despite extensive analyses optimized for various beyond the Standard Model (BSM) signal, no statistically significant evidence of new physics has been found.
 Recently, broader anomaly detection methods have gained focus.
 These approaches target sensitivity to a much wider spectrum of possible new physics scenarios, at the expense of sensitivity to any one process.
 
@@ -878,27 +879,27 @@ Each run of the experiment involved the following steps:
     \item Generate the training set by mixing some signal events with the rest of the QCD background.
     \item Train a background template model using samples from the SB.
     \item Generate the reference background using mass values in the SR.
-    \item Train a CWoLA classifier using the reference background and actual data from the SR.
+    \item Train a CWoLa classifier using the reference background and actual data from the SR.
     \item Measure the performance of the classifier at various background rejection rates $r_b$.
 \end{itemize}
 This entire process is repeated for different levels of signal injection to gauge the model's ability to enhance bump hunts in the presence of different signal strengths.
 
 \subsection{Results}
 
-The primary performance metric, significance improvement ($SIC$), is defined as the number of signal events divided by the square root of the number of background events passing the CWoLA filter.
+The primary performance metric, significance improvement ($SIC$), is defined as the number of signal events divided by the square root of the number of background events passing the CWoLa filter.
 It is measured for a given background rejection rate ($r_b$).
 
 The high-level template \drapes HLV is compared to the previous state-of-the-art model \FfF.
-Both models used the same setup and CWoLA classifier, only the generative model differs.
+Both models used the same setup and CWoLa classifier, only the generative model differs.
 As upper bounds on performance, two extra classifiers are produced.
 The first is a supervised classifier trained using truth labels ($s$ vs $b$).
-The second is an idealized CWoLA classifier, trained using true QCD background samples drawn from the SR ($s+b$ vs $b$).
-This shows the limits of the CWoLA approach even with perfect background knowledge.
+The second is an idealized CWoLa classifier, trained using true QCD background samples drawn from the SR ($s+b$ vs $b$).
+This shows the limits of the CWoLa approach even with perfect background knowledge.
 All other classifiers are trained using the reference background $b'$ generated by different methods.
 
 The results on the high-level features are shown in \Cref{fig:drapes_hlv}.
 For all levels of initial signal injection, \drapes provides a higher $SIC$ than \FfF.
-All template methods, including the idealized classifier, drop off at around 500 injected signal events due to reaching the CWoLA limit of the setup.
+All template methods, including the idealized classifier, drop off at around 500 injected signal events due to reaching the CWoLa limit of the setup.
 This limit is where signal presence is too low compared to the natural fluctuations of the background for a $s+b$ vs $b$ classifier to be able to pick out the signal~\cite{AachenLimit}.
 
 \drapes outperforms the idealized classifier in some cases by increasing the $b'$ statistics through generating more samples, whereas the idealized classifier is limited to the number of QCD events in the dataset.

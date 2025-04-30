@@ -4,7 +4,7 @@
 Particle physics experiments have finite resolution, limited acceptance, and error-prone reconstruction algorithms.
 These limitations mean that the actual physical variable of interest $\x$ and its associated distribution $p_\text{true}(\x)$ are not directly observable.
 Data only provides access to some distorted reconstructed proxy variable $\y$ and its distribution $p_\text{data}(\y)$.
-MC generators use theoretical assumptions to approximate $p_\text{gen} \approx p_\text{true}$.
+Monte Carlo (MC) generators use theoretical assumptions to approximate $p_\text{gen} \approx p_\text{true}$.
 Expensive detector simulations allow us to sample from the conditional distribution $p_\text{sim}(\y|\x)$.
 This allows an estimation of the data distribution through the marginalization,
 \begin{equation}
@@ -35,7 +35,7 @@ Neutrinos couple solely to the weak nuclear force and do not interact with detec
 Their presence is inferred from the missing transverse momentum $\ptmiss$, calculated from the momentum imbalance of all visible particles in the plane perpendicular to the beam pipe.
 It offers an experimental proxy for the net transverse momentum of all undetected particles.
 However, no such proxy exists in the longitudinal direction due to the unknown initial momentum of the colliding partons.
-Furthermore, this only constrains the total transverse momentum, and for events producing multiple neutrinos, individual kinematics are under-constrained, leading to a continuum of possible solutions given the data.
+Furthermore, this only constrains the total transverse momentum, and for events producing multiple neutrinos, individual kinematics are under-constrained, leading to a continuum of possible solutions.
 While these solutions are possible, they are not equally probable, and the goal of this chapter is to determine this probability distribution.
 
 Analyses in collider physics often involve neutrino production and would benefit from determining the individual kinematics of final-state neutrinos.
@@ -93,10 +93,10 @@ It also assumes $\pt^\nu$ is perfectly captured by $\ptmiss$, overlooking miside
 These factors can result in complex solutions where the convention is simply disregard the imaginary component.
 Additionally, even with perfect reconstruction, the equation will yield two real solutions, with no reason to favour one over the other, though the smaller magnitude result is typically taken.
 
-\subsection{Data}
+\subsection{Datasets}
 \label{sec:nu_data}
 
-The data in this study comprises simulated \ttbar events where exactly one top quark decays into a $b$-jet and a leptonically decaying $W^\pm$ boson, resulting in final states with $(e,\nu_e)$, $(\mu,\nu_\mu)$, or their antiparticles.
+The datasets used in this study comprises simulated \ttbar events where exactly one top quark decays into a $b$-jet and a leptonically decaying $W^\pm$ boson, resulting in final states with $(e,\nu_e)$, $(\mu,\nu_\mu)$, or their antiparticles.
 Around 600k events are used to train the model and an additional 100k events are used for evaluating performance.
 
 \subsubsection{Monte Carlo Generation}
@@ -390,7 +390,7 @@ A simple $\Delta R$ matching is used to make the lepton to $b$-jet association, 
 If this assignment fails to yield a neutrino solution, the opposite association is tested.
 The method fails to make an assignment in 22\% of \ttbar dilepton events, more than \vweight, but it requires significantly fewer computational resources.
 
-\subsection{Data}
+\subsection{Datasets}
 
 In this work, \vvflows is applied to simulated \ttbar events where both top quarks decay leptonically, resulting in a final state with exactly two leptons, two neutrinos and two jets initiated by $b$-hadrons ($b$-jets).
 Additional jets arise from ISR and FSR.
@@ -594,7 +594,7 @@ This may result in the model learning sample-specific effects, and lead to subop
 To evaluate this effect, \vvflows is trained using the alternative \ttbar dilepton sample (\vvflowsPy) and used to reconstruct the neutrinos for the nominal \ttbar sample.
 The reconstructed kinematic distributions as well as the unfolding performance are compared.
 
-Negligible differences are observed in the reconstructed neutrino kinematics, though the minor offsets can clearly be seen for the reconstructed \Wboson mass top quark invariant masses.
+Negligible differences are observed in the reconstructed neutrino kinematics, though the minor offsets can clearly be seen for the reconstructed \Wboson and top quark invariant masses.
 For the double differential unfolding analysis, there is a slight change in the statistical uncertainty in each bin after unfolding, shown in \Cref{tab:all_unfolding}.
 However, most of these changes are minor, and the method still outperforms \vweight and \ellipse.
 
@@ -654,7 +654,7 @@ Another benefit of \vvflows is also demonstrated, with a smoother template const
     \includegraphics[width=0.32\textwidth]{Figures/neutrino_unfolding/mass_shift/both_bl_mass.pdf}
     \includegraphics[width=0.32\textwidth]{Figures/neutrino_unfolding/mass_shift/both_top_mass_1.pdf}
     \includegraphics[width=0.32\textwidth]{Figures/neutrino_unfolding/mass_shift/both_top_mass_256.pdf}
-    \caption{The reconstructed top quark mass using just from the lepton and $b$-quark from the top quark decay ($m_{b\ell}$, left), the full invariant mass using \vvflows to reconstruct the neutrinos from the top quarks ($m_t$, middle), and a smoothed template for $m_t$ obtained by sampling 256 solutions for each event with \vvflows (right).}
+    \caption{These plots test the sensitivity of \vvflows when inference is performed on a sample generated with a different top quark mass. The left plot shows the reconstructed top quark mass when neutrinos are completely neglected and while there are deviations from the nominal distribution, there are significant fluctuations. The middle plot presents the reconstructed top quark mass using the lepton, $b$-jet, and neutrino momenta from \vvflows. Here the separation between the nominal and the two shifted samples is more pronounced. Using the \vvflows model, one can produce an even smoother template by sampling multiple solutions for each event. The right plot shows the reconstructed top quark mass using the lepton, $b$-jet, and neutrino momenta from \vvflows with 256 samples per event, demonstrating the method's potential for improved template construction for mass measurements.}
     \label{fig:top_mass_reco}
 \end{figure*}
 
@@ -665,7 +665,7 @@ The proposed \vvflows method demonstrates significant improvements over traditio
 \vvflows can reconstruct individual neutrinos without enforcing strong constraints on reconstructed particle masses to find solutions in an under-constrained system, thus avoiding the biases that come with the other analytical methods.
 
 The results show that \vvflows enhances the reconstruction of individual neutrino kinematics and improves the overall event reconstruction, leading to more accurate measurements of key observables in top quark physics.
-These improvements can increase the sensitivity of the measurement of top quark spin correlation and entanglement at the LHC.
+These improvements can increase the sensitivity of the measurement of top quark spin correlation and entanglement at the LHC~\cite{CMS:2015cal}.
 Furthermore, in contrast to other approaches, \vvflows has solutions for all events and the fast single event inference below 75~ms on a single computing core.
 
 Future work includes extending this approach to final states with more than two neutrinos and training on a wide range of top quark masses for direct top quark mass measurements.

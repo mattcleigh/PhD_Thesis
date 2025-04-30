@@ -34,7 +34,13 @@
 \usepackage{xspace}
 \usepackage{textpos}
 \usepackage{enumitem}
-\makeglossaries
+
+% Some glossary specific commands
+\renewcommand*{\glstextformat}[1]{\textcolor{black}{#1}} % Colour glossary text
+\makeglossaries % Make the glossary
+
+
+
 
 % \usepackage{makecell}
 
@@ -42,7 +48,7 @@
 \input{definitions.tex}
 \input{glossary.tex}
 
-\captionsetup{labelformat=empty}
+% \captionsetup{labelformat=empty}
 
 \addbibresource{bibliography.bib}
 
@@ -91,30 +97,32 @@
 \pagenumbering{arabic}
 \renewcommand{\thepage}{\arabic{page}}
 
-% \include{Chapters/introduction}
-
-% \include{Chapters/standard_model}
-% \include{Chapters/lhc_atlas_detector}
-% \include{Chapters/deep_learning}
-% \include{Chapters/graph_networks}
-% \include{Chapters/generative_models}
+\include{Chapters/introduction}
+\include{Chapters/standard_model}
+\include{Chapters/lhc_atlas_detector}
+\include{Chapters/deep_learning}
+\include{Chapters/graph_networks}
+\include{Chapters/generative_models}
 \include{Chapters/flavour_tagging}
-% \include{Chapters/neutrino_unfolding}
-% \include{Chapters/jet_generation}
-% \include{Chapters/foundation_models}
-% \include{Chapters/conclusion}
+\include{Chapters/neutrino_unfolding}
+\include{Chapters/jet_generation}
+\include{Chapters/foundation_models}
+\include{Chapters/conclusion}
 
-% Include all glossary terms even if not used
-\glsaddall
-\printglossary[title=Glossary and Abbreviations]
+% Include the glossary
+\glsaddall % Include all glossary terms even if not used
+\begingroup
+\let\clearpage\relax % Suppress page breaks
+\printglossary[style=list,nonumberlist, title=Glossary and Abbreviations]
+\endgroup
 
-
+% Include the bibliography
 \printbibliography{}
 
 \appendix
 
-% \include{Appendices/neutrino}
-% \include{Appendices/jet_generation}
-% \include{Appendices/foundation_models}
+\include{Appendices/neutrino}
+\include{Appendices/jet_generation}
+\include{Appendices/foundation_models}
 
 \end{document}

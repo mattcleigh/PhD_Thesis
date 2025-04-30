@@ -59,15 +59,15 @@
 \newglossaryentry{PCJedi}{
     name=PCJedi,
     description={Particle Cloud Jet Diffusion, a deep generative model for high-energy physics jets},
-    first={Point Cloud Jet Diffusion (PCJedi)},
-    text={PCJedi}
+    first={Point Cloud Jet Diffusion (\pcjedi)},
+    text={\pcjedi}
 }
 
 \newglossaryentry{PCDroid}{
     name=PCDroid,
     description={Particle Cloud Diffusion of reconstructed objects with improved denoising, a deep generative model for high-energy physics jets and the successor to the PCJedi model},
-    first={PCDroid},
-    text={PCDroid}
+    first={\pcdroid},
+    text={\pcdroid}
 }
 
 \newglossaryentry{MPM}{
@@ -91,6 +91,13 @@
     description=The Standard Model of particle physics,
     first={Standard Model (SM)},
     text={SM}
+}
+
+\newglossaryentry{BSM}{
+    name=BSM,
+    description={Beyond the Standard Model, refers to theories and models that extend or go beyond the Standard Model of particle physics},
+    first={beyond the Standard Model (BSM)},
+    text={BSM}
 }
 
 \newglossaryentry{QFT}{
@@ -349,6 +356,13 @@
     text={i.i.d.}
 }
 
+\newglossaryentry{OOD}{
+    name=OOD,
+    description={Out-of-distribution, refers to data samples that are not drawn from the same distribution as the training data, often used in the context of evaluating model robustness},
+    first={out-of-distribution (OOD)},
+    text={OOD}
+}
+
 \newglossaryentry{MLP}{
     name=MLP,
     description={Multi-Layer Perceptron, arguably the simplest form of a deep neural network, also referred to as a dense network, fully connected network, or sometimes confusingly as a feed-forward neural network (FFN)},
@@ -544,6 +558,20 @@
     text={ParT}
 }
 
+\newglossaryentry{ParticleNet}{
+    name=ParticleNet,
+    description={A graph neural network based jet tagger, which uses a message passing architecture to process particle clouds},
+    first={ParticleNet},
+    text={ParticleNet}
+}
+
+\newglossaryentry{FrechetParticleNetDistance}{
+    name=FPND,
+    description={Fréchet ParticleNet distance, a metric between two datasets of jets using the Fréchet distance of the penultimate embedding layer of a ParticleNet model},
+    first={Fréchet ParticleNet distance (FPND)},
+    text={FPND}
+}
+
 % Generative Modelling
 
 \newglossaryentry{PGM}{
@@ -578,9 +606,17 @@
     text={VAE}
 }
 
+\newglossaryentry{VQVAE}{
+    name=VQVAE,
+    description={Vector Quantized Variational Autoencoder, a type of VAE that uses vector quantization as the information bottleneck in the latent space,},
+    first={Vector Quantized Variational Autoencoder (VQVAE)},
+    firstplural={Vector Quantized Variational Autoencoders (VQVAEs)},
+    text={VQVAE}
+}
+
 \newglossaryentry{ODE}{
     name=ODE,
-    description={Ordinary Differential Equation, used in Continuous Normalizing Flows and Diffusion Models to define a continuous transformation process; numerical ODE solvers are used for transforming samples},
+    description={Ordinary Differential Equation},
     first={ordinary differential equation (ODE)},
     firstplural={ordinary differential equations (ODEs)},
     text={ODE}
@@ -596,7 +632,7 @@
 
 \newglossaryentry{SDE}{
     name=SDE,
-    description={Stochastic Differential Equation, used in score-based generative modelling to describe the forward-process where noise is progressively added to data samples},
+    description={Stochastic Differential Equation},
     first={stochastic differential equation (SDE)},
     firstplural={stochastic differential equations (SDEs)},
     text={SDE}
@@ -611,7 +647,7 @@
 
 \newglossaryentry{DSm}{
     name=DSm,
-    description={Denoising Score Matching, an objective for training score-based models that uses the conditional score function $\nabla_{\x_t} \log p_{0t}(\x_t|\x_0)$, which is tractable},
+    description={Denoising Score Matching, an objective for training score-based models that uses the conditional score function $\nabla_{\x_t} \log p_{0t}(\x_t|\x_0)$, which, unlike score function, is tractable},
     first={denoising score matching (DSm)},
     text={DSm}
 }
@@ -657,3 +693,216 @@
     first={Central Processing Unit (CPU)},
     text={CPU}
 }
+
+\newglossaryentry{SVD}{
+    name=SVD,
+    description={Singular Value Decomposition method, a form of matrix factorization},
+    first={Singular Value Decomposition (SVD)},
+    text={SVD}
+}
+
+\newglossaryentry{FSR}{
+    name=FSR,
+    description={Final State Radiation, the emission of additional particles from the final state of a particle interaction},
+    first={Final State Radiation (FSR)},
+    text={FSR}
+}
+
+\newglossaryentry{ISR}{
+    name=ISR,
+    description={Initial State Radiation, the emission of additional particles from the initial state of a particle interaction},
+    first={Initial State Radiation (ISR)},
+    text={ISR}
+}
+
+\newglossaryentry{NuWeight}{
+    name=\vweight,
+    description={An analytical technique for reconstructing neutrino kinematics, typically in multi-neutrino events, based on a grid search over rapidities and using mass constraints},
+    first={\vweight},
+    text={\vweight}
+}
+
+\newglossaryentry{NuEllipse}{
+    name=\ellipse,
+    description={A geometric approach for reconstructing neutrino kinematics using mass constraints, particularly in processes where top quarks decay leptonically},
+    first={\ellipse},
+    text={\ellipse}
+}
+
+\newglossaryentry{MC}{
+    name=MC,
+    description={Monte Carlo, a method used in simulations to model complex systems and processes by generating random samples from a probability distribution},
+    first={Monte Carlo (MC)},
+    text={MC}
+}
+
+\newglossaryentry{JetNet}{
+    name=JetNet,
+    description={An open dataset of simulated \pythia jets,},
+    first={JetNet},
+    text={JetNet}
+}
+
+\newglossaryentry{JetClass}{
+    name=JetClass,
+    description={An open dataset of simulated \pythia+\delphes jets},
+    first={JetClass},
+    text={JetClass}
+}
+
+\newglossaryentry{tauij}{
+    name=$\tau_{ij}$,
+    description={A substructure variable, specifically the ratio of the $i$ and $j$ N-subjettiness values, used to distinguish jets based on their prong structure},
+    first={$\tau_{ij}$},
+    text={$\tau_{ij}$}
+}
+
+\newglossaryentry{CWoLa}{
+    name=CWoLa,
+    description={Classification Without Labels, a semi-supervised learning method for training classifiers using datasets with mixed levels of signal and background},
+    first={Classification Without Labels (CWoLa)},
+    text={CWoLa}
+}
+
+\newglossaryentry{Cathode}{
+    name=Cathode,
+    description={A anomaly detection method where a conditional generative model is used to construct a reference background template which is then used to train a classifier using CWoLa},
+    first={Cathode},
+    text={Cathode}
+}
+
+\newglossaryentry{Drapes}{
+    name=Drapes,
+    description={A class of models which use conditional diffusion to generate background templates for anomaly detection, based on the \pcdroid model},
+    first={\drapes},
+    text={\drapes}
+}
+
+\newglossaryentry{DrapesHLV}{
+    name=Drapes HLV,
+    description={A variant of the Drapes model that generates only high-level features for anomaly detection templates},
+    first={\drapes HLV},
+    text={\drapes HLV}
+}
+
+\newglossaryentry{DrapesLLV}{
+    name=Drapes LLV,
+    description={A variant of the Drapes model that generates low-level features (di-jet system as sets of constituents) for anomaly detection templates},
+    first={\drapes LLV},
+    text={\drapes LLV}
+}
+
+\newglossaryentry{SignificanceImprovement}{
+    name=SIC,
+    description={Significance Improvement, A metric for anomaly detection classifiers, defined as the number of signal events divided by the square root of the number of background events passing the classifier filter},
+    first={significance improvement (SIC)},
+    text={SIC}
+}
+
+\newglossaryentry{PIPPIN}{
+    name=PIPPIN,
+    description={Particles Into Particles with Permutation Invariant Networks, a novel method that frames full forward simulation as a set-to-set generative task, directly generating reconstructed objects from partons},
+    first={PIPPIN (Particles Into Particles with Permutation Invariant Networks)},
+    text={PIPPIN}
+}
+
+\newglossaryentry{ConsistencyDistillation}{
+    name=CD,
+    description={Consistency distillation, a process where a teacher network trains a student network to solve the reverse diffusion process in fewer steps, potentially enabling one-step generation},
+    first={consistency distillation (CD)},
+    text={CD}
+}
+
+\newglossaryentry{NFE}{
+    name=NFE,
+    description={Neural Function Evaluations, a measure of the number of network passes required during generation with diffusion models, directly impacting generation time},
+    first={neural function evaluations (NFE)},
+    text={NFE}
+}
+
+\newglossaryentry{Pythia}{
+    name=Pythia,
+    description={A general-purpose Monte Carlo event generator for simulating high-energy particle collisions, including parton showering, hadronization, and multi-parton interactions},
+    first={\pythia},
+    text={\pythia}
+}
+
+\newglossaryentry{Sherpa}{
+    name=Sherpa,
+    description={A flexible event generator designed for precision QCD calculations, incorporating matrix elements, parton showers, and hadronization to model complex collider events},
+    first={\sherpa},
+    text={\sherpa}
+}
+
+\newglossaryentry{Herwig}{
+    name=Herwig,
+    description={A comprehensive event generator focusing on accurate modeling of parton showers and non-perturbative QCD effects, with strong capabilities in hadronization and BSM physics},
+    first={\herwig},
+    text={\herwig}
+}
+
+\newglossaryentry{MadGraph}{
+    name=MadGraph,
+    description={A software package for simulating high-energy particle collisions, focusing on matrix element generation and event generation for various processes},
+    first={\madgraph},
+    text={\madgraph}
+}
+
+\newglossaryentry{akT}{
+    name=anti-$k_T$,
+    description={A jet clustering algorithm used to group particles into jets, prioritizing the angular separation of particles},
+    first={anti-$k_T$},
+    text={anti-$k_T$}
+}
+
+\newglossaryentry{GEANT4}{
+    name=GEANT4,
+    description={A state-of-the-art tool for high-precision detector simulations in particle physics},
+    first={\geant},
+    text={\geant}
+}
+
+\newglossaryentry{Delphes}{
+    name=Delphes,
+    description={A fast parametric simulation tool used as an efficient alternative to computationally expensive detector simulations when resources are limited},
+    first={\delphes},
+    text={\delphes}
+}
+
+\newglossaryentry{FM}{
+    name=FM,
+    description={Foundation Model, a deep learning model that serves as the basis for further development or research, often produced using unsupervised or self-supervised learning techniques},
+    first={Foundation Model (FM)},
+    text={FM}
+}
+
+\newglossaryentry{BERT}{
+    name=BERT,
+    description={Bidirectional Encoder Representations from Transformers, a transformer-based model pre-trained on large text corpora, widely used in NLP tasks},
+    first={Bidirectional Encoder Representations from Transformers (BERT)},
+    text={BERT}
+}
+
+\newglossaryentry{GPT}{
+    name=GPT,
+    description={Generative Pre-trained Transformer, a transformer-based model pre-trained on large text corpora, widely used in NLP tasks},
+    first={Generative Pre-trained Transformer (GPT)},
+    text={GPT}
+}
+
+\newglossaryentry{BEiT}{
+    name=BEiT,
+    description={Bidirectional Encoder representation from Image Transformers, a transformer-based model pre-trained on large image corpora, widely used in computer vision tasks},
+    first={Bidirectional Encoder representation from Image Transformers (BEiT)},
+    text={BEiT}
+}
+
+\newglossaryentry{MAE}{
+    name=MAE,
+    description={Masked Autoencoder, a transformer-based model pre-trained on large image corpora, widely used in computer vision tasks},
+    first={Masked Autoencoder (MAE)},
+    text={MAE}
+}
+
+
+
